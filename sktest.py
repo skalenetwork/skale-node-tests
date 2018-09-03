@@ -2,7 +2,13 @@ from tempfile import TemporaryDirectory
 import os
 import io
 import json
-from subprocess import Popen
+from subprocess import Popen, DEVNULL
+import copy
+import time
+import binascii
+
+import web3
+from web3.auto import w3
 
 def _compare_states(nodes):
     # n[i].eth.blockNumber()
@@ -16,6 +22,27 @@ def _compare_states(nodes):
 
     # n[i].eth.getTransactionReceipt(hash)
     pass
+
+def loadPrivateKeys(path, password):
+    #TODO Exceptions?!
+    files = os.listdir(path)
+    res = []
+    for f in files:
+        fd = open(path+"/"+f)
+        key_crypted = fd.read()
+        fd.close()
+        key_open = w3.eth.account.decrypt(key_crypted, password)
+        res.append(key_open)
+    return res
+
+def _waitOnFilter(filter, dt):
+    e = []
+    while True:
+        e = filter.get_new_entries()
+        if len(e) > 0:
+            assert len(e) == 1
+            return e[0]
+        time.sleep(dt)
 
 def Config(other={}):
     """Simple function that returns default config as a python dictionary and optionally appends it from the dictionary passed."""
@@ -60,7 +87,7 @@ def Config(other={}):
         if dotpos >= 0:
             part1 = k[:dotpos]
             part2 = k[dotpos+1:]
-            if part1 in self:
+            if not part1 in self:
                 self[part1] = {}
             self[part1][part2] = v
         else:
@@ -68,86 +95,191 @@ def Config(other={}):
     return self
 
 class Node:
-    """Holds everything about node, can access it. But cannot run it."""    
+    """Holds everything about node, can access it. But cannot run it."""
 
     _counter = 0;
 
     def __init__(self, **kwargs):
         Node._counter = Node._counter + 1
         self.nodeName = kwargs.get('nodeName', "Node" + str(Node._counter))
-        self.nodeID   = kwargs.get('nodeID', str(Node._counter))
+        self.nodeID   = kwargs.get('nodeID', Node._counter)
         self.bindIP   = kwargs.get('bindIP', "127.0.0." + str(Node._counter))
         self.basePort = kwargs.get('basePort', 1231)
         self.sChain   = None
         self.config   = None
         self.running  = False
         self.eth      = None
+        self.pendingFilter = None
+        self.latestFilter  = None
 
 class SChain:
 
-    _counter = 0    
+    _counter = 0
+    _pollInterval = 0.2
 
-    def __init__(self, nodes, prefill=[], config=Config(), **kwargs):
+    def __init__(self, nodes, starter, prefill=[], config=Config(), keysPath="./keys", keysPassword="1234", **kwargs):
         # TODO throw if len(prefill)>9
         # TODO throw if repeating node IDs
         SChain._counter = SChain._counter + 1
         self.sChainName = kwargs.get('sChainName', "Chain" + str(SChain._counter))
         self.sChainID   = kwargs.get('sChainID', SChain._counter)
         self.nodes = list(nodes)
-        self.config = config            # TODO make a copy!?
-#        for k,v in prefill.items():
-#            self.config["accounts"][k] = {"balance":v}
+        self.config = copy.deepcopy(config)
+        self.starter = starter
         self.running = False
         self.eth = None
+        for n in self.nodes:
+            assert n.sChain is None
+            n.sChain = self
+            
+        self.privateKeys = loadPrivateKeys(keysPath, keysPassword)
+        self.accounts = []
+        for i in range(len(prefill)):
+            k = self.privateKeys[i]
+            v = prefill[i]
+            addr = w3.eth.account.privateKeyToAccount(k).address
+            self.accounts.append(addr)
+            self.config["accounts"][addr] = {"balance":v}
 
-    def balance(acc):
-        pass
+    def balance(self, i):
+        return self.eth.getBalance(self.accounts[i])
 
-    def nonce(acc):
-        pass
+    def nonce(self, i):
+        return self.eth.getTransactionCount(self.accounts[i])
 
-    def code(acc):
-        pass
+    def code(self, i):
+        return self.eth.getCode(self.accounts[i])
+        
+    def _waitAllPending(self):
+        ret = []
+        for n in self.nodes:
+            ret.append( _waitOnFilter(n.pendingFilter, SChain._pollInterval) )
+        return ret
 
-    def transaction(**kwargs):
-        pass
+    def _waitAllLatest(self):
+        ret = []
+        for n in self.nodes:
+            ret.append( _waitOnFilter(n.latestFilter, SChain._pollInterval) )
+        return ret
 
-    def block():
-        pass
+    def transaction(self, **kwargs):
+        assert len(self.accounts) > 0
+        _from = kwargs.get("from", 0)
+        to    = kwargs.get("to", 1)
+        value = kwargs.get("value", self.balance(_from)//2)
+        nonce = kwargs.get("nonce", self.nonce(_from))
 
-    def start():
-        pass
+        from_addr  = self.accounts[_from]
+        to_addr    = self.accounts[to]
+        
+        transaction = {
+            "from" : from_addr,
+            "to"   : to_addr,
+            "value": value,
+            "gas"  : 21000,
+            "gasPrice": 0,
+            "nonce": nonce
+        }
+        signed = w3.eth.account.signTransaction(transaction, private_key=self.privateKeys[_from])
+        hash   = self.eth.sendRawTransaction( "0x"+binascii.hexlify(signed.rawTransaction).decode("utf-8") )
+        self._waitAllPending()
+        return self._waitAllLatest()
 
-    def stop():
-        pass
+    def block(self):
+        return self.transaction(value=0)
 
+    def start(self):
+        self.starter.start(self)
+        for n in self.nodes:
+            n.eth = web3.Web3(web3.Web3.HTTPProvider("http://"+n.bindIP+":"+str(n.basePort))).eth
+            n.pendingFilter = n.eth.filter('pending')
+            n.latestFilter = n.eth.filter('latest')
+        self.eth = self.nodes[0].eth
+        self.running = True         # TODO Duplicates functionality in Starter!
+
+    def stop(self):
+        self.starter.stop()
+        self.running = False
+
+def _makeConfigNode(node):
+    return {
+        "nodeName": node.nodeName,
+        "nodeID"  : node.nodeID,
+        "bindIP"  : node.bindIP,
+        "basePort": node.basePort
+    }
+    
+def _makeConfigSChainNode(node, index):
+    return {
+        "nodeID"   : node.nodeID,
+        "ip"       : node.bindIP,
+        "basePort" : node.basePort,
+        "sChainIndex": index
+    }
+
+def _makeConfigSChain(chain):
+    ret = {
+        "sChainName": chain.sChainName,
+        "sChainID"  : chain.sChainID,
+        "nodes"     : []
+    }
+    for i in range(len(chain.nodes)):
+        ret["nodes"].append(_makeConfigSChainNode(chain.nodes[i], i))
+    return ret
+        
 class LocalStarter:
     # TODO Implement monitoring of dead processes!
 
-    def __init__(self, chain, exe, proxy):
-
-        self.chain = chain
+    def __init__(self, exe, proxy):
         self.exe   = exe
+        self.proxy = proxy
         self.dir = TemporaryDirectory()
-        self.popens = []
+        self.exe_popens = []
+        self.proxy_popens = []        
+        self.running = False
 
+    def start(self, chain):
+        assert not hasattr(self, "chain")
+        self.chain = chain
+        # TODO Handle exceptions!
         for n in self.chain.nodes:
-            nodeDir = self.dir.name+"/"+n.nodeID
+            assert not n.running
+        
+            nodeDir = self.dir.name+"/"+str(n.nodeID)
+            ipcDir = nodeDir
             os.makedirs(nodeDir)
-            ipcDir  = nodeDir
             cfgFile = nodeDir+"/config.json"
 
+            cfg = copy.deepcopy(chain.config)
+            cfg["skaleConfig"] = {
+                "nodeInfo": _makeConfigNode(n),
+                "sChains": [_makeConfigSChain(self.chain)]
+            }
             f = io.open(cfgFile, "w")
-            json.dump(chain.config, f)
+            json.dump(cfg, f, indent=1)
+            n.config = cfg
             f.close()
 
-            # TODO Handle exceptions!
-            self.popens.append(Popen([self.exe, "--no-discovery", "--config", cfgFile, "-d", nodeDir, "--ipcpath", ipcDir]))
-        pass
+            self.exe_popens.append(Popen([self.exe, "--no-discovery", "--config", cfgFile, "-d", nodeDir, "--ipcpath", ipcDir]))
+            time.sleep(2)
+            self.proxy_popens.append(Popen([self.proxy, ipcDir+"/geth.ipc", "http://"+n.bindIP+":"+str(n.basePort)], stdout=DEVNULL, stderr=DEVNULL))
+            time.sleep(1)
+            n.running = True
+        self.running = True
+        
+    def stop(self):
+        assert hasattr(self, "chain")
+        
+        #TODO race conditions?
+        for n in self.chain.nodes:
+            n.running = False
+        for p in self.proxy_popens:
+            if p.poll() is None:
+                p.terminate()
+                p.wait()    
+        for p in self.exe_popens:
+            if p.poll() is None:
+                p.terminate()
+                p.wait()
+        self.running = False
 
-    def start():
-        pass
-    def stop():
-        pass
-    def running():
-        pass
