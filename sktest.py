@@ -10,18 +10,94 @@ import binascii
 import web3
 from web3.auto import w3
 
+def _transaction2json(eth, t, accounts):
+    res = eth.getTransaction(t).__dict__
+    accounts[res["from"]] = {}
+    accounts[res["to"]]   = {}
+    return res
+
+def _block2json(eth, block, accounts):
+    block = block.__dict__
+    
+    transactions = {}
+    for t in block["transactions"]:
+        transactions[t.hex()] = _transaction2json(eth, t.hex(), accounts)
+    block["transactions"] = transactions
+    return block
+
+def _node2json(eth):
+    blocks = []
+    accounts = {}
+    blockNumber = eth.blockNumber
+    for i in range(blockNumber):
+        blocks.append(_block2json(eth, eth.getBlock(i), accounts))
+    for k in accounts:
+        accounts[k] = {
+            "balance": eth.getBalance(k),
+            "nonce"  : eth.getTransactionCount(k),
+            "code"   : eth.getCode(k)
+        }
+    return {
+        "blocks": blocks,
+        "accounts": accounts
+    }
+
+def _iterate_dicts(a,b):
+    ret = {}
+    for k in a:
+        if not k in b:
+            ret[k] = (a[k], None)
+        else:
+            cmp = deep_compare(a[k], b[k])
+            if not cmp is None:
+                ret[k] = cmp
+    for k in b:
+        if k in a:
+            continue
+        else:
+            ret[k] = (None, b[k])
+    if len(ret)==0:
+        return None
+    else:
+        return ret
+
+def _iterate_lists(a,b):
+    ret = []
+    for i in range(min(len(a), len(b))):
+        cmp = deep_compare(a[i], b[i])
+        ret.append(cmp)
+    max = []
+    if len(a) > len(b):
+        for i in range(len(ret), len(a)):
+            ret[i] = (a[i], None)
+    else:
+        for i in range(len(ret), len(b)):
+            ret[i] = (None, b[i])
+    return ret
+
+def deep_compare(a, b):
+    if type(a) != type(b):
+        return (a,b)
+    elif (not type(a) is dict) and (not type(a) is list):
+        if a==b:
+            return None
+        else:
+            return (a,b)
+    if type(a) is dict:
+       return _iterate_dicts(a, b)
+    else:
+        return _iterate_lists(a, b)
+        
 def _compare_states(nodes):
-    # n[i].eth.blockNumber()
-    # n[i].eth.getBlock(j)
-
-    # n[i].eth.getBalance(n[i].accounts[j])
-    # n[i].eth.getTransactionCount(n[i].accounts[j])
-    # n[i].eth.getCode(n[i].accounts[j])
-
-    # n[i].eth.getTransaction(hash)
-
-    # n[i].eth.getTransactionReceipt(hash)
-    pass
+    assert len(nodes) > 1
+    res = []
+    obj0 = _node2json(nodes[0].eth)
+    for n in nodes:
+        obj = _node2json(n.eth)
+        res.append(deep_compare(obj0, obj))
+    return res
+    
+# n[i].eth.getTransactionReceipt(hash)
 
 def loadPrivateKeys(path, password):
     #TODO Exceptions?!
@@ -200,6 +276,9 @@ class SChain:
     def stop(self):
         self.starter.stop()
         self.running = False
+        
+    def compareAll(self):
+        return _compare_states(self.nodes)
 
 def _makeConfigNode(node):
     return {
