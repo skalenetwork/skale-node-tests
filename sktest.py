@@ -332,7 +332,7 @@ class LocalStarter:
             cfg = copy.deepcopy(chain.config)
             cfg["skaleConfig"] = {
                 "nodeInfo": _makeConfigNode(n),
-                "sChains": [_makeConfigSChain(self.chain)]
+                "sChain": _makeConfigSChain(self.chain)
             }
             f = io.open(cfgFile, "w")
             json.dump(cfg, f, indent=1)
