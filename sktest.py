@@ -43,6 +43,8 @@ def _node2json(eth):
     }
 
 def _iterate_dicts(a,b):
+    """Return dict only with keys with difference. Or None if there is none."""
+
     ret = {}
     for k in a:
         if not k in b:
@@ -62,20 +64,31 @@ def _iterate_dicts(a,b):
         return ret
 
 def _iterate_lists(a,b):
+    """Returns None for equal arrays, else returns nulls in positions of equal elements, or their 'difference' if unequal"""
+
     ret = []
+    has_any = False
     for i in range(min(len(a), len(b))):
         cmp = deep_compare(a[i], b[i])
         ret.append(cmp)
-    max = []
+        if cmp:
+            has_any = True
     if len(a) > len(b):
+        has_any = True
         for i in range(len(ret), len(a)):
             ret[i] = (a[i], None)
-    else:
+    elif len(b) > len(a):
+        has_any = True    
         for i in range(len(ret), len(b)):
             ret[i] = (None, b[i])
-    return ret
+    if has_any:
+        return ret
+    else:
+        return None
 
 def deep_compare(a, b):
+    """Returns None for equal objects, pair for unequal simple objects, tree with paths to unequal elemetns of array with nulls on place of equal elements"""
+
     if type(a) != type(b):
         return (a,b)
     elif (not type(a) is dict) and (not type(a) is list):

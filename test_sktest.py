@@ -13,12 +13,13 @@ cfg=Config()
 
 n1=Node()
 n2=Node()
-n3=Node()
 
 starter = LocalStarter("/home/dimalit/skale-ethereum/build/Debug/aleth/aleth", "/home/dimalit/skale-ethereum/scripts/jsonrpcproxy.py")
-chain = SChain([n1,n2,n3], starter, ["123000000000", "4000000000"])
+chain = SChain([n1,n2], starter, ["123000000000", "4000000000"])
 chain.start()
 print("Started")
+
+input("press enter")
 
 chain.block()
 chain.transaction()
