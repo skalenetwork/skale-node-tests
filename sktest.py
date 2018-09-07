@@ -311,8 +311,8 @@ def _makeConfigSChainNode(node, index):
 
 def _makeConfigSChain(chain):
     ret = {
-        "sChainName": chain.sChainName,
-        "sChainID"  : chain.sChainID,
+        "schainName": chain.sChainName,
+        "schainID"  : chain.sChainID,
         "nodes"     : []
     }
     for i in range(len(chain.nodes)):
