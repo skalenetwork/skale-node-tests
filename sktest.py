@@ -210,8 +210,8 @@ class SChain:
         # TODO throw if len(prefill)>9
         # TODO throw if repeating node IDs
         SChain._counter = SChain._counter + 1
-        self.sChainName = kwargs.get('sChainName', "Chain" + str(SChain._counter))
-        self.sChainID   = kwargs.get('sChainID', SChain._counter)
+        self.sChainName = kwargs.get('schainName', "Chain" + str(SChain._counter))
+        self.sChainID   = kwargs.get('schainID', SChain._counter)
         self.nodes = list(nodes)
         self.config = copy.deepcopy(config)
         self.starter = starter
@@ -306,7 +306,7 @@ def _makeConfigSChainNode(node, index):
         "nodeID"   : node.nodeID,
         "ip"       : node.bindIP,
         "basePort" : node.basePort,
-        "sChainIndex": index
+        "schainIndex": index
     }
 
 def _makeConfigSChain(chain):
