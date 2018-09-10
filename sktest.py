@@ -280,7 +280,7 @@ class SChain:
     def start(self):
         self.starter.start(self)
         for n in self.nodes:
-            n.eth = web3.Web3(web3.Web3.HTTPProvider("http://"+n.bindIP+":"+str(n.basePort))).eth
+            n.eth = web3.Web3(web3.Web3.HTTPProvider("http://"+n.bindIP+":"+str(n.basePort+3))).eth
             n.pendingFilter = n.eth.filter('pending')
             n.latestFilter = n.eth.filter('latest')
         self.eth = self.nodes[0].eth
