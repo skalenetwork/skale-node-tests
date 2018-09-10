@@ -1,0 +1,62 @@
+{
+        "sealEngine": "Ethash",
+        "params": {
+		"accountStartNonce": "0x00",
+		 "maximumExtraDataSize": "0x20",
+		"blockReward": "0x4563918244F40000",
+                "homesteadForkBlock": "0",
+                "EIP150ForkBlock": "0",
+                "EIP158ForkBlock": "0",
+                "networkID" : "23956",
+                "chainID": "23956",
+                "maxGasLimit": "7fffffffffffffff",
+                "minimumDifficulty": "0x002000",
+                "difficultyBoundDivisor": "0x0800",
+                "blockReward": "0x4563918244F40000"
+        },
+        "genesis": {
+
+		  "nonce": "0x0",
+		  "timestamp": "0x5b4c7aef",
+		  "extraData": "0x0000000000000000000000000000000000000000000000000000000000000000",
+		  "gasLimit": "0x47E7C4",
+                  "difficulty": "0x002000",
+		  "mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+
+                "author": "0x0000000000000000000000000000000000000000",
+                "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "accounts": {
+	    "0xbcd8f71d46a20a7417afb9b9b7e69de6bfb5c06f":{
+	        "balance": "1000000000000000000000"
+	    },
+	    "0x88a733ff9fc70fb07ba3767ab9578cf9cf0e3ad1":{
+	        "balance": "1000000000000000000000"
+	    },
+	    "0xae4f0cbd0dcf6fc32e345b0d1b39d262719697e2":{
+	        "balance": "1000000000000000000000"
+	    },
+	    "0xc3b9aea6b4b3045e1c0a4887ed10d2054e110549":{
+	        "balance": "1000000000000000000000"
+	    }
+        },
+	 "skaleConfig": {
+	    "nodeInfo": {
+	      "nodeName": "Node1",
+	      "nodeID": 1112,
+	      "bindIP": "127.0.0.1",
+	      "basePort": 1231
+	    },
+	    "sChain":
+	      {
+	        "schainName": "TestChain",
+	        "schainID": 1,
+	        "nodes": [
+	          { "nodeID": 1112, "ip": "127.0.0.1", "basePort": 1231, "schainIndex" : 0},
+	          { "nodeID": 1113, "ip": "127.0.0.2", "basePort":1231, "schainIndex" : 1},
+	          { "nodeID": 1114, "ip": "127.0.0.3", "basePort":1231, "schainIndex" : 2}
+	        ]
+	      }
+  }
+}
+ 
