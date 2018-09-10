@@ -354,7 +354,8 @@ class LocalStarter:
 
             self.exe_popens.append(Popen([self.exe, "--no-discovery", "--config", cfgFile, "-d", nodeDir, "--ipcpath", ipcDir]))
             time.sleep(2)
-            self.proxy_popens.append(Popen([self.proxy, ipcDir+"/geth.ipc", "http://"+n.bindIP+":"+str(n.basePort)], stdout=DEVNULL, stderr=DEVNULL))
+            # HACK +0 +1 +2 are used by consensus
+            self.proxy_popens.append(Popen([self.proxy, ipcDir+"/geth.ipc", "http://"+n.bindIP+":"+str(n.basePort+3)], stdout=DEVNULL, stderr=DEVNULL))
             time.sleep(1)
             n.running = True
         self.running = True
