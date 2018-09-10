@@ -29,7 +29,7 @@ def _node2json(eth):
     blocks = []
     accounts = {}
     blockNumber = eth.blockNumber
-    for i in range(blockNumber):
+    for i in range(blockNumber+1):
         blocks.append(_block2json(eth, eth.getBlock(i), accounts))
     for k in accounts:
         accounts[k] = {
@@ -290,8 +290,11 @@ class SChain:
         self.starter.stop()
         self.running = False
         
-    def compareAll(self):
+    def compareAllStates(self):
         return _compare_states(self.nodes)
+
+    def mainState(self):
+        return _node2json(self.nodes[0].eth)
 
 def _makeConfigNode(node):
     return {
