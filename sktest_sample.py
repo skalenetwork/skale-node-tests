@@ -1,11 +1,8 @@
 from sktest import *
-from sktest import _node2json
+from sktest_helpers import *
 import time
 import json
 from hexbytes import HexBytes
-
-sktest_exe = os.getenv("SKTEST_EXE", "/home/dimalit/skale-ethereum/scripts/aleth")
-sktest_proxy = os.getenv("SKTEST_PROXY", "/home/dimalit/skale-ethereum/scripts/jsonrpcproxy.py")
 
 class HexJsonEncoder(json.JSONEncoder):
     def default(self, obj):

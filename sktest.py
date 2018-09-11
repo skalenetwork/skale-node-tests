@@ -358,6 +358,7 @@ class LocalStarter:
                 "sChain": _makeConfigSChain(self.chain)
             }
             f = io.open(cfgFile, "w")
+#            f = io.open("/home/dimalit/config.js", "w")
             json.dump(cfg, f, indent=1)
             n.config = cfg
             f.close()
