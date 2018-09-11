@@ -104,11 +104,18 @@ def deep_compare(a, b):
 def _compare_states(nodes):
     assert len(nodes) > 1
     res = []
+    has_any = False
     obj0 = _node2json(nodes[0].eth)
     for n in nodes:
         obj = _node2json(n.eth)
-        res.append(deep_compare(obj0, obj))
-    return res
+        cmp = deep_compare(obj0, obj)
+        res.append(cmp)
+        if not cmp is None:
+            has_any = True
+    if has_any:
+        return res
+    else:
+        return None
     
 # n[i].eth.getTransactionReceipt(hash)
 
