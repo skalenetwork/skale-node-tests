@@ -386,4 +386,5 @@ class LocalStarter:
                 p.terminate()
                 p.wait()
         self.running = False
+        self.dir.cleanup()
 
