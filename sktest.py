@@ -205,8 +205,6 @@ class Node:
         self.config   = None
         self.running  = False
         self.eth      = None
-        self.pendingFilter = None
-        self.latestFilter  = None
 
 class SChain:
 
@@ -245,17 +243,17 @@ class SChain:
 
     def code(self, i):
         return self.eth.getCode(self.accounts[i])
-        
-    def _waitAllPending(self):
+
+    def allFilter(self, str):
         ret = []
         for n in self.nodes:
-            ret.append( _waitOnFilter(n.pendingFilter, SChain._pollInterval) )
+            ret.append( n.eth.filter(str) )
         return ret
 
-    def _waitAllLatest(self):
+    def waitAllFilter(self, filters):
         ret = []
-        for n in self.nodes:
-            ret.append( _waitOnFilter(n.latestFilter, SChain._pollInterval) )
+        for f in filters:
+            ret.append( _waitOnFilter(f, SChain._pollInterval) )
         return ret
 
     def transaction(self, **kwargs):
@@ -277,9 +275,12 @@ class SChain:
             "nonce": nonce
         }
         signed = w3.eth.account.signTransaction(transaction, private_key=self.privateKeys[_from])
+
+        pendingFilter = self.allFilter('pending')
+        latestFilter  = self.allFilter('latest')
         hash   = self.eth.sendRawTransaction( "0x"+binascii.hexlify(signed.rawTransaction).decode("utf-8") )
-        self._waitAllPending()
-        return self._waitAllLatest()
+        self.waitAllFilter(pendingFilter)
+        return self.waitAllFilter(latestFilter)
 
     def block(self):
         return self.transaction(value=0)
@@ -288,8 +289,6 @@ class SChain:
         self.starter.start(self)
         for n in self.nodes:
             n.eth = web3.Web3(web3.Web3.HTTPProvider("http://"+n.bindIP+":"+str(n.basePort+3))).eth
-            n.pendingFilter = n.eth.filter('pending')
-            n.latestFilter = n.eth.filter('latest')
         self.eth = self.nodes[0].eth
         self.running = True         # TODO Duplicates functionality in Starter!
 
