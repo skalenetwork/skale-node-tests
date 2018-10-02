@@ -10,6 +10,8 @@ import binascii
 import web3
 from web3.auto import w3
 
+w3.eth.enable_unaudited_features()
+
 def _transaction2json(eth, t, accounts):
     res = eth.getTransaction(t).__dict__
     accounts[res["from"]] = {}
@@ -119,16 +121,20 @@ def _compare_states(nodes):
     
 # n[i].eth.getTransactionReceipt(hash)
 
-def loadPrivateKeys(path, password):
+def loadPrivateKeys(path, password, count=0):
     #TODO Exceptions?!
     files = os.listdir(path)
     res = []
+    i = 0
     for f in files:
         fd = open(path+"/"+f)
         key_crypted = fd.read()
         fd.close()
         key_open = w3.eth.account.decrypt(key_crypted, password)
         res.append(key_open)
+        i += 1
+        if count != 0 and i == count:
+            break
     return res
 
 def _waitOnFilter(filter, dt):
@@ -178,7 +184,8 @@ def Config(other={}):
     
     self["accounts"] = {}
 
-    for k,v in other:
+    for k in other:
+        v = other[k]
         dotpos = k.find(".")            # allow 1-level nesting
         if dotpos >= 0:
             part1 = k[:dotpos]
@@ -225,15 +232,16 @@ class SChain:
         for n in self.nodes:
             assert n.sChain is None
             n.sChain = self
+            n.config = self.config
             
-        self.privateKeys = loadPrivateKeys(keysPath, keysPassword)
+        self.privateKeys = loadPrivateKeys(keysPath, keysPassword, len(prefill))
         self.accounts = []
         for i in range(len(prefill)):
             k = self.privateKeys[i]
             v = prefill[i]
             addr = w3.eth.account.privateKeyToAccount(k).address
             self.accounts.append(addr)
-            self.config["accounts"][addr] = {"balance":v}
+            self.config["accounts"][addr] = {"balance":str(v)}
 
     def balance(self, i):
         return self.eth.getBalance(self.accounts[i])
@@ -256,9 +264,9 @@ class SChain:
             ret.append( _waitOnFilter(f, SChain._pollInterval) )
         return ret
 
-    def transaction(self, **kwargs):
+    def transactionAsync(self, **kwargs):
         assert len(self.accounts) > 0
-        _from = kwargs.get("from", 0)
+        _from = kwargs.get("_from", 0)
         to    = kwargs.get("to", 1)
         value = kwargs.get("value", self.balance(_from)//2)
         nonce = kwargs.get("nonce", self.nonce(_from))
@@ -275,10 +283,12 @@ class SChain:
             "nonce": nonce
         }
         signed = w3.eth.account.signTransaction(transaction, private_key=self.privateKeys[_from])
+        return self.eth.sendRawTransaction( "0x"+binascii.hexlify(signed.rawTransaction).decode("utf-8") )
 
+    def transaction(self, **kwargs):
         pendingFilter = self.allFilter('pending')
         latestFilter  = self.allFilter('latest')
-        hash   = self.eth.sendRawTransaction( "0x"+binascii.hexlify(signed.rawTransaction).decode("utf-8") )
+        hash = self.transactionAsync(**kwargs)
         self.waitAllFilter(pendingFilter)
         return self.waitAllFilter(latestFilter)
 
@@ -295,12 +305,15 @@ class SChain:
     def stop(self):
         self.starter.stop()
         self.running = False
-        
-    def compareAllStates(self):
-        return _compare_states(self.nodes)
+
+    def state(self, i):
+        return _node2json(self.nodes[i].eth)
 
     def mainState(self):
-        return _node2json(self.nodes[0].eth)
+        return self.state(0)
+
+    def compareAllStates(self):
+        return _compare_states(self.nodes)
 
 def _makeConfigNode(node):
     return {
@@ -362,10 +375,16 @@ class LocalStarter:
             n.config = cfg
             f.close()
 
-            self.exe_popens.append(Popen([self.exe, "--no-discovery", "--config", cfgFile, "-d", nodeDir, "--ipcpath", ipcDir]))
+            # TODO Close all of it?
+            aleth_out = io.open(nodeDir+"/"+"aleth.out", "w")
+            aleth_err = io.open(nodeDir+"/"+"aleth.err", "w")
+            proxy_out = io.open(nodeDir+"/"+"proxy.out", "w")
+            proxy_err = io.open(nodeDir+"/"+"proxy.err", "w")
+
+            self.exe_popens.append(Popen([self.exe, "--no-discovery", "--config", cfgFile, "-d", nodeDir, "--ipcpath", ipcDir, "-v", "4"], stdout=aleth_out, stderr=aleth_err))
             time.sleep(2)
             # HACK +0 +1 +2 are used by consensus
-            self.proxy_popens.append(Popen([self.proxy, ipcDir+"/geth.ipc", "http://"+n.bindIP+":"+str(n.basePort+3)], stdout=DEVNULL, stderr=DEVNULL))
+            self.proxy_popens.append(Popen([self.proxy, ipcDir+"/geth.ipc", "http://"+n.bindIP+":"+str(n.basePort+3)], stdout=proxy_out, stderr=proxy_err))
             time.sleep(1)
             n.running = True
         self.running = True
@@ -386,4 +405,24 @@ class LocalStarter:
                 p.wait()
         self.running = False
         self.dir.cleanup()
+
+class NoStarter:
+    def __init__(self):
+        self.running = False
+
+    def start(self, chain):
+        assert not hasattr(self, "chain")
+
+        self.chain = chain
+        for n in self.chain.nodes:
+            assert not n.running
+            n.running = True
+        self.running = True
+        
+    def stop(self):
+        assert hasattr(self, "chain")
+        
+        for n in self.chain.nodes:
+            n.running = False
+        self.running = False
 

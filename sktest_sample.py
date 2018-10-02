@@ -2,13 +2,7 @@ from sktest import *
 from sktest_helpers import *
 import time
 import json
-from hexbytes import HexBytes
 
-class HexJsonEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, HexBytes):
-            return obj.hex()
-        return super().default(obj)
 cfg=Config()
 
 n1=Node()
@@ -19,14 +13,16 @@ chain = SChain([n1,n2], starter, ["123000000000", "4000000000"])
 
 chain.start()
 
+input("press enter")
+
 chain.transaction()
 chain.transaction()
 
 print("State at node 1:")
-print(json.dumps(chain.mainState(), indent=1, cls=HexJsonEncoder))
+print(dumpNodeState(chain.mainState()))
 print("")
 print("Diffs from state 1:")
-print(json.dumps(chain.compareAllStates(), indent=1, cls=HexJsonEncoder))
+print(dumpNodeState(chain.compareAllStates()))
 
 chain.stop()
 print("Stopped")
