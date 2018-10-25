@@ -4,6 +4,7 @@ import time
 import traceback
 
 nAcc = 10
+nTxns = 30
 
 #node = Node()
 #print(node.__dict__)
@@ -19,7 +20,9 @@ ch = createDefaultChain(numNodes=3, numAccounts=nAcc)
 ch.start()
 input("press")
 
-for i in range(30):
+t1 = time.time()
+
+for i in range(nTxns):
 
     acc1 = i % nAcc
     acc2 = (i+1) % nAcc
@@ -35,7 +38,10 @@ for i in range(30):
             if not hasattr(e, 'args') or e.args[0]['message']!='Invalid transaction nonce.':
                 raise
 
+t2 = time.time()
+
 time.sleep(4)
 print(dumpNodeState(ch.compareAllStates()))
 ch.stop()
+print("Txns: "+str(nTxns)+" Time: "+str(t2-t1)+" => "+str(nTxns/(t2-t1))+" tx/sec")
 

@@ -382,6 +382,7 @@ class LocalStarter:
             proxy_err = io.open(nodeDir+"/"+"proxy.err", "w")
 
             self.exe_popens.append(Popen([self.exe, "--no-discovery", "--config", cfgFile, "-d", nodeDir, "--ipcpath", ipcDir, "-v", "4"], stdout=aleth_out, stderr=aleth_err))
+#            self.exe_popens.append(Popen(['gdb', '-e', self.exe, '-ex', "\"run --no-discovery --config " + cfgFile + " -d " + nodeDir + " --ipcpath " + ipcDir + " -v 4\""], stdout=aleth_out, stderr=aleth_err))
             time.sleep(2)
             # HACK +0 +1 +2 are used by consensus
             self.proxy_popens.append(Popen([self.proxy, ipcDir+"/geth.ipc", "http://"+n.bindIP+":"+str(n.basePort+3)], stdout=proxy_out, stderr=proxy_err))
@@ -404,7 +405,7 @@ class LocalStarter:
                 p.terminate()
                 p.wait()
         self.running = False
-        self.dir.cleanup()
+        #self.dir.cleanup()
 
 class NoStarter:
     def __init__(self):

@@ -66,3 +66,4 @@ def test_N_nodes(schainN):
 
     assert(ch.compareAllStates() is None)
 
+
