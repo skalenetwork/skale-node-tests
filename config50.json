@@ -1,0 +1,205 @@
+{
+ "sealEngine": "Ethash",
+ "params": {
+  "accountStartNonce": "0x00",
+  "homesteadForkBlock": "0x0",
+  "daoHardforkBlock": "0x0",
+  "EIP150ForkBlock": "0x0",
+  "EIP158ForkBlock": "0x0",
+  "byzantiumForkBlock": "0x0",
+  "constantinopleForkBlock": "0x0",
+  "networkID": "12313219",
+  "chainID": "0x01",
+  "maximumExtraDataSize": "0x20",
+  "tieBreakingGas": false,
+  "minGasLimit": "0x1388",
+  "maxGasLimit": "7fffffffffffffff",
+  "gasLimitBoundDivisor": "0x0400",
+  "minimumDifficulty": "0x020000",
+  "difficultyBoundDivisor": "0x0800",
+  "durationLimit": "0x0d",
+  "blockReward": "0x4563918244F40000"
+ },
+ "genesis": {
+  "nonce": "0x0000000000000042",
+  "difficulty": "0x020000",
+  "mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+  "author": "0x0000000000000000000000000000000000000000",
+  "timestamp": "0x00",
+  "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+  "extraData": "0x11bbe8db4e347b4e8c937c1c8370e4b5ed33adb3db69cbdb7a38e1e50b1b82fa",
+  "gasLimit": "0x47E7C4"
+ },
+ "accounts": {
+  "0x547fa1ceCF53c70c9603724831337FE31D9FD8b4": {
+   "balance": "1000000000"
+  },
+  "0xDB2E6B90DEa52db33f980c4fD8EcEB081dc66B37": {
+   "balance": "2000000000"
+  },
+  "0x37D1948E5a0E83EFD46803b0dBC425Ffee22960A": {
+   "balance": "3000000000"
+  },
+  "0x33D36D074488F7aFf3e9dbf455Bd6070Df3AA7D7": {
+   "balance": "4000000000"
+  },
+  "0x9d257bF6315CDCAb1b2e60Bea51cc77c3Cf2684f": {
+   "balance": "5000000000"
+  },
+  "0xA0C9DFD5b274ee79Fd241059f7C9848E44dC3201": {
+   "balance": "6000000000"
+  },
+  "0x825c38220661ff09a2D80153B0524f9201703558": {
+   "balance": "7000000000"
+  },
+  "0xA3D546ec7aF30E0C80c82bc4fcfA4F0249f14D3E": {
+   "balance": "8000000000"
+  },
+  "0x4B6FDD4BaD142ff172446d827CEB3351f1813489": {
+   "balance": "9000000000"
+  },
+  "0xa2eb6ae5132e58Ee3C2f1691FC21e9A71cf01FfC": {
+   "balance": "10000000000"
+  },
+  "0x44b57315B35d17aefAB29f175B11312d87Ee7B9D": {
+   "balance": "11000000000"
+  },
+  "0xBC1C8125eb7241d60aD799B68AEF458a7c5f38c1": {
+   "balance": "12000000000"
+  },
+  "0x205C7BA8D056cAC1318c214082fA9162f170604C": {
+   "balance": "13000000000"
+  },
+  "0x318F7443817b68f9FB4CD4000C573f742b90AC6b": {
+   "balance": "14000000000"
+  },
+  "0xb5bEA5D01860CB356B16dF64Ac2EDeCf7dBc2770": {
+   "balance": "15000000000"
+  },
+  "0x17ff5dE53947346B5E0722E110A351e2D60b410c": {
+   "balance": "16000000000"
+  },
+  "0xae4f0Cbd0dcF6FC32E345B0D1B39D262719697E2": {
+   "balance": "17000000000"
+  },
+  "0x63aA3B72F5976cc7BCcB107da3979b632Ed0fEd0": {
+   "balance": "18000000000"
+  },
+  "0x82f2199B4dC1e8f68F554612A5576A014Dd6c3A7": {
+   "balance": "19000000000"
+  },
+  "0x6A0da4f7345E55803FA21a691d7F910EE3381468": {
+   "balance": "20000000000"
+  },
+  "0x9DB5D0d0D62bd1Efe253eaA8Cd6c9Bd8C45Dd870": {
+   "balance": "21000000000"
+  },
+  "0xdcDCF383C76B26C46A2aBF2e74aacb48727F9c0E": {
+   "balance": "22000000000"
+  },
+  "0x5CC337bfF70899964E88a252034102C51Caf98e3": {
+   "balance": "23000000000"
+  },
+  "0xFd79fDFE4aD642A569F155B5Ac51a95803eDF095": {
+   "balance": "24000000000"
+  },
+  "0x88A733Ff9Fc70FB07BA3767ab9578cF9cF0E3aD1": {
+   "balance": "25000000000"
+  },
+  "0xC3b9Aea6b4B3045e1C0a4887ED10d2054E110549": {
+   "balance": "26000000000"
+  },
+  "0xa31499553E1b8675612bc0539a45aa0C38511ACb": {
+   "balance": "27000000000"
+  },
+  "0x115918De386c14F8Fcc3933F337534497f9843Fa": {
+   "balance": "28000000000"
+  },
+  "0xBBB666DC0787845b49EFB37CF2A257dAcE1CE486": {
+   "balance": "29000000000"
+  },
+  "0xa7E4d6f1eA9f7c768E9bC87471cAFCc6DBbb6547": {
+   "balance": "30000000000"
+  },
+  "0x78863267233482C8cbC7Dc50b36A3b71d9a626F5": {
+   "balance": "31000000000"
+  },
+  "0x01fEf9Ad8018433A8557A24905D757eA6bAa02D2": {
+   "balance": "32000000000"
+  },
+  "0x5e33F09ff3f674509f4c3719f9c01989ab9B7AD6": {
+   "balance": "33000000000"
+  },
+  "0x46C2fa190e857807a261B6c7BFf31480C283F7e7": {
+   "balance": "34000000000"
+  },
+  "0x23e5236c9852B4Eec7d8e29ed29C81D0a66F0EE1": {
+   "balance": "35000000000"
+  },
+  "0x7357505bD4cd6a1c14a675c0e5240A8F471f4233": {
+   "balance": "36000000000"
+  },
+  "0xDE0699a11AE22F93EB72817A91F2BBd0f2FAC38A": {
+   "balance": "37000000000"
+  },
+  "0x03Eb09D961a581301A4d02c8f40AD6D8989F7029": {
+   "balance": "38000000000"
+  },
+  "0x11F8f16d9933b85f1A0b0243a5AEF4BE6b92bd44": {
+   "balance": "39000000000"
+  },
+  "0xf2DB00d06F1b1B7A4B9c2478c3Cf907d6b4D15e6": {
+   "balance": "40000000000"
+  },
+  "0x537c3BC11B05a2Dfa8C34A8C0C401266A594A8c1": {
+   "balance": "41000000000"
+  },
+  "0x2516ef0AD03F6F4c5DD22C3254B2204932036264": {
+   "balance": "42000000000"
+  },
+  "0x8D654cD52613A38163d6aF753353875c831d149d": {
+   "balance": "43000000000"
+  },
+  "0x30F16aD1680E29eA8aC8F42af5b387B0737b371f": {
+   "balance": "44000000000"
+  },
+  "0x70b897cB69418765c29ac4d65877e6dBe87b855a": {
+   "balance": "45000000000"
+  },
+  "0xb93Cc277c57a32f7dFbA5fAF01B44045ff30C653": {
+   "balance": "46000000000"
+  },
+  "0x6eC9228bf36c0822A8dd85fE5eec0FCd521FC4d5": {
+   "balance": "47000000000"
+  },
+  "0xBd8accC3983F37f53DC499688EF2C773AEDf17e3": {
+   "balance": "48000000000"
+  },
+  "0xcb7D27188ea8e6a85D08D67b0827a7d0A2BF71f2": {
+   "balance": "49000000000"
+  },
+  "0x8E59d501daf731D0DDCd7338D080136275Bf3d59": {
+   "balance": "50000000000"
+  }
+ },
+ "skaleConfig": {
+  "nodeInfo": {
+   "nodeName": "Node2",
+   "nodeID": 2,
+   "bindIP": "127.0.0.2",
+   "basePort": 1231
+  },
+  "sChain": {
+   "schainName": "Chain1",
+   "schainID": 1,
+   "nodes": [
+    {
+     "nodeID": 2,
+     "ip": "127.0.0.2",
+     "basePort": 1231,
+     "schainIndex": 0
+    }
+   ]
+  }
+ }
+}
