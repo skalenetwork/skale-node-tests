@@ -51,46 +51,44 @@ def _node2json(eth):
 def _iterate_dicts(a, b):
     """Return dict only with keys with difference. Or None if there is none."""
 
-    ret = {}
+    difference = {}
     for k in a:
         if k not in b:
-            ret[k] = (a[k], None)
+            difference[k] = (a[k], None)
         else:
             cmp = deep_compare(a[k], b[k])
             if cmp is not None:
-                ret[k] = cmp
+                difference[k] = cmp
     for k in b:
-        if k in a:
-            continue
-        else:
-            ret[k] = (None, b[k])
-    if len(ret) == 0:
-        return None
+        if k not in a:
+            difference[k] = (None, b[k])
+    if difference:
+        return difference
     else:
-        return ret
+        return None
 
 
 def _iterate_lists(a, b):
     """Returns None for equal arrays,\
     else returns nulls in positions of equal elements, or their 'difference' if unequal"""
 
-    ret = []
-    has_any = False
-    for i in range(min(len(a), len(b))):
-        cmp = deep_compare(a[i], b[i])
-        ret.append(cmp)
-        if cmp:
-            has_any = True
+    difference = []
+    different = False
+    for a_element, b_element in zip(a, b):
+        cmp = deep_compare(a_element, b_element)
+        difference.append(cmp)
+        if cmp is not None:
+            different = True
     if len(a) > len(b):
-        has_any = True
-        for i in range(len(ret), len(a)):
-            ret[i] = (a[i], None)
+        different = True
+        for element in a[len(difference):]:
+            difference.append((element, None))
     elif len(b) > len(a):
-        has_any = True
-        for i in range(len(ret), len(b)):
-            ret[i] = (None, b[i])
-    if has_any:
-        return ret
+        different = True
+        for element in b[len(difference):]:
+            difference.append((None, element))
+    if different:
+        return difference
     else:
         return None
 
@@ -130,7 +128,37 @@ def _compare_states(nodes):
         return None
 
 
+def _print_path(path):
+    if path:
+        return f'object{path}: '
+    else:
+        return ''
+
+
+def list_differences(a, b, path=''):
+    if type(a) != type(b):
+        return [f'{_print_path(path)}values have different types']
+    difference = []
+    if type(a) is list:
+        if len(a) != len(b):
+            return [f'{_print_path(path)}lists have different lengths']
+        for index, (value_a, value_b) in enumerate(zip(a, b)):
+            difference += list_differences(value_a, value_b, f'{path}[{index}]')
+    elif type(a) is dict:
+        for key in a:
+            if key not in b:
+                difference += [f'{_print_path(path)}key {key} does not present in the second object']
+            else:
+                difference += list_differences(a[key], b[key], f'{path}[\'{key}\']')
+        for key in b:
+            if key not in a:
+                difference += [f'{_print_path(path)}key {key} does not present in the first object']
+    elif a != b:
+            difference += [f'{_print_path(path)}{a} != {b}']
+    return difference
+
 # n[i].eth.getTransactionReceipt(hash)
+
 
 def load_private_keys(path, password, count=0):
     # TODO Exceptions?!
@@ -249,15 +277,16 @@ class SChain:
             n.sChain = self
             n.config = self.config
 
+        print('Load private keys')
         self.privateKeys = load_private_keys(keys_path, keys_password, len(prefill))
         self.accounts = []
         if prefill is not None:
             for i in range(len(prefill)):
-                k = self.privateKeys[i]
-                v = prefill[i]
-                addr = w3.eth.account.privateKeyToAccount(k).address
-                self.accounts.append(addr)
-                self.config["accounts"][addr] = {"balance": str(v)}
+                private_key = self.privateKeys[i]
+                balance = prefill[i]
+                address = w3.eth.account.privateKeyToAccount(private_key).address
+                self.accounts.append(address)
+                self.config["accounts"][address] = {"balance": str(balance)}
 
     def balance(self, i):
         return self.eth.getBalance(self.accounts[i])
@@ -413,17 +442,20 @@ class LocalStarter:
                        "--ipcpath", ipc_dir,
                        "-v", "4"],
                       stdout=aleth_out, stderr=aleth_err))
-            self.exe_popens.append(
-                Popen(['gdb',
-                       '-e', self.exe,
-                       '-ex', "\"run --no-discovery --config " + cfg_file + " -d " + node_dir + " --ipcpath " + ipc_dir
-                       + " -v 4\""],
-                      stdout=aleth_out, stderr=aleth_err))
+            # self.exe_popens.append(
+            #     Popen(['gdb',
+            #            '-e', self.exe,
+            #            '-ex', "\"run --no-discovery --config " + cfg_file + " -d " + node_dir
+            #            + " --ipcpath " + ipc_dir + " -v 4\""],
+            #           stdout=aleth_out, stderr=aleth_err))
+            print('Wait for node start')
             time.sleep(2)
             # HACK +0 +1 +2 are used by consensus
+            url = f"http://{n.bindIP}:{n.basePort + 3}"
             self.proxy_popens.append(
-                Popen([self.proxy, ipc_dir + "/geth.ipc", "http://" + n.bindIP + ":" + str(n.basePort + 3)],
+                Popen([self.proxy, ipc_dir + "/geth.ipc", url],
                       stdout=proxy_out, stderr=proxy_err))
+            print(f'Wait for json rpc proxy start ({url})')
             time.sleep(1)
             n.running = True
         self.running = True
