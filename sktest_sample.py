@@ -3,10 +3,11 @@ from sktest_helpers import *
 import time
 import json
 
-ch = createDefaultChain(numNodes=2, numAccounts=2)
+ch = createDefaultChain(numNodes=2, numAccounts=20)
+print("Created schain")
 ch.start()
 
-input("press enter")
+input("Started schain - press enter")
 
 ch.transactionAsync(nonce=0)
 time.sleep(0.2)

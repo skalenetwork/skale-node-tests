@@ -1,5 +1,10 @@
 from sktest import *
 
+import web3
+from web3.auto import w3
+
+w3.eth.enable_unaudited_features()
+
 from hexbytes import HexBytes
  
 global sktest_exe, sktest_proxy
@@ -32,4 +37,20 @@ def createDefaultChain(numNodes=2, numAccounts=2):
     starter = LocalStarter(sktest_exe, sktest_proxy)
     chain = SChain(nodes, starter, balances)
     return chain
+
+def loadPrivateKeys(path, password, count=0):
+    #TODO Exceptions?!
+    files = os.listdir(path)
+    res = []
+    i = 0
+    for f in files:
+        fd = open(path+"/"+f)
+        key_crypted = fd.read()
+        fd.close()
+        key_open = w3.eth.account.decrypt(key_crypted, password)
+        res.append(key_open)
+        i += 1
+        if count != 0 and i == count:
+            break
+    return res
 

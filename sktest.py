@@ -6,6 +6,7 @@ from subprocess import Popen, DEVNULL
 import copy
 import time
 import binascii
+import pickle
 
 import web3
 from web3.auto import w3
@@ -121,22 +122,6 @@ def _compare_states(nodes):
     
 # n[i].eth.getTransactionReceipt(hash)
 
-def loadPrivateKeys(path, password, count=0):
-    #TODO Exceptions?!
-    files = os.listdir(path)
-    res = []
-    i = 0
-    for f in files:
-        fd = open(path+"/"+f)
-        key_crypted = fd.read()
-        fd.close()
-        key_open = w3.eth.account.decrypt(key_crypted, password)
-        res.append(key_open)
-        i += 1
-        if count != 0 and i == count:
-            break
-    return res
-
 def _waitOnFilter(filter, dt):
     e = []
     while True:
@@ -218,7 +203,7 @@ class SChain:
     _counter = 0
     _pollInterval = 0.2
 
-    def __init__(self, nodes, starter, prefill=[], config=Config(), keysPath="./keys", keysPassword="1234", **kwargs):
+    def __init__(self, nodes, starter, prefill=[], config=Config(), keysFile="./keys.all", keysPassword="1234", **kwargs):
         # TODO throw if len(prefill)>9
         # TODO throw if repeating node IDs
         SChain._counter = SChain._counter + 1
@@ -234,7 +219,15 @@ class SChain:
             n.sChain = self
             n.config = self.config
             
-        self.privateKeys = loadPrivateKeys(keysPath, keysPassword, len(prefill))
+        fd = open(keysFile, "rb")
+        self.privateKeys = pickle.load(fd)
+
+        assert(len(self.privateKeys) >= len(prefill))
+
+        del self.privateKeys[len(prefill):]
+        fd.close()
+        print("Loaded private keys")
+
         self.accounts = []
         for i in range(len(prefill)):
             k = self.privateKeys[i]
@@ -242,6 +235,7 @@ class SChain:
             addr = w3.eth.account.privateKeyToAccount(k).address
             self.accounts.append(addr)
             self.config["accounts"][addr] = {"balance":str(v)}
+        print("Added accounts")
 
     def balance(self, i):
         return self.eth.getBalance(self.accounts[i])
