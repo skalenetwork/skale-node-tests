@@ -18,20 +18,20 @@ class HexJsonEncoder(json.JSONEncoder):
             return obj.hex()
         return super().default(obj)
 
-def dumpNodeState(obj):
+
+def dump_node_state(obj):
     return json.dumps(obj, indent=1, cls=HexJsonEncoder)
 
-def createDefaultChain(numNodes=2, numAccounts=2):
-    cfg=Config()
+
+def create_default_chain(num_nodes=2, num_accounts=2):
     nodes = []
     balances = []
 
-    for i in range(numNodes):
+    for i in range(num_nodes):
         nodes.append(Node())
-    
-    balance = 128000000000
-    for i in range(numAccounts):
-        balances.append(str((i+1)*1000000000))
+
+    for i in range(num_accounts):
+        balances.append(str((i + 1) * 1000000000))
 
     global sktest_exe, sktest_proxy
     starter = LocalStarter(sktest_exe, sktest_proxy)
