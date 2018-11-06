@@ -1,7 +1,7 @@
 import web3
 from web3.auto import w3
 
-from sktest_helpers import loadPrivateKeys
+from sktest_helpers import load_private_keys
 
 import sys
 import pickle
@@ -17,7 +17,7 @@ def usage():
     sys.exit()
 
 def decrypt(source_path, dest_path, n = 0):
-    keys = loadPrivateKeys(source_path, '1234', n)
+    keys = load_private_keys(source_path, '1234', n)
     fd = open(dest_path, "wb")
     pickle.dump(keys, fd)
     fd.close()

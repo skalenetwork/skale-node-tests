@@ -14,8 +14,6 @@ ch.transaction()
 print("State at node 1:")
 print(dump_node_state(ch.main_state()))
 print("")
-print("Diffs from state 1:")
-print(dumpNodeState(ch.compareAllStates()))
 
 difference = ch.compare_all_states()
 
@@ -27,5 +25,5 @@ else:
     print(dump_node_state(difference))
     print('*** Test failed ***')
 
-# ch.stop()
+ch.stop()
 print("Stopped")

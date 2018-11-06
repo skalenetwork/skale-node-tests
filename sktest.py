@@ -78,15 +78,15 @@ def _iterate_lists(a, b):
         if cmp is not None:
             different = True
     if len(a) > len(b):
-        has_any = True
-        for i in range(len(ret), len(a)):
-            ret[i] = (a[i], None)
+        different = True
+        for element in a[len(difference):]:
+            difference.append((element, None))
     elif len(b) > len(a):
-        has_any = True    
-        for i in range(len(ret), len(b)):
-            ret[i] = (None, b[i])
-    if has_any:
-        return ret
+        different = True
+        for element in b[len(difference):]:
+            difference.append((None, element))
+    if different:
+        return difference
     else:
         return None
 
@@ -256,7 +256,7 @@ class SChain:
     _counter = 0
     _pollInterval = 0.2
 
-    def __init__(self, nodes, starter, prefill=None, config=get_config(), keys_path="./keys", keys_password="1234", **kwargs):
+    def __init__(self, nodes, starter, prefill=None, config=get_config(), keys_file="./keys.all", keys_password="1234", **kwargs):
         # TODO throw if len(prefill)>9
         # TODO throw if repeating node IDs
         SChain._counter = SChain._counter + 1
@@ -271,8 +271,8 @@ class SChain:
             assert n.sChain is None
             n.sChain = self
             n.config = self.config
-            
-        fd = open(keysFile, "rb")
+
+        fd = open(keys_file, "rb")
         self.privateKeys = pickle.load(fd)
 
         assert(len(self.privateKeys) >= len(prefill))

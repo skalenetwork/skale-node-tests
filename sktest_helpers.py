@@ -38,7 +38,7 @@ def create_default_chain(num_nodes=2, num_accounts=2):
     chain = SChain(nodes, starter, balances)
     return chain
 
-def loadPrivateKeys(path, password, count=0):
+def load_private_keys(path, password, count=0):
     #TODO Exceptions?!
     files = os.listdir(path)
     res = []
@@ -53,4 +53,3 @@ def loadPrivateKeys(path, password, count=0):
         if count != 0 and i == count:
             break
     return res
-
