@@ -311,7 +311,7 @@ class SChain:
             ret.append(_wait_on_filter(f, SChain._pollInterval))
         return ret
 
-    def transaction_async(self, **kwargs):
+    def transaction_obj(self, **kwargs):
         assert len(self.accounts) > 0
         _from = kwargs.get("_from", 0)
         to = kwargs.get("to", 1)
@@ -330,7 +330,11 @@ class SChain:
             "nonce": nonce
         }
         signed = w3.eth.account.signTransaction(transaction, private_key=self.privateKeys[_from])
-        return self.eth.sendRawTransaction("0x" + binascii.hexlify(signed.rawTransaction).decode("utf-8"))
+        return "0x" + binascii.hexlify(signed.rawTransaction).decode("utf-8")
+
+    def transaction_async(self, **kwargs):
+        tx = self.transaction_obj(**kwargs)
+        return self.eth.sendRawTransaction(tx)
 
     def transaction(self, **kwargs):
         pending_filter = self.all_filter('pending')
