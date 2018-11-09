@@ -177,8 +177,7 @@ def _wait_on_filter(eth_filter, dt):
     while True:
         e = eth_filter.get_new_entries()
         if len(e) > 0:
-            assert len(e) == 1
-            return e[0]
+            return e
         time.sleep(dt)
 
 
