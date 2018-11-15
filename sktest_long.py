@@ -3,7 +3,7 @@ import time
 
 nAcc = 2
 nTxns = 3
-num_nodes = 3
+num_nodes = 1
 
 # node = Node()
 # print(node.__dict__)
@@ -70,5 +70,5 @@ else:
                 print('\n'.join(diff))
     print('*** Test failed ***')
 
-ch.stop()
+#ch.stop()
 print("Txns: "+str(nTxns)+" Time: "+str(t2-t1)+" => "+str(nTxns/(t2-t1))+" tx/sec")

@@ -439,7 +439,8 @@ class LocalStarter:
             proxy_err = io.open(node_dir + "/" + "proxy.err", "w")
 
             self.exe_popens.append(
-                Popen([self.exe,
+                Popen([#"/usr/local/bin/valgrind",
+                       self.exe,
                        "--no-discovery",
                        "--config", cfg_file,
                        "-d", node_dir,
@@ -456,6 +457,7 @@ class LocalStarter:
             time.sleep(2)
             # HACK +0 +1 +2 are used by consensus
             url = f"http://{n.bindIP}:{n.basePort + 3}"
+#            input("Stop before jsonrpcproxy")
             self.proxy_popens.append(
                 Popen([self.proxy, ipc_dir + "/geth.ipc", url],
                       stdout=proxy_out, stderr=proxy_err))

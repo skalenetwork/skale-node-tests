@@ -1,7 +1,7 @@
 from sktest_helpers import *
 import time 
 
-nNodes = 1
+nNodes = 3
 nTxns = 1000
 nAcc  = 1000
 
@@ -16,7 +16,7 @@ def count_txns(ch):
 ch = create_default_chain(num_nodes=nNodes, num_accounts=nAcc)
 
 ch.start()
-input("press")
+#input("press")
 
 #filter = ch.all_filter('latest')
 transactions = []
@@ -33,7 +33,8 @@ print("Sending txns")
 t1 = time.time()
 
 for i in range(len(transactions)):
-    print("Sending %d" % i)
+    if i%10 == 0:
+        print("Sending %d" % i)
     t = transactions[i]
     ch.eth.sendRawTransaction(t)
 
@@ -51,4 +52,3 @@ print("Txns: "+str(nTxns)+" Time: "+str(t2-t1)+" => "+str(nTxns/(t2-t1))+" tx/se
 
 #print(dump_node_state(ch.compare_all_states()))
 ch.stop()
-
