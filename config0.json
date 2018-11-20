@@ -17,7 +17,7 @@
         "genesis": {
 
 		  "nonce": "0x0",
-		  "timestamp": "0x5b4c7aef",
+		  "timestamp": "0x0",
 		  "extraData": "0x0000000000000000000000000000000000000000000000000000000000000000",
 		  "gasLimit": "0x47E7C4",
                   "difficulty": "0x002000",
