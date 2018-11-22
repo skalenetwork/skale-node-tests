@@ -3,7 +3,7 @@ import time
 
 nAcc = 2
 nTxns = 3
-num_nodes = 1
+num_nodes = 2
 
 # node = Node()
 # print(node.__dict__)
@@ -17,7 +17,7 @@ num_nodes = 1
 ch = create_default_chain(num_nodes=num_nodes, num_accounts=nAcc)
 
 ch.start()
-# input("press enter")
+input("press enter")
 
 start_nonce = {account: ch.nonce(account) for account in range(nAcc)}
 
@@ -70,5 +70,5 @@ else:
                 print('\n'.join(diff))
     print('*** Test failed ***')
 
-#ch.stop()
+ch.stop()
 print("Txns: "+str(nTxns)+" Time: "+str(t2-t1)+" => "+str(nTxns/(t2-t1))+" tx/sec")

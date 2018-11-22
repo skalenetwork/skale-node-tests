@@ -1,7 +1,7 @@
 from sktest_helpers import *
 import time 
 
-nNodes = 3
+nNodes = 16
 nTxns = 1000
 nAcc  = 1000
 
@@ -16,9 +16,9 @@ def count_txns(ch):
 ch = create_default_chain(num_nodes=nNodes, num_accounts=nAcc)
 
 ch.start()
-#input("press")
 
-#filter = ch.all_filter('latest')
+input("press")
+
 transactions = []
 
 print("Generating txns")
@@ -48,7 +48,7 @@ while count != nTxns:
 
 t2 = time.time()
 
-print("Txns: "+str(nTxns)+" Time: "+str(t2-t1)+" => "+str(nTxns/(t2-t1))+" tx/sec")
-
-#print(dump_node_state(ch.compare_all_states()))
+print(dump_node_state(ch.compare_all_states()))
 ch.stop()
+
+print("Txns: "+str(nTxns)+" Time: "+str(t2-t1)+" => "+str(nTxns/(t2-t1))+" tx/sec")

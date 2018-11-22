@@ -14,12 +14,14 @@ from web3.auto import w3
 w3.eth.enable_unaudited_features()
 
 def _transaction2json(eth, t, accounts):
+#    print("_transaction2json", t)
     res = eth.getTransaction(t).__dict__
     accounts[res["from"]] = {}
     accounts[res["to"]]   = {}
     return res
 
 def _block2json(eth, block, accounts):
+    print("_block2json", block['number'])
     block = block.__dict__
     
     transactions = {}
@@ -34,15 +36,18 @@ def _node2json(eth):
     block_number = eth.blockNumber
     for i in range(block_number + 1):
         blocks.append(_block2json(eth, eth.getBlock(i), accounts))
-    for k in accounts:
-        accounts[k] = {
-            "balance": eth.getBalance(k),
-            "nonce"  : eth.getTransactionCount(k),
-            "code"   : eth.getCode(k)
-        }
+#    i = 0
+#    for k in accounts:
+#        print("account:", i)
+#        accounts[k] = {
+#            "balance": eth.getBalance(k),
+#            "nonce"  : eth.getTransactionCount(k),
+#            "code"   : eth.getCode(k)
+#        }
+#        i+=1
     return {
-        "blocks": blocks,
-        "accounts": accounts
+        "blocks": blocks
+#        "accounts": accounts
     }
 
 
@@ -111,8 +116,10 @@ def _compare_states(nodes):
     assert len(nodes) > 1
     res = []
     has_any = False
+    print("_node2json", "0")
     obj0 = _node2json(nodes[0].eth)
     for n in nodes:
+        print("_node2json", n.nodeID)
         obj = _node2json(n.eth)
         cmp = deep_compare(obj0, obj)
         res.append(cmp)
@@ -412,6 +419,9 @@ class LocalStarter:
         assert not self.started
         self.started = True
         self.chain = chain
+
+        for_delayed_proxies = []
+
         # TODO Handle exceptions!
         for n in self.chain.nodes:
             assert not n.running
@@ -447,23 +457,23 @@ class LocalStarter:
                        "--ipcpath", ipc_dir,
                        "-v", "4"],
                       stdout=aleth_out, stderr=aleth_err))
-            # self.exe_popens.append(
-            #     Popen(['gdb',
-            #            '-e', self.exe,
-            #            '-ex', "\"run --no-discovery --config " + cfg_file + " -d " + node_dir
-            #            + " --ipcpath " + ipc_dir + " -v 4\""],
-            #           stdout=aleth_out, stderr=aleth_err))
-            print('Wait for node start')
-            time.sleep(2)
             # HACK +0 +1 +2 are used by consensus
             url = f"http://{n.bindIP}:{n.basePort + 3}"
-#            input("Stop before jsonrpcproxy")
-            self.proxy_popens.append(
-                Popen([self.proxy, ipc_dir + "/geth.ipc", url],
-                      stdout=proxy_out, stderr=proxy_err))
-            print(f'Wait for json rpc proxy start ({url})')
-            time.sleep(1)
+
+            for_delayed_proxies.append({'args': [self.proxy, ipc_dir + "/geth.ipc", url],
+                                        'stdout': proxy_out, 'stderr': proxy_err});
+
             n.running = True
+
+        print('Wait for nodes start')
+        time.sleep(3)
+
+        for p in for_delayed_proxies:
+            self.proxy_popens.append( Popen(p['args'], stdout = p['stdout'], stderr = p['stderr']) )
+
+        print('Wait for json rpc proxies start')
+        time.sleep(2)
+
         self.running = True
 
     def stop(self):
