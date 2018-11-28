@@ -1,9 +1,9 @@
 from sktest_helpers import *
 import time
 
-nAcc = 2
-nTxns = 3
-num_nodes = 2
+nAcc = 10
+nTxns = 100
+num_nodes = 4
 
 # node = Node()
 # print(node.__dict__)
