@@ -17,12 +17,12 @@ num_nodes = 2
 ch = create_default_chain(num_nodes=num_nodes, num_accounts=nAcc)
 
 ch.start()
-input("press enter")
+# input("press enter")
 
 start_nonce = {account: ch.nonce(account) for account in range(nAcc)}
 
 start_balance = {account: ch.balance(account) for account in range(nAcc)}
-print(start_balance)
+print('Balances:', start_balance)
 
 t1 = time.time()
 
@@ -34,8 +34,9 @@ for i in range(nTxns):
 
     while True:
         try:
-            time.sleep(0.2)
-            print("from=%d nonce=%d" % (acc1, nonce))
+            while ch.nonce(acc1) < nonce:
+                time.sleep(0.2)
+            print(f"Send from account #{acc1} (nonce={nonce})")
             ch.transaction_async(value=1, _from=acc1, to=acc2, nonce=nonce)
             break
         except ValueError as e:
@@ -52,14 +53,16 @@ t2 = time.time()
 
 time.sleep(4)
 
+print('Comparing final states...')
 difference = ch.compare_all_states()
 
 if difference is None:
     print('States on all nodes are consistent')
     print('*** Test passed ***')
 else:
-    print("Diffs from state 1:")
-    print(dump_node_state(difference))
+    # print("Diffs from state 1:")
+    # print(dump_node_state(difference))
+
     states = [ch.state(index) for index in range(num_nodes)]
     for a_index in range(num_nodes):
         for b_index in range(a_index + 1, num_nodes):

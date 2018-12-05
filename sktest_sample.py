@@ -6,14 +6,14 @@ import json
 ch = create_default_chain(num_nodes=2, num_accounts=2)
 ch.start()
 
-input("press enter")
+# input("press enter")
 
 ch.transaction()
 ch.transaction()
 
-print("State at node 1:")
-print(dump_node_state(ch.main_state()))
-print("")
+# print("State at node 1:")
+# print(dump_node_state(ch.main_state()))
+# print("")
 
 difference = ch.compare_all_states()
 
