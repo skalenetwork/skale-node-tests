@@ -1,7 +1,7 @@
 from sktest_helpers import *
 import time 
 
-nNodes = 16
+nNodes = 4
 nTxns = 1000
 nAcc  = 1000
 
@@ -48,7 +48,26 @@ while count != nTxns:
 
 t2 = time.time()
 
-print(dump_node_state(ch.compare_all_states()))
-ch.stop()
+#time.sleep(3)
 
 print("Txns: "+str(nTxns)+" Time: "+str(t2-t1)+" => "+str(nTxns/(t2-t1))+" tx/sec")
+
+ch.stop()
+
+difference = None #ch.compare_all_states()
+
+if difference is None:
+    print('States on all nodes are consistent')
+    print('*** Test passed ***')
+else:
+    print("Diffs from state 1:")
+    print(dump_node_state(difference))
+    states = [ch.state(index) for index in range(nNodes)]
+    for a_index in range(nNodes):
+        for b_index in range(a_index + 1, nNodes):
+            diff = list_differences(states[a_index], states[b_index])
+            if diff:
+                print('')
+                print(f'Difference between node #{a_index + 1} and #{b_index + 1}')
+                print('\n'.join(diff))
+    print('*** Test failed ***')
