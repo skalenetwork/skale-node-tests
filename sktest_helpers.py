@@ -31,7 +31,7 @@ def create_default_chain(num_nodes=2, num_accounts=2):
         nodes.append(Node())
 
     for i in range(num_accounts):
-        balances.append(str((i + 1) * 1000000000))
+        balances.append(str((i + 1) * 1000000000000000000000))
 
     global sktest_exe, sktest_proxy
     starter = LocalStarter(sktest_exe, sktest_proxy)

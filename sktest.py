@@ -21,9 +21,9 @@ def _transaction2json(eth, t, accounts):
     return res
 
 def _block2json(eth, block, accounts):
-    print("_block2json", block['number'])
+    # print("_block2json", block['number'])
     block = block.__dict__
-    
+
     transactions = {}
     for t in block["transactions"]:
         transactions[t.hex()] = _transaction2json(eth, t.hex(), accounts)
@@ -36,18 +36,18 @@ def _node2json(eth):
     block_number = eth.blockNumber
     for i in range(block_number + 1):
         blocks.append(_block2json(eth, eth.getBlock(i), accounts))
-#    i = 0
-#    for k in accounts:
-#        print("account:", i)
-#        accounts[k] = {
-#            "balance": eth.getBalance(k),
-#            "nonce"  : eth.getTransactionCount(k),
-#            "code"   : eth.getCode(k)
-#        }
-#        i+=1
+    #    i = 0
+    #    for k in accounts:
+    #        print("account:", i)
+    #        accounts[k] = {
+    #            "balance": eth.getBalance(k),
+    #            "nonce"  : eth.getTransactionCount(k),
+    #            "code"   : eth.getCode(k)
+    #        }
+    #        i+=1
     return {
         "blocks": blocks
-#        "accounts": accounts
+        # "accounts": accounts
     }
 
 
@@ -116,10 +116,10 @@ def _compare_states(nodes):
     assert len(nodes) > 1
     res = []
     has_any = False
-    print("_node2json", "0")
+    # print("_node2json", "0")
     obj0 = _node2json(nodes[0].eth)
     for n in nodes:
-        print("_node2json", n.nodeID)
+        # print("_node2json", n.nodeID)
         obj = _node2json(n.eth)
         cmp = deep_compare(obj0, obj)
         res.append(cmp)
@@ -157,7 +157,7 @@ def list_differences(a, b, path=''):
             if key not in a:
                 difference += [f'{_print_path(path)}key {key} does not present in the first object']
     elif a != b:
-            difference += [f'{_print_path(path)}{a} != {b}']
+        difference += [f'{_print_path(path)}{a} != {b}']
     return difference
 
 # n[i].eth.getTransactionReceipt(hash)
@@ -250,25 +250,27 @@ class Node:
     def __init__(self, **kwargs):
         Node._counter = Node._counter + 1
         self.nodeName = kwargs.get('nodeName', "Node" + str(Node._counter))
-        self.nodeID   = kwargs.get('nodeID', Node._counter)
-        self.bindIP   = kwargs.get('bindIP', "127.0.0." + str(Node._counter))
+        self.nodeID = kwargs.get('nodeID', Node._counter)
+        self.bindIP = kwargs.get('bindIP', "127.0.0." + str(Node._counter))
         self.basePort = kwargs.get('basePort', 1231)
-        self.sChain   = None
-        self.config   = None
-        self.running  = False
-        self.eth      = None
+        self.sChain = None
+        self.config = None
+        self.running = False
+        self.eth = None
+
 
 class SChain:
 
     _counter = 0
     _pollInterval = 0.2
 
-    def __init__(self, nodes, starter, prefill=None, config=get_config(), keys_file="./keys.all", keys_password="1234", **kwargs):
+    def __init__(self, nodes, starter, prefill=None, config=get_config(), keys_file="./keys.all", keys_password="1234",
+                 **kwargs):
         # TODO throw if len(prefill)>9
         # TODO throw if repeating node IDs
         SChain._counter = SChain._counter + 1
         self.sChainName = kwargs.get('schainName', "Chain" + str(SChain._counter))
-        self.sChainID   = kwargs.get('schainID', SChain._counter)
+        self.sChainID = kwargs.get('schainID', SChain._counter)
         self.nodes = list(nodes)
         self.config = copy.deepcopy(config)
         self.starter = starter
@@ -282,7 +284,7 @@ class SChain:
         fd = open(keys_file, "rb")
         self.privateKeys = pickle.load(fd)
 
-        assert(len(self.privateKeys) >= len(prefill))
+        assert (len(self.privateKeys) >= len(prefill))
 
         del self.privateKeys[len(prefill):]
         fd.close()
@@ -330,10 +332,10 @@ class SChain:
         to_addr = self.accounts[to]
 
         transaction = {
-            "from" : from_addr,
-            "to"   : to_addr,
+            "from": from_addr,
+            "to": to_addr,
             "value": value,
-            "gas"  : 21000,
+            "gas": 21000,
             "gasPrice": 0,
             "nonce": nonce
         }
@@ -406,14 +408,14 @@ def _make_config_schain(chain):
     for i in range(len(chain.nodes)):
         ret["nodes"].append(_make_config_schain_node(chain.nodes[i], i))
     return ret
-        
+
 class LocalStarter:
     # TODO Implement monitoring of dead processes!
     chain = None
     started = False
 
     def __init__(self, exe, proxy):
-        self.exe   = exe
+        self.exe = exe
         self.proxy = proxy
         self.dir = TemporaryDirectory()
         self.exe_popens = []
@@ -468,7 +470,7 @@ class LocalStarter:
             url = f"http://{n.bindIP}:{n.basePort + 3}"
 
             for_delayed_proxies.append({'args': [self.proxy, ipc_dir + "/geth.ipc", url],
-                                        'stdout': proxy_out, 'stderr': proxy_err});
+                                        'stdout': proxy_out, 'stderr': proxy_err})
 
             n.running = True
 
