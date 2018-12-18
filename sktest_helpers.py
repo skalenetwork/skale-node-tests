@@ -9,7 +9,7 @@ from hexbytes import HexBytes
  
 global sktest_exe, sktest_proxy
 #sktest_exe = os.getenv("SKTEST_EXE", "/home/dimalit/skale-ethereum/scripts/aleth")
-sktest_exe = os.getenv("SKTEST_EXE", "/home/dimalit/skale-ethereum/build/Debug/aleth/aleth")
+sktest_exe = os.getenv("SKTEST_EXE", "/home/dimalit/skale-ethereum/build/Debug/skaled/skaled")
 sktest_proxy = os.getenv("SKTEST_PROXY", "/home/dimalit/skale-ethereum/scripts/jsonrpcproxy.py")
 
 class HexJsonEncoder(json.JSONEncoder):

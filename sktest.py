@@ -199,6 +199,7 @@ def get_config(other=None):
             "homesteadForkBlock": "0x0",
             "daoHardforkBlock": "0x0",
             "EIP150ForkBlock": "0x0",
+            "EIP155ForkBlock": "0x0",
             "EIP158ForkBlock": "0x0",
             "byzantiumForkBlock": "0x0",
             "constantinopleForkBlock": "0x0",
@@ -222,7 +223,7 @@ def get_config(other=None):
             "timestamp": "0x00",
             "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
             "extraData": "0x11bbe8db4e347b4e8c937c1c8370e4b5ed33adb3db69cbdb7a38e1e50b1b82fa",
-            "gasLimit": "0x47E7C4"
+            "gasLimit": "0x47E7C400"
         },
         "accounts": {}
     }
@@ -355,6 +356,10 @@ class SChain:
 
     def start(self):
         self.starter.start(self)
+
+        #proxies = {'http': 'http://127.0.0.1:2234'};
+        #, request_kwargs={'proxies': proxies}
+
         for n in self.nodes:
             n.eth = web3.Web3(web3.Web3.HTTPProvider("http://" + n.bindIP + ":" + str(n.basePort + 3))).eth
         self.eth = self.nodes[0].eth
@@ -449,14 +454,16 @@ class LocalStarter:
             proxy_err = io.open(node_dir + "/" + "proxy.err", "w")
 
             self.exe_popens.append(
-                Popen([#"/usr/local/bin/valgrind",
+                Popen([#"/usr/bin/strace", '-o'+node_dir+'/aleth.trace',
                        self.exe,
                        "--no-discovery",
                        "--config", cfg_file,
                        "-d", node_dir,
                        "--ipcpath", ipc_dir,
                        "-v", "4"],
-                      stdout=aleth_out, stderr=aleth_err))
+                      stdout=aleth_out,
+                      stderr=aleth_err
+                ))
             # HACK +0 +1 +2 are used by consensus
             url = f"http://{n.bindIP}:{n.basePort + 3}"
 
@@ -501,7 +508,7 @@ class NoStarter:
         self.running = False
 
     def start(self, chain):
-        assert not hasattr(self, "chain")
+        assert self.chain is None
 
         self.chain = chain
         for n in self.chain.nodes:
@@ -510,7 +517,7 @@ class NoStarter:
         self.running = True
 
     def stop(self):
-        assert hasattr(self, "chain")
+        assert self.chain is not None
 
         for n in self.chain.nodes:
             n.running = False
