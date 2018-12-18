@@ -1,7 +1,8 @@
 from sktest_helpers import *
 import time 
+import threading
 
-nNodes = 4
+nNodes = 1
 nTxns = 1000
 nAcc  = 1000
 
@@ -12,6 +13,11 @@ def count_txns(ch):
         n = len(b.transactions)
         sum += n
     return sum
+
+def send_func(eth, arr, begin, count):
+    for i in range(begin, begin+count):
+        t = arr[i]
+        eth.sendRawTransaction(t)
 
 ch = create_default_chain(num_nodes=nNodes, num_accounts=nAcc)
 
@@ -32,11 +38,15 @@ for i in range(nTxns):
 print("Sending txns")
 t1 = time.time()
 
-for i in range(len(transactions)):
-    if i%10 == 0:
-        print("Sending %d" % i)
-    t = transactions[i]
-    ch.eth.sendRawTransaction(t)
+#for i in range(len(transactions)):
+#    if i%10 == 0:
+#        print("Sending %d" % i)
+#    t = transactions[i]
+#    ch.eth.sendRawTransaction(t)
+
+for t in range(1):
+    thread = threading.Thread(target=send_func, args=(ch.eth, transactions, t*1000, 1000))
+    thread.start()
 
 print("Waiting for blocks")
 count = 0
@@ -48,13 +58,10 @@ while count != nTxns:
 
 t2 = time.time()
 
-#time.sleep(3)
-
 print("Txns: "+str(nTxns)+" Time: "+str(t2-t1)+" => "+str(nTxns/(t2-t1))+" tx/sec")
 
-ch.stop()
-
-difference = None #ch.compare_all_states()
+time.sleep(3)
+difference = ch.compare_all_states()
 
 if difference is None:
     print('States on all nodes are consistent')
@@ -71,3 +78,6 @@ else:
                 print(f'Difference between node #{a_index + 1} and #{b_index + 1}')
                 print('\n'.join(diff))
     print('*** Test failed ***')
+
+ch.stop()
+
