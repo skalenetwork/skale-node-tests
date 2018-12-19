@@ -44,8 +44,11 @@ t1 = time.time()
 #    t = transactions[i]
 #    ch.eth.sendRawTransaction(t)
 
-for t in range(1):
-    thread = threading.Thread(target=send_func, args=(ch.eth, transactions, t*1000, 1000))
+for t in range(10):
+    n = ch.nodes[0]
+    eth = web3.Web3(web3.Web3.HTTPProvider("http://" + n.bindIP + ":" + str(n.basePort + 3))).eth
+    #eth = web3.Web3(web3.Web3.IPCProvider(n.ipcPath)).eth
+    thread = threading.Thread(target=send_func, args=(eth, transactions, t*100, 100))
     thread.start()
 
 print("Waiting for blocks")
@@ -59,6 +62,8 @@ while count != nTxns:
 t2 = time.time()
 
 print("Txns: "+str(nTxns)+" Time: "+str(t2-t1)+" => "+str(nTxns/(t2-t1))+" tx/sec")
+
+input("press enter")
 
 time.sleep(3)
 difference = ch.compare_all_states()
