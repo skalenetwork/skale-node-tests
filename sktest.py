@@ -257,6 +257,7 @@ class Node:
         self.config = None
         self.running = False
         self.eth = None
+        self.ipcPath = None
 
 
 class SChain:
@@ -472,6 +473,7 @@ class LocalStarter:
             for_delayed_proxies.append({'args': [self.proxy, ipc_dir + "/geth.ipc", url],
                                         'stdout': proxy_out, 'stderr': proxy_err})
 
+            n.ipcPath = ipc_dir + "/geth.ipc"
             n.running = True
 
         print('Wait for nodes start')
