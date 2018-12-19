@@ -3,8 +3,9 @@ import time
 import threading
 
 nNodes = 1
-nTxns = 1000
-nAcc  = 1000
+nTxns = 2400
+nAcc  = 2400
+nThreads = 1
 
 def count_txns(ch):
     sum = 0
@@ -35,6 +36,9 @@ for i in range(nTxns):
     print("from=%d nonce=%d %s" % (acc1, nonce, ch.accounts[acc1]))
     transactions.append( ch.transaction_obj(value=1, _from=acc1, to=acc2, nonce=nonce) )
 
+#print("Sleeping 15 sec")
+#time.sleep(15)
+
 print("Sending txns")
 t1 = time.time()
 
@@ -44,11 +48,15 @@ t1 = time.time()
 #    t = transactions[i]
 #    ch.eth.sendRawTransaction(t)
 
-for t in range(10):
+txns_per_thread = nTxns // nThreads
+
+assert txns_per_thread*nThreads == nTxns
+
+for t in range(nThreads):
     n = ch.nodes[0]
     eth = web3.Web3(web3.Web3.HTTPProvider("http://" + n.bindIP + ":" + str(n.basePort + 3))).eth
     #eth = web3.Web3(web3.Web3.IPCProvider(n.ipcPath)).eth
-    thread = threading.Thread(target=send_func, args=(eth, transactions, t*100, 100))
+    thread = threading.Thread(target=send_func, args=(eth, transactions, t*txns_per_thread, txns_per_thread))
     thread.start()
 
 print("Waiting for blocks")
