@@ -25,7 +25,7 @@ def decrypt(source_path, dest_path, n = 0):
 def generate(aleth_path, n):
     tmp = TemporaryDirectory().name
     popen = Popen([aleth_path, "--no-discovery", "-d", tmp, "--ipcpath", tmp, "-v", "4"])
-    time.sleep(2)
+    time.sleep(3)
 
     personal = web3.Web3(web3.Web3.IPCProvider(tmp+"/geth.ipc")).personal
     for i in range(n):

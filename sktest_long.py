@@ -3,7 +3,7 @@ import time
 
 nAcc = 10
 nTxns = 100
-num_nodes = 4
+num_nodes = 2
 
 # node = Node()
 # print(node.__dict__)

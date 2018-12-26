@@ -52,4 +52,6 @@ def load_private_keys(path, password, count=0):
         i += 1
         if count != 0 and i == count:
             break
+        if i % 10 == 0:
+            print(f"Loaded {i} of {count} keys")
     return res

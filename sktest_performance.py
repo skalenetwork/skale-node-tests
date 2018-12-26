@@ -1,11 +1,11 @@
 from sktest_helpers import *
-import time 
+import time
 import threading
 
 nNodes = 1
-nTxns = 2400
-nAcc  = 2400
-nThreads = 1
+nTxns = 25000
+nAcc  = 25000
+nThreads = 4
 
 def count_txns(ch):
     sum = 0
@@ -16,9 +16,12 @@ def count_txns(ch):
     return sum
 
 def send_func(eth, arr, begin, count):
+    txf = open("txf.txt", "w")
     for i in range(begin, begin+count):
         t = arr[i]
+        txf.write(t+"\n")
         eth.sendRawTransaction(t)
+    txf.close()
 
 ch = create_default_chain(num_nodes=nNodes, num_accounts=nAcc)
 
@@ -34,7 +37,8 @@ for i in range(nTxns):
     acc2 = (i+1) % nAcc
     nonce = i // nAcc
     print("from=%d nonce=%d %s" % (acc1, nonce, ch.accounts[acc1]))
-    transactions.append( ch.transaction_obj(value=1, _from=acc1, to=acc2, nonce=nonce) )
+    txn_str = ch.transaction_obj(value=1, _from=acc1, to=acc2, nonce=nonce)
+    transactions.append( txn_str )
 
 #print("Sleeping 15 sec")
 #time.sleep(15)
@@ -54,8 +58,8 @@ assert txns_per_thread*nThreads == nTxns
 
 for t in range(nThreads):
     n = ch.nodes[0]
-    eth = web3.Web3(web3.Web3.HTTPProvider("http://" + n.bindIP + ":" + str(n.basePort + 3))).eth
-    #eth = web3.Web3(web3.Web3.IPCProvider(n.ipcPath)).eth
+    #eth = web3.Web3(web3.Web3.HTTPProvider("http://" + n.bindIP + ":" + str(n.basePort + 3))).eth
+    eth = web3.Web3(web3.Web3.IPCProvider(n.ipcPath)).eth
     thread = threading.Thread(target=send_func, args=(eth, transactions, t*txns_per_thread, txns_per_thread))
     thread.start()
 

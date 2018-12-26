@@ -476,8 +476,7 @@ class LocalStarter:
             n.ipcPath = ipc_dir + "/geth.ipc"
             n.running = True
 
-        print('Wait for nodes start')
-        time.sleep(3)
+        input('Press enter when nodes start')
 
         for p in for_delayed_proxies:
             self.proxy_popens.append( Popen(p['args'], stdout = p['stdout'], stderr = p['stderr']) )
