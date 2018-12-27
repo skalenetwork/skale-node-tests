@@ -381,6 +381,8 @@ class SChain:
     def compare_all_states(self):
         return _compare_states(self.nodes)
 
+    def __del__(self):
+        self.stop()
 
 def _make_config_node(node):
     return {
@@ -435,6 +437,7 @@ class LocalStarter:
             assert not n.running
 
             node_dir = self.dir.name + "/" + str(n.nodeID)
+#            node_dir = "dir/" + str(n.nodeID)
             ipc_dir = node_dir
             os.makedirs(node_dir)
             cfg_file = node_dir + "/config.json"
@@ -501,7 +504,7 @@ class LocalStarter:
                 p.terminate()
                 p.wait()
         self.running = False
-        # self.dir.cleanup()
+        self.dir.cleanup()
 
 
 class NoStarter:
