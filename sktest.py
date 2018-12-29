@@ -481,11 +481,11 @@ class LocalStarter:
 
         input('Press enter when nodes start')
 
-        for p in for_delayed_proxies:
-            self.proxy_popens.append( Popen(p['args'], stdout = p['stdout'], stderr = p['stderr']) )
+#        for p in for_delayed_proxies:
+#            self.proxy_popens.append( Popen(p['args'], stdout = p['stdout'], stderr = p['stderr']) )
 
-        print('Wait for json rpc proxies start')
-        time.sleep(2)
+#        print('Wait for json rpc proxies start')
+#        time.sleep(2)
 
         self.running = True
 
