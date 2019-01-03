@@ -2,7 +2,7 @@ from tempfile import TemporaryDirectory
 import os
 import io
 import json
-from subprocess import Popen, DEVNULL
+from subprocess import Popen, DEVNULL, PIPE, STDOUT, TimeoutExpired
 import copy
 import time
 import binascii
@@ -282,23 +282,40 @@ class SChain:
             n.sChain = self
             n.config = self.config
 
-        fd = open(keys_file, "rb")
-        self.privateKeys = pickle.load(fd)
+        with open(keys_file, "rb") as fd:
+            self.privateKeys = pickle.load(fd)
+            assert (len(self.privateKeys) >= len(prefill))
+            del self.privateKeys[len(prefill):]
 
-        assert (len(self.privateKeys) >= len(prefill))
-
-        del self.privateKeys[len(prefill):]
-        fd.close()
         print("Loaded private keys")
 
-        self.accounts = []
-        if prefill is not None:
-            for i in range(len(prefill)):
-                private_key = self.privateKeys[i]
-                balance = prefill[i]
-                address = w3.eth.account.privateKeyToAccount(private_key).address
-                self.accounts.append(address)
-                self.config["accounts"][address] = {"balance": str(balance)}
+        # TODO Make addresses.all customizable!
+        try:
+            with open("./addresses.all", "rb") as fd:
+                self.accounts = pickle.load(fd)
+            assert (len(self.accounts) >= len(prefill))
+            del self.accounts[len(prefill):]
+            if prefill is not None:
+                for i in range(len(prefill)):
+                    private_key = self.privateKeys[i]
+                    balance = prefill[i]
+                    address = self.accounts[i]
+                    self.config["accounts"][address] = {"balance": str(balance)}
+            print("Loaded public keys (addresses)")
+        except Exception as ex:
+            self.accounts = []
+            if prefill is not None:
+                for i in range(len(prefill)):
+                    private_key = self.privateKeys[i]
+                    balance = prefill[i]
+                    address = w3.eth.account.privateKeyToAccount(private_key).address
+                    self.accounts.append(address)
+                    self.config["accounts"][address] = {"balance": str(balance)}
+
+            with open("./addresses.all", "wb") as fd:
+                pickle.dump(self.accounts, fd)
+
+            print("Computed public keys (addresses)")
 
     def balance(self, i):
         return self.eth.getBalance(self.accounts[i])
@@ -506,6 +523,73 @@ class LocalStarter:
         self.running = False
         self.dir.cleanup()
 
+class RemoteStarter:
+    # TODO Implement monitoring of dead processes!
+    chain = None
+    started = False
+
+    # condif is array of hashes: {address, dir, exe}
+    def __init__(self, ssh_config):
+        self.ssh_config = copy.deepcopy(ssh_config)
+        self.running = False
+
+    def start(self, chain):
+        assert not self.started
+        assert len(self.ssh_config) == len(chain.nodes)
+        self.started = True
+        self.chain = chain
+
+        # TODO Handle exceptions!
+        for i in range(len(self.chain.nodes)):
+            n = self.chain.nodes[i]
+            ssh_conf = self.ssh_config[i]
+
+            assert not n.running
+
+            node_dir = ssh_conf["dir"]
+            cfg_file = node_dir + "/config.json"
+
+            ssh = Popen( [ "ssh", ssh_conf["address"] ], stdin=PIPE, stdout=PIPE, stderr=STDOUT, bufsize=1 )    # line-buffered
+
+            command = ""
+            command += "mkdir -p "+node_dir
+            command += "; cd " + node_dir
+
+            cfg = copy.deepcopy(chain.config)
+            cfg["skaleConfig"] = {
+                "nodeInfo": _make_config_node(n),
+                "sChain": _make_config_schain(self.chain)
+            }
+            json_str = json.dumps(cfg)
+            n.config = cfg
+
+            command += "; echo '" + json_str + "' >" + cfg_file
+
+            command += ("; nohup " +
+                       ssh_conf["exe"] +
+                       " --no-discovery" +
+                       " --config " + cfg_file +
+                       " -d " + node_dir + 
+                       " -v " + "4" + " 2>&1 >nohup.out&")
+            command += "\nexit\n"
+
+            try:
+                comm = ssh.communicate(command.encode(), timeout=1)
+                print(comm[0].decode())
+            except TimeoutExpired:
+                pass
+
+            n.running = True
+
+        self.running = True
+
+    def stop(self):
+        assert hasattr(self, "chain")
+
+        # TODO race conditions?
+        for n in self.chain.nodes:
+            n.running = False
+        self.running = False
 
 class NoStarter:
     chain = None

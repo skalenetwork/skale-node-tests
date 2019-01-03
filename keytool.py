@@ -18,9 +18,8 @@ def usage():
 
 def decrypt(source_path, dest_path, n = 0):
     keys = load_private_keys(source_path, '1234', n)
-    fd = open(dest_path, "wb")
-    pickle.dump(keys, fd)
-    fd.close()
+    with open(dest_path, "wb") as fd:
+        pickle.dump(keys, fd)
 
 def generate(aleth_path, n):
     tmp = TemporaryDirectory().name

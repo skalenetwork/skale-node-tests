@@ -3,9 +3,9 @@ import time
 import threading
 
 nNodes = 1
-nTxns = 25000
-nAcc  = 25000
-nThreads = 4
+nTxns = 24000
+nAcc  = 24000
+nThreads = 1
 
 def count_txns(ch):
     sum = 0
@@ -16,12 +16,9 @@ def count_txns(ch):
     return sum
 
 def send_func(eth, arr, begin, count):
-    txf = open("txf.txt", "w")
     for i in range(begin, begin+count):
         t = arr[i]
-        txf.write(t+"\n")
         eth.sendRawTransaction(t)
-    txf.close()
 
 ch = create_default_chain(num_nodes=nNodes, num_accounts=nAcc)
 
@@ -31,19 +28,26 @@ input("press")
 
 transactions = []
 
-print("Generating txns")
-for i in range(nTxns):
-    acc1 = i % nAcc
-    acc2 = (i+1) % nAcc
-    nonce = i // nAcc
-    print("from=%d nonce=%d %s" % (acc1, nonce, ch.accounts[acc1]))
-    txn_str = ch.transaction_obj(value=1, _from=acc1, to=acc2, nonce=nonce)
-    transactions.append( txn_str )
+try:
+    with open("transactions.all", "rb") as fd:
+        transactions = pickle.load(fd)
+    print("Loaded transactions from file")
+except Exception as ex:
+    print("Generating txns")
+    for i in range(nTxns):
+        acc1 = i % nAcc
+        acc2 = (i+1) % nAcc
+        nonce = i // nAcc
+        print("from=%d nonce=%d %s" % (acc1, nonce, ch.accounts[acc1]))
+        txn_str = ch.transaction_obj(value=1, _from=acc1, to=acc2, nonce=nonce)
+        transactions.append( txn_str )
+    with open("transactions.all", "wb") as fd:
+        pickle.dump(transactions, fd)
 
 #print("Sleeping 15 sec")
 #time.sleep(15)
 
-print("Sending txns")
+input("Sending txns - press")
 t1 = time.time()
 
 #for i in range(len(transactions)):
@@ -58,8 +62,8 @@ assert txns_per_thread*nThreads == nTxns
 
 for t in range(nThreads):
     n = ch.nodes[0]
-    #eth = web3.Web3(web3.Web3.HTTPProvider("http://" + n.bindIP + ":" + str(n.basePort + 3))).eth
-    eth = web3.Web3(web3.Web3.IPCProvider(n.ipcPath)).eth
+    eth = web3.Web3(web3.Web3.HTTPProvider("http://" + n.bindIP + ":" + str(n.basePort + 3))).eth
+    #eth = web3.Web3(web3.Web3.IPCProvider(n.ipcPath)).eth
     thread = threading.Thread(target=send_func, args=(eth, transactions, t*txns_per_thread, txns_per_thread))
     thread.start()
 
