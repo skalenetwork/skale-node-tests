@@ -406,7 +406,9 @@ def _make_config_node(node):
         "nodeName": node.nodeName,
         "nodeID"  : node.nodeID,
         "bindIP"  : node.bindIP,
-        "basePort": node.basePort
+        "basePort": node.basePort,
+        "logLevel": "trace",
+        "logLevelProposal": "trace"
     }
 
 
