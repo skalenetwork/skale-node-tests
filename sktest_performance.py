@@ -2,7 +2,7 @@ from sktest_helpers import *
 import time 
 import threading
 
-nNodes = 1
+nNodes = int(os.getenv("NUM_NODES", 4))
 nTxns = 2400
 nAcc  = 2400
 nThreads = 1
