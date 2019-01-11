@@ -1,10 +1,10 @@
 from sktest_helpers import *
-import time 
+import time
 import threading
 
 nNodes = int(os.getenv("NUM_NODES", 4))
-nTxns = 2400
-nAcc  = 2400
+nTxns = 24000
+nAcc  = 24000
 nThreads = 1
 
 def count_txns(ch):
@@ -28,18 +28,26 @@ input("press")
 
 transactions = []
 
-print("Generating txns")
-for i in range(nTxns):
-    acc1 = i % nAcc
-    acc2 = (i+1) % nAcc
-    nonce = i // nAcc
-    print("from=%d nonce=%d %s" % (acc1, nonce, ch.accounts[acc1]))
-    transactions.append( ch.transaction_obj(value=1, _from=acc1, to=acc2, nonce=nonce) )
+try:
+    with open("transactions.all", "rb") as fd:
+        transactions = pickle.load(fd)
+    print("Loaded transactions from file")
+except Exception as ex:
+    print("Generating txns")
+    for i in range(nTxns):
+        acc1 = i % nAcc
+        acc2 = (i+1) % nAcc
+        nonce = i // nAcc
+        print("from=%d nonce=%d %s" % (acc1, nonce, ch.accounts[acc1]))
+        txn_str = ch.transaction_obj(value=1, _from=acc1, to=acc2, nonce=nonce)
+        transactions.append( txn_str )
+    with open("transactions.all", "wb") as fd:
+        pickle.dump(transactions, fd)
 
 #print("Sleeping 15 sec")
 #time.sleep(15)
 
-print("Sending txns")
+input("Sending txns - press")
 t1 = time.time()
 
 #for i in range(len(transactions)):
