@@ -24,8 +24,6 @@ ch = create_default_chain(num_nodes=nNodes, num_accounts=nAcc)
 
 ch.start()
 
-input("press")
-
 transactions = []
 
 try:
@@ -41,13 +39,13 @@ except Exception as ex:
         print("from=%d nonce=%d %s" % (acc1, nonce, ch.accounts[acc1]))
         txn_str = ch.transaction_obj(value=1, _from=acc1, to=acc2, nonce=nonce)
         transactions.append( txn_str )
+    input("Sending txns - press")
     with open("transactions.all", "wb") as fd:
         pickle.dump(transactions, fd)
 
 #print("Sleeping 15 sec")
 #time.sleep(15)
 
-input("Sending txns - press")
 t1 = time.time()
 
 #for i in range(len(transactions)):
