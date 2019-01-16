@@ -2,7 +2,7 @@ from sktest_helpers import *
 import time
 import threading
 
-nNodes = 4
+nNodes = 16
 nTxns = 24000
 nAcc  = 24000
 nThreads = 1

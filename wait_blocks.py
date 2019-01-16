@@ -1,7 +1,7 @@
 from sktest_helpers import *
 import time 
 
-nNodes = 4
+nNodes = 16
 nTxns = 24000
 nAcc  = 24000
 
