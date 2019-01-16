@@ -55,8 +55,8 @@ time.sleep(4)
 
 print('Comparing final states...')
 difference = None
-if num_nodes > 1:
-    difference = ch.compare_all_states()
+#if num_nodes > 1:
+#    difference = ch.compare_all_states()
 
 if difference is None:
     print('States on all nodes are consistent')
