@@ -10,6 +10,7 @@ import pickle
 
 import web3
 from web3.auto import w3
+import signal
 
 w3.eth.enable_unaudited_features()
 
@@ -498,7 +499,21 @@ class LocalStarter:
             n.ipcPath = ipc_dir + "/geth.ipc"
             n.running = True
 
-        input('Press enter when nodes start')
+        #input('Press enter when nodes start')
+
+        def signal_handler(signum, frame):
+            raise Exception("Timed out!")
+
+        signal.signal(signal.SIGALRM, signal_handler)
+        signal.alarm(7)
+        try:
+            input('Press enter when nodes start')
+        except:
+            pass
+            #Exception("Timed out!")
+
+
+
 
 #        for p in for_delayed_proxies:
 #            self.proxy_popens.append( Popen(p['args'], stdout = p['stdout'], stderr = p['stderr']) )
@@ -571,7 +586,7 @@ class RemoteStarter:
                        ssh_conf["exe"] +
                        " --no-discovery" +
                        " --config " + cfg_file +
-                       " -d " + node_dir + 
+                       " -d " + node_dir +
                        " -v " + "4" + " 2>&1 >nohup.out&")
             command += "\nexit\n"
 
