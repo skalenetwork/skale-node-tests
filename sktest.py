@@ -525,6 +525,15 @@ class LocalStarter:
         self.running = False
         self.dir.cleanup()
 
+def ssh_exec(address, command):
+    ssh = Popen( [ "ssh", address ], stdin=PIPE, stdout=PIPE, stderr=STDOUT, bufsize=1 )    # line-buffered
+
+    try:
+        comm = ssh.communicate(command.encode(), timeout=1)
+        print(comm[0].decode())
+    except TimeoutExpired:
+        pass
+
 class RemoteStarter:
     # TODO Implement monitoring of dead processes!
     chain = None
@@ -551,8 +560,6 @@ class RemoteStarter:
             node_dir = ssh_conf["dir"]
             cfg_file = node_dir + "/config.json"
 
-            ssh = Popen( [ "ssh", ssh_conf["address"] ], stdin=PIPE, stdout=PIPE, stderr=STDOUT, bufsize=1 )    # line-buffered
-
             command = ""
             command += "mkdir -p "+node_dir
             command += "; cd " + node_dir
@@ -572,14 +579,10 @@ class RemoteStarter:
                        " --no-discovery" +
                        " --config " + cfg_file +
                        " -d " + node_dir + 
-                       " -v " + "4" + " 2>&1 >nohup.out&")
+                       " -v " + "4" + " 2>nohup.err >nohup.out&")
             command += "\nexit\n"
 
-            try:
-                comm = ssh.communicate(command.encode(), timeout=1)
-                print(comm[0].decode())
-            except TimeoutExpired:
-                pass
+            ssh_exec(ssh_conf['address'], command)
 
             n.running = True
 
