@@ -27,5 +27,5 @@ else:
     print(dump_node_state(difference))
     print('*** Test failed ***')
 
-ch.stop()
-print("Stopped")
+#ch.stop()
+#print("Stopped")

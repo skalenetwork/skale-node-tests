@@ -2,7 +2,7 @@ from sktest_helpers import *
 import time
 import threading
 
-nNodes = int(os.getenv("NUM_NODES", 4))
+nNodes = int(os.getenv("NUM_NODES", 16))
 nTxns = 24000
 nAcc  = 24000
 nThreads = 1
@@ -23,6 +23,8 @@ def send_func(eth, arr, begin, count):
 ch = create_default_chain(num_nodes=nNodes, num_accounts=nAcc)
 
 ch.start()
+
+input("press")
 
 transactions = []
 
