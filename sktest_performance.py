@@ -24,8 +24,6 @@ ch = create_default_chain(num_nodes=nNodes, num_accounts=nAcc)
 
 ch.start()
 
-input("press")
-
 transactions = []
 
 try:
