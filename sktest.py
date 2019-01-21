@@ -7,7 +7,7 @@ import copy
 import time
 import binascii
 import pickle
-
+from threading import Timer
 import web3
 from web3.auto import w3
 import signal
@@ -508,6 +508,7 @@ class LocalStarter:
         signal.alarm(20)
         try:
             input('Press enter when nodes start')
+            signal.alarm(0)
         except:
             pass
             #Exception("Timed out!")
