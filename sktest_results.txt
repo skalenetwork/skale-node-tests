@@ -21,3 +21,4 @@ Date            pytest      pytest      pytest      pytest      pytest      pyte
 '2019-01-25'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'
 '2019-01-26'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'
 '2019-01-27'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'
+'2019-01-28'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'    'FAILED'
