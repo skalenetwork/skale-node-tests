@@ -518,7 +518,7 @@ class LocalStarter:
             else:
                 print("something awful happened!" + repr(ex))
                 signal.alarm(0)
-                time.sleep(TIMEOUT*1000)
+                time.sleep(TIMEOUT)
             #Exception("Timed out!")
 
 
