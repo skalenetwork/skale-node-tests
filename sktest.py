@@ -505,12 +505,19 @@ class LocalStarter:
             raise Exception("Timed out!")
 
         signal.signal(signal.SIGALRM, signal_handler)
-        signal.alarm(20)
+        TIMEOUT=20
+        signal.alarm(TIMEOUT)
         try:
             input('Press enter when nodes start')
+            print('thank you')
             signal.alarm(0)
-        except:
-            pass
+        except Exception as ex:
+            if str(ex) == "Timed out!":
+                print("\ntimed out")
+            else:
+                print("something awful happened!" + repr(ex))
+                signal.alarm(0)
+                time.sleep(TIMEOUT*1000)
             #Exception("Timed out!")
 
 
