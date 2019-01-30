@@ -488,7 +488,8 @@ class LocalStarter:
                        "--ipcpath", ipc_dir,
                        "-v", "4"],
                       stdout=aleth_out,
-                      stderr=aleth_err
+                      stderr=aleth_err,
+                      env = {"DATA_DIR":node_dir}
                 ))
             # HACK +0 +1 +2 are used by consensus
             url = f"http://{n.bindIP}:{n.basePort + 3}"
@@ -597,12 +598,12 @@ class RemoteStarter:
 
             command += "; echo '" + json_str + "' >" + cfg_file
 
-            command += ("; nohup " +
+            command += ("; bash -c \"DATA_DIR="+node_dir+" nohup " +
                        ssh_conf["exe"] +
                        " --no-discovery" +
                        " --config " + cfg_file +
                        " -d " + node_dir + 
-                       " -v " + "4" + " 2>nohup.err >nohup.out&")
+                       " -v " + "4" + "\" 2>nohup.err >nohup.out&")
             command += "\nexit\n"
 
             ssh_exec(ssh_conf['address'], command)
