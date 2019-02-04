@@ -1,5 +1,5 @@
 from sktest_helpers import *
-import time 
+import time
 
 nNodes = int(os.getenv("NUM_NODES", 4))
 nTxns = 24000
@@ -21,17 +21,17 @@ print("Waiting for blocks")
 t1 = time.time()
 count = 0
 
-while count != nTxns:
+while True: #count != nTxns:
     count = count_txns(ch)
 
     t2 = time.time()
 
     if t2!=t1:
         print("%d txns %d blocks perf = %f tx/sec" % (count, ch.eth.blockNumber, count/(t2-t1)))
-    
+
     time.sleep(0.5)
 
 t2 = time.time()
 
-print("Txns: "+str(nTxns)+" Time: "+str(t2-t1)+" => "+str(nTxns/(t2-t1))+" tx/sec")
+#print("Txns: "+str(nTxns)+" Time: "+str(t2-t1)+" => "+str(nTxns/(t2-t1))+" tx/sec")
 ch.stop()
