@@ -4,7 +4,7 @@ import threading
 
 nNodes = int(os.getenv("NUM_NODES", 16))
 nTxns = 24000
-nAcc  = 24000
+nAcc  = 8000
 nThreads = 1
 
 def count_txns(ch):
@@ -25,9 +25,10 @@ ch = create_default_chain(num_nodes=nNodes, num_accounts=nAcc)
 ch.start()
 
 transactions = []
+file = "transactions_"+str(nAcc)+"_"+str(nTxns)
 
 try:
-    with open("transactions.all", "rb") as fd:
+    with open(file, "rb") as fd:
         transactions = pickle.load(fd)
     print("Loaded transactions from file")
 except Exception as ex:
@@ -40,7 +41,7 @@ except Exception as ex:
         txn_str = ch.transaction_obj(value=1, _from=acc1, to=acc2, nonce=nonce)
         transactions.append( txn_str )
     input("Sending txns - press")
-    with open("transactions.all", "wb") as fd:
+    with open(file, "wb") as fd:
         pickle.dump(transactions, fd)
 
 #print("Sleeping 15 sec")
