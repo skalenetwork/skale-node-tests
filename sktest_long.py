@@ -1,7 +1,7 @@
 from sktest_helpers import *
 import time
 
-nAcc = 10
+nAcc = int(os.getenv("NUM_ACCOUNTS", 10))
 nTxns = 100
 num_nodes = int(os.getenv("NUM_NODES", 4))
 
