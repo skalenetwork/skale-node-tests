@@ -51,7 +51,7 @@
 	      "bindIP": "127.0.0.1",
 	      "basePort": 1231,
               "logLevel": "critical",
-              "emptyBlockInterval": 10
+              "emptyBlockIntervalSec": 10
 	    },
 	    "sChain":
 	      {
