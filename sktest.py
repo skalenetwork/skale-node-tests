@@ -409,9 +409,9 @@ def _make_config_node(node):
         "bindIP"  : node.bindIP,
         "basePort": node.basePort,
         "logLevel": "trace",
-        "logLevelProposal": "trace"
+        "logLevelProposal": "trace",
+        "emptyBlockIntervalSec": 3600
     }
-
 
 def _make_config_schain_node(node, index):
     return {
