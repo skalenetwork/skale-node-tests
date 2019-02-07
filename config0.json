@@ -1,34 +1,37 @@
 {
         "sealEngine": "Ethash",
-        "params": {
-		"accountStartNonce": "0x00",
-		 "maximumExtraDataSize": "0x20",
-		"blockReward": "0x4563918244F40000",
-                "homesteadForkBlock": "0",
-                "EIP150ForkBlock": "0",
-                "EIP158ForkBlock": "0",
-                "ByzantiumForkBlock": "0",
-                "networkID" : "23956",
-                "chainID": "23956",
-                "maxGasLimit": "7fffffffffffffff",
-                "minimumDifficulty": "0x002000",
-                "difficultyBoundDivisor": "0x0800",
-                "blockReward": "0x4563918244F40000"
-        },
-        "genesis": {
-
-		  "nonce": "0x0",
-		  "timestamp": "0x0",
-		  "extraData": "0x0000000000000000000000000000000000000000000000000000000000000000",
-		  "gasLimit": "0x47E7C4",
-                  "difficulty": "0x002000",
-		  "mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
-
-                "author": "0x0000000000000000000000000000000000000000",
-                "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000"
-        },
+  "params": {
+    "accountStartNonce": "0x00",
+    "homesteadForkBlock": "0x0",
+    "daoHardforkBlock": "0x0",
+    "EIP150ForkBlock": "0x00",
+    "EIP158ForkBlock": "0x00",
+    "byzantiumForkBlock": "0x0",
+    "constantinopleForkBlock": "0x0",
+    "networkID": "12313219",
+    "chainID": "0x01",
+    "maximumExtraDataSize": "0x20",
+    "tieBreakingGas": false,
+    "minGasLimit": "0x1388",
+    "maxGasLimit": "7fffffffffffffff",
+    "gasLimitBoundDivisor": "0x0400",
+    "minimumDifficulty": "0x020000",
+    "difficultyBoundDivisor": "0x0800",
+    "durationLimit": "0x0d",
+    "blockReward": "0x4563918244F40000"
+  },
+  "genesis": {
+    "nonce": "0x0000000000000042",
+    "difficulty": "0x020000",
+    "mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "author": "0x0000000000000000000000000000000000000000",
+    "timestamp": "0x00",
+    "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "extraData": "0x11bbe8db4e347b4e8c937c1c8370e4b5ed33adb3db69cbdb7a38e1e50b1b82fa",
+    "gasLimit": "0x47E7C4"
+  },
         "accounts": {
-	    "0xa81c77ecdad25c6e65e0733c9d460868df601b78":{
+	    "0xc80a77a587442f60537d2ef6dd6bef3778335939":{
 	        "balance": "1000000000000000000000"
 	    },
 	    "0x88a733ff9fc70fb07ba3767ab9578cf9cf0e3ad1":{
@@ -47,7 +50,8 @@
 	      "nodeID": 1112,
 	      "bindIP": "127.0.0.1",
 	      "basePort": 1231,
-              "logLevel": "critical"
+              "logLevel": "critical",
+              "emptyBlockInterval": 10
 	    },
 	    "sChain":
 	      {
