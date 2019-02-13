@@ -17,8 +17,14 @@ def count_txns(ch):
 
 def send_func(eth, arr, begin, count):
     for i in range(begin, begin+count):
-        t = arr[i]
-        eth.sendRawTransaction(t)
+        while(True):
+            try:
+                t = arr[i]
+                eth.sendRawTransaction(t)
+                break
+            except Exception as e:
+                print(e)
+                time.sleep(0.1)
 
 ch = create_default_chain(num_nodes=nNodes, num_accounts=nAcc)
 
@@ -101,5 +107,5 @@ print('*** Test passed ***')
 #                 print('\n'.join(diff))
 #     print('*** Test failed ***')
 
-ch.stop()
+#ch.stop()
 

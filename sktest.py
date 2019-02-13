@@ -393,7 +393,7 @@ class SChain:
 
         for n in self.nodes:
             provider = web3.Web3.HTTPProvider("http://" + n.bindIP + ":" + str(n.basePort + 3))
-            n.eth = web3.Web3().eth
+            n.eth = web3.Web3(provider).eth
             n.eth._provider = provider
             patch_eth(n.eth)
         self.eth = self.nodes[0].eth
