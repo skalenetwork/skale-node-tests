@@ -11,8 +11,18 @@ from threading import Timer
 import web3
 from web3.auto import w3
 import signal
+import types
 
 w3.eth.enable_unaudited_features()
+
+def patch_eth(eth):
+    def pauseConsensus(eth, pause):
+        eth._provider.make_request("debug_pauseConsensus", [pause])
+    def pauseBroadcast(eth, pause):
+        eth._provider.make_request("debug_pauseBroadcast", [pause])
+
+    eth.pauseConsensus = types.MethodType(pauseConsensus, eth)
+    eth.pauseBroadcast = types.MethodType(pauseBroadcast, eth)
 
 def _transaction2json(eth, t, accounts):
 #    print("_transaction2json", t)
@@ -208,8 +218,8 @@ def get_config(other=None):
             "chainID": "0x01",
             "maximumExtraDataSize": "0x20",
             "tieBreakingGas": False,
-            "minGasLimit": "0x1388",
-            "maxGasLimit": "7fffffffffffffff",
+            "minGasLimit": "0x47E7C4",
+            "maxGasLimit": "0x47E7C4",
             "gasLimitBoundDivisor": "0x0400",
             "minimumDifficulty": "0x020000",
             "difficultyBoundDivisor": "0x0800",
@@ -224,7 +234,7 @@ def get_config(other=None):
             "timestamp": "0x00",
             "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
             "extraData": "0x11bbe8db4e347b4e8c937c1c8370e4b5ed33adb3db69cbdb7a38e1e50b1b82fa",
-            "gasLimit": "0x47E7C400"
+            "gasLimit": "0x47E7C4"
         },
         "accounts": {}
     }
@@ -375,6 +385,10 @@ class SChain:
     def block(self):
         return self.transaction(value=0)
 
+    def wait_block(self):
+        latest_filter = self.all_filter('latest')
+        return self.wait_all_filter(latest_filter)
+
     def start(self):
         self.starter.start(self)
 
@@ -382,7 +396,10 @@ class SChain:
         #, request_kwargs={'proxies': proxies}
 
         for n in self.nodes:
-            n.eth = web3.Web3(web3.Web3.HTTPProvider("http://" + n.bindIP + ":" + str(n.basePort + 3))).eth
+            provider = web3.Web3.HTTPProvider("http://" + n.bindIP + ":" + str(n.basePort + 3))
+            n.eth = web3.Web3(provider).eth
+            n.eth._provider = provider
+            patch_eth(n.eth)
         self.eth = self.nodes[0].eth
         self.running = True  # TODO Duplicates functionality in Starter!
 
@@ -410,7 +427,7 @@ def _make_config_node(node):
         "basePort": node.basePort,
         "logLevel": "trace",
         "logLevelProposal": "trace",
-        "emptyBlockIntervalSec": 3600
+        "emptyBlockIntervalMs": -1
     }
 
 def _make_config_schain_node(node, index):
