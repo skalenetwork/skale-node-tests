@@ -506,7 +506,7 @@ class LocalStarter:
             raise Exception("Timed out!")
 
         signal.signal(signal.SIGALRM, signal_handler)
-        TIMEOUT=30
+        TIMEOUT = 40
         signal.alarm(TIMEOUT)
         try:
             input('Press enter when nodes start')
