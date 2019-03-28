@@ -218,8 +218,8 @@ def get_config(other=None):
             "chainID": "0x01",
             "maximumExtraDataSize": "0x20",
             "tieBreakingGas": False,
-            "minGasLimit": "0x1388",
-            "maxGasLimit": "7fffffffffffffff",
+            "minGasLimit": "0x47E7C4",
+            "maxGasLimit": "0x47E7C4",
             "gasLimitBoundDivisor": "0x0400",
             "minimumDifficulty": "0x020000",
             "difficultyBoundDivisor": "0x0800",
@@ -234,7 +234,7 @@ def get_config(other=None):
             "timestamp": "0x00",
             "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
             "extraData": "0x11bbe8db4e347b4e8c937c1c8370e4b5ed33adb3db69cbdb7a38e1e50b1b82fa",
-            "gasLimit": "0x47E7C400"
+            "gasLimit": "0x47E7C4"
         },
         "accounts": {}
     }
@@ -385,6 +385,10 @@ class SChain:
     def block(self):
         return self.transaction(value=0)
 
+    def wait_block(self):
+        latest_filter = self.all_filter('latest')
+        return self.wait_all_filter(latest_filter)
+
     def start(self):
         self.starter.start(self)
 
@@ -423,7 +427,7 @@ def _make_config_node(node):
         "basePort": node.basePort,
         "logLevel": "trace",
         "logLevelProposal": "trace",
-        "emptyBlockIntervalSec": 3600
+        "emptyBlockIntervalMs": -1
     }
 
 def _make_config_schain_node(node, index):
