@@ -12,7 +12,7 @@
     "chainID": "0x01",
     "maximumExtraDataSize": "0x20",
     "tieBreakingGas": false,
-    "minGasLimit": "0x1388",
+    "minGasLimit": "0x47E7C40",
     "maxGasLimit": "7fffffffffffffff",
     "gasLimitBoundDivisor": "0x0400",
     "minimumDifficulty": "0x020000",
@@ -23,12 +23,12 @@
   "genesis": {
     "nonce": "0x0000000000000042",
     "difficulty": "0x020000",
-    "mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "mixHash": "0x0000000000000000000000000000000000000000000000000000000000000abc",
     "author": "0x0000000000000000000000000000000000000000",
     "timestamp": "0x00",
     "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
     "extraData": "0x11bbe8db4e347b4e8c937c1c8370e4b5ed33adb3db69cbdb7a38e1e50b1b82fa",
-    "gasLimit": "0x47E7C4"
+    "gasLimit": "0x47E7C40"
   },
         "accounts": {
 	    "0xc80a77a587442f60537d2ef6dd6bef3778335939":{
@@ -51,7 +51,7 @@
 	      "bindIP": "127.0.0.1",
 	      "basePort": 1231,
               "logLevel": "critical",
-              "emptyBlockIntervalSec": 10
+              "emptyBlockIntervalMs": -1
 	    },
 	    "sChain":
 	      {
