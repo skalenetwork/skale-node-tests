@@ -499,7 +499,7 @@ class LocalStarter:
             self.exe_popens.append(
                 Popen([#"/usr/bin/strace", '-o'+node_dir+'/aleth.trace',
                        self.exe,
-                       "--no-discovery",
+                       "--http-port", str(n.basePort + 3),
                        "--config", cfg_file,
                        "-d", node_dir,
                        "--ipcpath", ipc_dir,
