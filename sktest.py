@@ -352,21 +352,28 @@ class SChain:
 
     def transaction_obj(self, **kwargs):
         assert len(self.accounts) > 0
+
         _from = kwargs.get("_from", 0)
         to = kwargs.get("to", 1)
         value = kwargs.get("value", self.balance(_from) // 2)
         nonce = kwargs.get("nonce", self.nonce(_from))
+        data  = kwargs.get("data", "0x")
+        gas   = int(kwargs.get("gas", 21000))
 
         from_addr = self.accounts[_from]
-        to_addr = self.accounts[to]
+        if type(to) is str:
+            to_addr = to
+        else:
+            to_addr = self.accounts[to]
 
         transaction = {
             "from": from_addr,
             "to": to_addr,
             "value": value,
-            "gas": 21000,
+            "gas": gas,
             "gasPrice": 0,
-            "nonce": nonce
+            "nonce": nonce,
+            "data": data
         }
         signed = w3.eth.account.signTransaction(transaction, private_key=self.privateKeys[_from])
         return "0x" + binascii.hexlify(signed.rawTransaction).decode("utf-8")
@@ -427,7 +434,7 @@ def _make_config_node(node):
         "basePort": node.basePort,
         "logLevel": "trace",
         "logLevelProposal": "trace",
-        "emptyBlockIntervalMs": -1
+        "emptyBlockIntervalMs": 1000
     }
 
 def _make_config_schain_node(node, index):
@@ -500,10 +507,12 @@ class LocalStarter:
                 Popen([#"/usr/bin/strace", '-o'+node_dir+'/aleth.trace',
                        self.exe,
                        "--http-port", str(n.basePort + 3),
+                       "--aa", "always",
                        "--config", cfg_file,
                        "-d", node_dir,
                        "--ipcpath", ipc_dir,
-                       "-v", "4"],
+                       "-v", "4",
+                       "--web3-trace"],
                       stdout=aleth_out,
                       stderr=aleth_err,
                       env = {"DATA_DIR":node_dir}
