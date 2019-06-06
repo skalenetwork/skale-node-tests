@@ -12,8 +12,8 @@
     "chainID": "0x01",
     "maximumExtraDataSize": "0x20",
     "tieBreakingGas": false,
-    "minGasLimit": "0x47E7C40",
-    "maxGasLimit": "7fffffffffffffff",
+    "minGasLimit": "0xFFFFFFF",
+    "maxGasLimit": "0xFFFFFFF",
     "gasLimitBoundDivisor": "0x0400",
     "minimumDifficulty": "0x020000",
     "difficultyBoundDivisor": "0x0800",
@@ -28,7 +28,7 @@
     "timestamp": "0x00",
     "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
     "extraData": "0x11bbe8db4e347b4e8c937c1c8370e4b5ed33adb3db69cbdb7a38e1e50b1b82fa",
-    "gasLimit": "0x47E7C40"
+    "gasLimit": "0xFFFFFFF"
   },
         "accounts": {
 	    "0xc80a77a587442f60537d2ef6dd6bef3778335939":{
@@ -42,13 +42,16 @@
 	    },
 	    "0xc3b9aea6b4b3045e1c0a4887ed10d2054e110549":{
 	        "balance": "1000000000000000000000"
+	    },
+	    "0xde6aa2724b2e800f65cf54c3c632fded758aff7c":{
+	        "balance": "1000000000000000000000"
 	    }
         },
 	 "skaleConfig": {
 	    "nodeInfo": {
 	      "nodeName": "Node1",
 	      "nodeID": 1112,
-	      "bindIP": "127.0.0.1",
+	      "bindIP": "192.168.2.195",
 	      "basePort": 1231,
               "logLevel": "critical",
               "emptyBlockIntervalMs": -1
@@ -58,7 +61,7 @@
 	        "schainName": "TestChain",
 	        "schainID": 1,
 	        "nodes": [
-	          { "nodeID": 1112, "ip": "127.0.0.1", "basePort": 1231, "schainIndex" : 0}
+	          { "nodeID": 1112, "ip": "192.168.2.195", "basePort": 1231, "schainIndex" : 0}
 	        ]
 	      }
   }

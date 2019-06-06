@@ -434,7 +434,7 @@ def _make_config_node(node):
         "basePort": node.basePort,
         "logLevel": "trace",
         "logLevelProposal": "trace",
-        "emptyBlockIntervalMs": 1000
+        "emptyBlockIntervalMs": -1
     }
 
 def _make_config_schain_node(node, index):
@@ -512,7 +512,8 @@ class LocalStarter:
                        "-d", node_dir,
                        "--ipcpath", ipc_dir,
                        "-v", "4",
-                       "--web3-trace"],
+                       "--web3-trace"
+                       ],
                       stdout=aleth_out,
                       stderr=aleth_err,
                       env = {"DATA_DIR":node_dir}
