@@ -480,8 +480,7 @@ class LocalStarter:
         for n in self.chain.nodes:
             assert not n.running
 
-            node_dir = self.dir.name + "/" + str(n.nodeID)
-#            node_dir = "dir/" + str(n.nodeID)
+            node_dir = os.getenv('DATA_DIR', self.dir.name) + "/" + str(n.nodeID)
             ipc_dir = node_dir
             os.makedirs(node_dir)
             cfg_file = node_dir + "/config.json"
@@ -503,6 +502,9 @@ class LocalStarter:
             proxy_out = io.open(node_dir + "/" + "proxy.out", "w")
             proxy_err = io.open(node_dir + "/" + "proxy.err", "w")
 
+            env = os.environ.copy()
+            env['DATA_DIR'] = node_dir
+
             self.exe_popens.append(
                 Popen([#"/usr/bin/strace", '-o'+node_dir+'/aleth.trace',
                        self.exe,
@@ -516,7 +518,7 @@ class LocalStarter:
                        ],
                       stdout=aleth_out,
                       stderr=aleth_err,
-                      env = {"DATA_DIR":node_dir}
+                      env = env
                 ))
             # HACK +0 +1 +2 are used by consensus
             url = f"http://{n.bindIP}:{n.basePort + 3}"
