@@ -442,7 +442,7 @@ def _make_config_schain_node(node, index):
         "nodeID"   : node.nodeID,
         "ip"       : node.bindIP,
         "basePort" : node.basePort,
-        "schainIndex": index
+        "schainIndex": index+1
     }
 
 
@@ -512,9 +512,10 @@ class LocalStarter:
                        "--aa", "always",
                        "--config", cfg_file,
                        "-d", node_dir,
-                       "--ipcpath", ipc_dir,
+#                       "--ipcpath", ipc_dir,		# ACHTUNG!!! 107 characters max!!
                        "-v", "4",
-                       "--web3-trace"
+                       "--web3-trace",
+                       "--acceptors", "1"
                        ],
                       stdout=aleth_out,
                       stderr=aleth_err,
