@@ -15,6 +15,25 @@ import types
 
 w3.eth.enable_unaudited_features()
 
+def safe_input_with_timeout(s, timeout):
+
+    def signal_handler(signum, frame):
+        raise Exception("Timed out!")
+
+    signal.signal(signal.SIGALRM, signal_handler)
+    signal.alarm(timeout)
+    try:
+        input(s)
+        signal.alarm(0)
+    except Exception as ex:
+        if str(ex) == "Timed out!":
+            print("\ntimed out")
+        else:
+            print("nowhere to input from: " + repr(ex))
+            signal.alarm(0)
+            time.sleep(timeout)
+        #Exception("Timed out!")
+
 def patch_eth(eth):
     def pauseConsensus(eth, pause):
         eth._provider.make_request("debug_pauseConsensus", [pause])
@@ -530,29 +549,7 @@ class LocalStarter:
             n.ipcPath = ipc_dir + "/geth.ipc"
             n.running = True
 
-        #input('Press enter when nodes start')
-
-        def signal_handler(signum, frame):
-            raise Exception("Timed out!")
-
-        signal.signal(signal.SIGALRM, signal_handler)
-        TIMEOUT = 40
-        signal.alarm(TIMEOUT)
-        try:
-            input('Press enter when nodes start')
-            print('thank you')
-            signal.alarm(0)
-        except Exception as ex:
-            if str(ex) == "Timed out!":
-                print("\ntimed out")
-            else:
-                print("something awful happened!" + repr(ex))
-                signal.alarm(0)
-                time.sleep(TIMEOUT)
-            #Exception("Timed out!")
-
-
-
+            safe_input_with_timeout('Press enter when nodes start', 40)
 
 #        for p in for_delayed_proxies:
 #            self.proxy_popens.append( Popen(p['args'], stdout = p['stdout'], stderr = p['stderr']) )

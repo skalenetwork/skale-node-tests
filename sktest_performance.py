@@ -46,7 +46,7 @@ except Exception as ex:
         print("from=%d nonce=%d %s" % (acc1, nonce, ch.accounts[acc1]))
         txn_str = ch.transaction_obj(value=1, _from=acc1, to=acc2, nonce=nonce)
         transactions.append( txn_str )
-    input("Sending txns - press")
+    safe_input_with_timeout("Sending txns - press", 10)
     with open(file, "wb") as fd:
         pickle.dump(transactions, fd)
 
