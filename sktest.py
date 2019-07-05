@@ -549,7 +549,7 @@ class LocalStarter:
             n.ipcPath = ipc_dir + "/geth.ipc"
             n.running = True
 
-            safe_input_with_timeout('Press enter when nodes start', 40)
+        safe_input_with_timeout('Press enter when nodes start', 40)
 
 #        for p in for_delayed_proxies:
 #            self.proxy_popens.append( Popen(p['args'], stdout = p['stdout'], stderr = p['stderr']) )
