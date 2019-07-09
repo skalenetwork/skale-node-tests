@@ -7,14 +7,6 @@ nTxns = 24000
 nAcc  = 8000
 nThreads = 1
 
-def count_txns(ch):
-    sum = 0
-    for i in range(ch.eth.blockNumber+1):
-        b = ch.eth.getBlock(i)
-        n = len(b.transactions)
-        sum += n
-    return sum
-
 def send_func(eth, arr, begin, count):
     for i in range(begin, begin+count):
         while(True):
@@ -30,25 +22,7 @@ ch = create_default_chain(num_nodes=nNodes, num_accounts=nAcc)
 
 ch.start()
 
-transactions = []
-file = "transactions_"+str(nAcc)+"_"+str(nTxns)
-
-try:
-    with open(file, "rb") as fd:
-        transactions = pickle.load(fd)
-    print("Loaded transactions from file")
-except Exception as ex:
-    print("Generating txns")
-    for i in range(nTxns):
-        acc1 = i % nAcc
-        acc2 = (i+1) % nAcc
-        nonce = i // nAcc
-        print("from=%d nonce=%d %s" % (acc1, nonce, ch.accounts[acc1]))
-        txn_str = ch.transaction_obj(value=1, _from=acc1, to=acc2, nonce=nonce)
-        transactions.append( txn_str )
-    safe_input_with_timeout("Sending txns - press", 10)
-    with open(file, "wb") as fd:
-        pickle.dump(transactions, fd)
+transactions = generate_or_load_txns(ch, nAcc, nTxns)
 
 #print("Sleeping 15 sec")
 #time.sleep(15)
@@ -73,16 +47,10 @@ for t in range(nThreads):
     thread.start()
 
 print("Waiting for blocks")
-count = 0
-while count != nTxns:
-    count = count_txns(ch)
-    t2 = time.time()
-    print("%d txns %d blocks perf = %f tx/sec" % (count, ch.eth.blockNumber, count/(t2-t1)))
-    time.sleep(0.5)
 
-t2 = time.time()
+dt = wait_for_txns(ch, nTxns)
 
-print("Txns: "+str(nTxns)+" Time: "+str(t2-t1)+" => "+str(nTxns/(t2-t1))+" tx/sec")
+print("Txns: "+str(nTxns)+" Time: "+str(dt)+" => "+str(nTxns/(dt))+" tx/sec")
 
 print('*** Test passed ***')
 

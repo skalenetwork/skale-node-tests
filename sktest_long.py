@@ -75,5 +75,5 @@ else:
                 print('\n'.join(diff))
     print('*** Test failed ***')
 
-ch.stop()
+#ch.stop()
 print("Txns: "+str(nTxns)+" Time: "+str(t2-t1)+" => "+str(nTxns/(t2-t1))+" tx/sec")
