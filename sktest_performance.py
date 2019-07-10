@@ -3,8 +3,8 @@ import time
 import threading
 
 nNodes = int(os.getenv("NUM_NODES", 16))
-nTxns = 24000
-nAcc  = 8000
+nTxns = 100#24000
+nAcc  = 100#8000
 nThreads = 1
 
 def send_func(eth, arr, begin, count):
@@ -52,7 +52,17 @@ dt = wait_for_txns(ch, nTxns)
 
 print("Txns: "+str(nTxns)+" Time: "+str(dt)+" => "+str(nTxns/(dt))+" tx/sec")
 
-print('*** Test passed ***')
+ok = True
+for i in range(nNodes):
+    ntx = count_txns(ch.nodes[i].eth)
+    print("Node%d: %d txns" % (i, ntx))
+    if ntx != nTxns:
+        ok = False
+
+if ok:
+    print('*** Test passed ***')
+else:
+    print('*** Test failed ***')
 
 # input("press enter")
 #

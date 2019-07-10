@@ -56,10 +56,10 @@ def load_private_keys(path, password, count=0):
             print(f"Loaded {i} of {count} keys")
     return res
 
-def count_txns(ch):
+def count_txns(eth):
     sum = 0
-    for i in range(ch.eth.blockNumber+1):
-        b = ch.eth.getBlock(i)
+    for i in range(eth.blockNumber+1):
+        b = eth.getBlock(i)
         n = len(b.transactions)
         sum += n
     return sum
@@ -93,7 +93,7 @@ def wait_for_txns(ch, nTxns):
     count = 0
 
     while count != nTxns:
-        count = count_txns(ch)
+        count = count_txns(ch.eth)
 
         t2 = time.time()
 
