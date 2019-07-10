@@ -93,14 +93,20 @@ def wait_for_txns(ch, nTxns):
     count = 0
 
     while count != nTxns:
-        count = count_txns(ch.eth)
+
+        while True:
+            try:
+                count = count_txns(ch.eth)
+                break
+            except Exception as e:
+                print(e)
 
         t2 = time.time()
 
         if t2!=t1:
             print("%d txns %d blocks perf = %f tx/sec" % (count, ch.eth.blockNumber, count/(t2-t1)))
 
-        time.sleep(0.5)
+        time.sleep(1)
 
     t2 = time.time()
 

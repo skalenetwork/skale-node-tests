@@ -3,9 +3,9 @@ import time
 import threading
 
 nNodes = int(os.getenv("NUM_NODES", 16))
-nTxns = 100#24000
-nAcc  = 100#8000
-nThreads = 1
+nTxns = 24000
+nAcc  = 8000
+nThreads = 0
 
 def send_func(eth, arr, begin, count):
     for i in range(begin, begin+count):
@@ -16,7 +16,7 @@ def send_func(eth, arr, begin, count):
                 break
             except Exception as e:
                 print(e)
-                time.sleep(0.1)
+                time.sleep(1)
 
 ch = create_default_chain(num_nodes=nNodes, num_accounts=nAcc)
 
@@ -24,27 +24,38 @@ ch.start()
 
 transactions = generate_or_load_txns(ch, nAcc, nTxns)
 
-#print("Sleeping 15 sec")
-#time.sleep(15)
-
 t1 = time.time()
 
-#for i in range(len(transactions)):
-#    if i%10 == 0:
-#        print("Sending %d" % i)
-#    t = transactions[i]
-#    ch.eth.sendRawTransaction(t)
+if nThreads == 0:
+    for i in range(len(transactions)):
 
-txns_per_thread = nTxns // nThreads
+        if i % 100 == 0:
+            print(str(i))
 
-assert txns_per_thread*nThreads == nTxns
+        t = transactions[i]
+        while True:
+            try:
+                ch.nodes[0].eth.sendRawTransaction(t)
+                break
+            except Exception as e:
+                print(e)
+                try:
+                    ch.nodes[1].eth.sendRawTransaction(t)
+                    break
+                except Exception as e2:
+                    print(e2)
+                    time.sleep(1)
+else:
+    txns_per_thread = nTxns // nThreads
 
-for t in range(nThreads):
-    n = ch.nodes[0]
-    eth = web3.Web3(web3.Web3.HTTPProvider("http://" + n.bindIP + ":" + str(n.basePort + 3))).eth
-    #eth = web3.Web3(web3.Web3.IPCProvider(n.ipcPath)).eth
-    thread = threading.Thread(target=send_func, args=(eth, transactions, t*txns_per_thread, txns_per_thread))
-    thread.start()
+    assert txns_per_thread*nThreads == nTxns
+
+    for t in range(nThreads):
+        n = ch.nodes[0]
+        eth = web3.Web3(web3.Web3.HTTPProvider("http://" + n.bindIP + ":" + str(n.basePort + 3))).eth
+        #eth = web3.Web3(web3.Web3.IPCProvider(n.ipcPath)).eth
+        thread = threading.Thread(target=send_func, args=(eth, transactions, t*txns_per_thread, txns_per_thread))
+        thread.start()
 
 print("Waiting for blocks")
 
