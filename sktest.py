@@ -39,9 +39,19 @@ def patch_eth(eth):
         eth._provider.make_request("debug_pauseConsensus", [pause])
     def pauseBroadcast(eth, pause):
         eth._provider.make_request("debug_pauseBroadcast", [pause])
+    def forceBlock(eth):
+        eth._provider.make_request("debug_forceBlock", []);
+    def forceBroadcast(eth, h):
+        eth._provider.make_request("debug_forceBroadcast", [h]);
+    def callSkaleHost(eth, arg):
+        res = eth._provider.make_request("debug_callSkaleHost", [arg]);
+        return res["result"]
 
     eth.pauseConsensus = types.MethodType(pauseConsensus, eth)
     eth.pauseBroadcast = types.MethodType(pauseBroadcast, eth)
+    eth.forceBlock     = types.MethodType(forceBlock, eth)
+    eth.forceBroadcast = types.MethodType(forceBroadcast, eth)
+    eth.callSkaleHost  = types.MethodType(callSkaleHost, eth)
 
 def _transaction2json(eth, t, accounts):
 #    print("_transaction2json", t)
@@ -451,8 +461,9 @@ def _make_config_node(node):
         "nodeID"  : node.nodeID,
         "bindIP"  : node.bindIP,
         "basePort": node.basePort,
-        "logLevel": "trace",
-        "logLevelProposal": "trace",
+        "logLevel": "info",
+#        "logLevelProposal": "trace",
+        "logLevelCatchup": "trace",
         "emptyBlockIntervalMs": -1
     }
 
@@ -526,6 +537,7 @@ class LocalStarter:
 
             self.exe_popens.append(
                 Popen([#"/usr/bin/strace", '-o'+node_dir+'/aleth.trace',
+                       "stdbuf", "-oL",
                        self.exe,
                        "--http-port", str(n.basePort + 3),
                        "--aa", "always",

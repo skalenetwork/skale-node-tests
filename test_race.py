@@ -33,50 +33,68 @@ def schain2():
     final_check(ch)
     ch.stop()
 
-def test_no_bcast(schain2):
+@pytest.mark.parametrize("receive_before", ["fetch_transactions", "create_block", "import_block", "never"])
+def test_bcast(schain2, receive_before):
     (ch, eth1, eth2, tx1, tx2) = schain2
 
-    eth2.pauseBroadcast(True)
-    eth2.pauseConsensus(True)
-    
-    # send tx on 1 - should be no blocks
-    eth2.sendRawTransaction(tx1)
-    eth1.forceBlock()
-
-    time.sleep(2)
-    assert(eth1.blockNumber == 0)
-    assert(eth2.blockNumber == 0)
-
-    # now should have txn
-    eth2.pauseConsensus(False)
-
-    time.sleep(2)
-    assert(eth1.blockNumber == 1)
-    assert(eth2.blockNumber == 1)
-    assert(count_txns(eth1)==1)
-    assert(count_txns(eth2)==1)
-
-def test_late_bcast(schain2):
-    (ch, eth1, eth2, tx1, tx2) = schain2
-    
-    eth2.pauseBroadcast(True)
+    eth1.callSkaleHost("trace break receive_transaction")
 
     h1 = eth2.sendRawTransaction(tx1)
+
     h1 = "0x" + binascii.hexlify(h1).decode("utf-8")
-    eth1.forceBlock()
-    eth2.forceBroadcast(h1)
 
+    if receive_before != "never":
+        eth1.callSkaleHost("trace break " + receive_before)
+
+    if receive_before != "fetch_transactions":           # force only if 0 txns
+        eth1.forceBlock()
     time.sleep(2)
-    assert(eth1.blockNumber == 1)
-    assert(eth2.blockNumber == 1)
 
-    # eth1 should have an extra copy of this txn now, which should be dropped
+    ############################ receive txns, continue and check ##############################
+
+    eth1.callSkaleHost("trace continue receive_transaction")
+    time.sleep(2)
+
+    if receive_before != "never":
+        eth1.callSkaleHost("trace continue " + receive_before)
+        time.sleep(2)
+
+    # one more block
     eth2.forceBlock()
     eth1.forceBlock()
-
     time.sleep(2)
+
+    # checks 1
+
     assert(eth1.blockNumber == 2)
     assert(eth2.blockNumber == 2)
     assert(count_txns(eth1)==1)
     assert(count_txns(eth2)==1)
 
+    # checks 2
+    counters = []
+
+    cnt = int(eth1.callSkaleHost("trace count import_consensus_born"))
+    counters.append(cnt)
+
+    cnt = int(eth1.callSkaleHost("trace count import_future"))
+    counters.append(cnt)
+
+    cnt = int(eth1.callSkaleHost("trace count drop_good"))
+    counters.append(cnt)
+
+    cnt = int(eth1.callSkaleHost("trace count drop_bad"))
+    counters.append(cnt)
+
+    if receive_before == "fetch_transactions":
+        assert( counters == [0, 0, 1, 0] )
+    elif receive_before == "create_block":
+        assert (counters == [1, 1, 0, 1])
+    elif receive_before == "import_block":
+        assert (counters == [1, 0, 0, 1])
+    elif receive_before == "never":
+        assert (counters == [1, 0, 0, 0])
+    else:
+        assert False
+
+    pass
