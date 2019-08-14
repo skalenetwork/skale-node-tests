@@ -17,6 +17,10 @@ w3.eth.enable_unaudited_features()
 
 def safe_input_with_timeout(s, timeout):
 
+    if timeout == 0:
+       print("Zero wait")
+       return
+
     def signal_handler(signum, frame):
         raise Exception("Timed out!")
 
@@ -400,7 +404,7 @@ class SChain:
             "to": to_addr,
             "value": value,
             "gas": gas,
-            "gasPrice": 0,
+            "gasPrice": 1000,
             "nonce": nonce,
             "data": data
         }
@@ -425,8 +429,8 @@ class SChain:
         latest_filter = self.all_filter('latest')
         return self.wait_all_filter(latest_filter)
 
-    def start(self):
-        self.starter.start(self)
+    def start(self, **kwargs):
+        self.starter.start(self, **kwargs)
 
         #proxies = {'http': 'http://127.0.0.1:2234'};
         #, request_kwargs={'proxies': proxies}
@@ -491,20 +495,16 @@ class LocalStarter:
     chain = None
     started = False
 
-    def __init__(self, exe, proxy):
+    def __init__(self, exe):
         self.exe = exe
-        self.proxy = proxy
         self.dir = TemporaryDirectory()
         self.exe_popens = []
-        self.proxy_popens = []
         self.running = False
 
-    def start(self, chain):
+    def start(self, chain, start_timeout = 40):
         assert not self.started
         self.started = True
         self.chain = chain
-
-        for_delayed_proxies = []
 
         # TODO Handle exceptions!
         for n in self.chain.nodes:
@@ -529,8 +529,6 @@ class LocalStarter:
             # TODO Close all of it?
             aleth_out = io.open(node_dir + "/" + "aleth.out", "w")
             aleth_err = io.open(node_dir + "/" + "aleth.err", "w")
-            proxy_out = io.open(node_dir + "/" + "proxy.out", "w")
-            proxy_err = io.open(node_dir + "/" + "proxy.err", "w")
 
             env = os.environ.copy()
             env['DATA_DIR'] = node_dir
@@ -555,13 +553,10 @@ class LocalStarter:
             # HACK +0 +1 +2 are used by consensus
             url = f"http://{n.bindIP}:{n.basePort + 3}"
 
-            for_delayed_proxies.append({'args': [self.proxy, ipc_dir + "/geth.ipc", url],
-                                        'stdout': proxy_out, 'stderr': proxy_err})
-
             n.ipcPath = ipc_dir + "/geth.ipc"
             n.running = True
 
-        safe_input_with_timeout('Press enter when nodes start', 40)
+        safe_input_with_timeout('Press enter when nodes start', start_timeout)
 
 #        for p in for_delayed_proxies:
 #            self.proxy_popens.append( Popen(p['args'], stdout = p['stdout'], stderr = p['stderr']) )
@@ -577,10 +572,6 @@ class LocalStarter:
         # TODO race conditions?
         for n in self.chain.nodes:
             n.running = False
-        for p in self.proxy_popens:
-            if p.poll() is None:
-                p.terminate()
-                p.wait()
         for p in self.exe_popens:
             if p.poll() is None:
                 p.terminate()

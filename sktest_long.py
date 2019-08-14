@@ -16,10 +16,17 @@ num_nodes = int(os.getenv("NUM_NODES", 4))
 
 ch = create_default_chain(num_nodes=num_nodes, num_accounts=nAcc)
 
-ch.start()
+ch.start(start_timeout = 0)
 # input("press enter")
 
-start_nonce = {account: ch.nonce(account) for account in range(nAcc)}
+# wait for answer
+while True:
+    try:
+        start_nonce = {account: ch.nonce(account) for account in range(nAcc)}
+    except:
+        time.sleep(0.1)			# poll
+        continue
+    break
 
 start_balance = {account: ch.balance(account) for account in range(nAcc)}
 print('Balances:', start_balance)

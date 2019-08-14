@@ -7,10 +7,9 @@ w3.eth.enable_unaudited_features()
 
 from hexbytes import HexBytes
  
-global sktest_exe, sktest_proxy
+global sktest_exe
 #sktest_exe = os.getenv("SKTEST_EXE", "/home/dimalit/skale-ethereum/scripts/aleth")
 sktest_exe = os.getenv("SKTEST_EXE", "/home/dimalit/skale-ethereum/build/Debug/skaled/skaled")
-sktest_proxy = os.getenv("SKTEST_PROXY", "/home/dimalit/skale-ethereum/scripts/jsonrpcproxy.py")
 
 class HexJsonEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -33,8 +32,8 @@ def create_default_chain(num_nodes=2, num_accounts=2):
     for i in range(num_accounts):
         balances.append(str((i + 1) * 1000000000000000000000))
 
-    global sktest_exe, sktest_proxy
-    starter = LocalStarter(sktest_exe, sktest_proxy)
+    global sktest_exe
+    starter = LocalStarter(sktest_exe)
     chain = SChain(nodes, starter, balances)
     return chain
 
@@ -111,4 +110,15 @@ def wait_for_txns(ch, nTxns):
     t2 = time.time()
 
     return t2-t1
+
+def print_states_difference(ch):
+    nNodes = len(ch.nodes)
+    states = [ch.state(index) for index in range(nNodes)]
+    for a_index in range(nNodes):
+        for b_index in range(a_index + 1, nNodes):
+            diff = list_differences(states[a_index], states[b_index])
+            if diff:
+                print('')
+                print(f'Difference between node #{a_index + 1} and #{b_index + 1}')
+                print('\n'.join(diff))
 
