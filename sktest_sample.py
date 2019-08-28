@@ -3,7 +3,8 @@ from sktest_helpers import *
 import time
 import json
 
-ch = create_default_chain(num_nodes=int(os.getenv("NUM_NODES", 4)), num_accounts=2)
+num_nodes=int(os.getenv("NUM_NODES", 4))
+ch = create_default_chain(num_nodes=num_nodes, num_accounts=2)
 ch.start()
 
 # input("press enter")
@@ -16,8 +17,8 @@ ch.transaction()
 # print("")
 
 difference = None
-#if num_nodes > 1:
-#    difference = ch.compare_all_states()
+if num_nodes > 1:
+    difference = ch.compare_all_states()
 
 if difference is None:
     print('States on all nodes are consistent')
@@ -25,6 +26,7 @@ if difference is None:
 else:
     print("Diffs from state 1:")
     print(dump_node_state(difference))
+    print_states_difference(ch)
     print('*** Test failed ***')
 
 #ch.stop()

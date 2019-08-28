@@ -2,9 +2,9 @@ from sktest_helpers import *
 import time
 import threading
 
-nNodes = int(os.getenv("NUM_NODES", 16))
-nTxns = 24000
-nAcc  = 8000
+nNodes = int(os.getenv("NUM_NODES", 4))
+nTxns = 4000 #24000
+nAcc  = 1000 #8000
 nThreads = 0
 
 def send_func(eth, arr, begin, count):
@@ -20,9 +20,9 @@ def send_func(eth, arr, begin, count):
 
 ch = create_default_chain(num_nodes=nNodes, num_accounts=nAcc)
 
-ch.start()
-
 transactions = generate_or_load_txns(ch, nAcc, nTxns)
+
+ch.start(start_timeout = 0)
 
 t1 = time.time()
 
@@ -35,12 +35,14 @@ if nThreads == 0:
         t = transactions[i]
         while True:
             try:
-                ch.nodes[0].eth.sendRawTransaction(t)
+                hash = ch.nodes[0].eth.sendRawTransaction(t)
+                print(i, "0x" + binascii.hexlify(hash).decode("utf-8"))
                 break
             except Exception as e:
                 print(e)
                 try:
-                    ch.nodes[1].eth.sendRawTransaction(t)
+                    hash = ch.nodes[1].eth.sendRawTransaction(t)
+                    print(i, "0x" + binascii.hexlify(hash).decode("utf-8"))
                     break
                 except Exception as e2:
                     print(e2)
@@ -74,27 +76,6 @@ if ok:
     print('*** Test passed ***')
 else:
     print('*** Test failed ***')
-
-# input("press enter")
-#
-# time.sleep(3)
-# difference = ch.compare_all_states()
-#
-# if difference is None:
-#     print('States on all nodes are consistent')
-#     print('*** Test passed ***')
-# else:
-#     print("Diffs from state 1:")
-#     print(dump_node_state(difference))
-#     states = [ch.state(index) for index in range(nNodes)]
-#     for a_index in range(nNodes):
-#         for b_index in range(a_index + 1, nNodes):
-#             diff = list_differences(states[a_index], states[b_index])
-#             if diff:
-#                 print('')
-#                 print(f'Difference between node #{a_index + 1} and #{b_index + 1}')
-#                 print('\n'.join(diff))
-#     print('*** Test failed ***')
 
 #ch.stop()
 

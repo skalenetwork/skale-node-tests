@@ -57,7 +57,9 @@ def test_two_nodes(schain2):
     assert (eth2.blockNumber == 1)
     assert (eth2.getTransactionCount(acc1) == 1)
     assert (balance1 > eth2.getBalance(acc1))
-    assert (balance1 + balance2 == eth2.getBalance(acc1) + eth2.getBalance(acc2))
+    assert (balance2 < eth2.getBalance(acc2))
+    # gas cost goes to 0 address
+    assert (balance1 + balance2 == eth2.getBalance(acc1) + eth2.getBalance(acc2) + eth2.getBalance("0x0000000000000000000000000000000000000000"))
 
     assert (ch.compare_all_states() is None)
 

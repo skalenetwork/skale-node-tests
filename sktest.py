@@ -465,9 +465,8 @@ def _make_config_node(node):
         "nodeID"  : node.nodeID,
         "bindIP"  : node.bindIP,
         "basePort": node.basePort,
-        "logLevel": "info",
-#        "logLevelProposal": "trace",
-        "logLevelCatchup": "trace",
+        "logLevel": "trace",
+        "logLevelConfig": "trace",
         "emptyBlockIntervalMs": -1
     }
 
