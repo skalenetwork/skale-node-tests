@@ -20,9 +20,9 @@ def send_func(eth, arr, begin, count):
 
 ch = create_default_chain(num_nodes=nNodes, num_accounts=nAcc)
 
-transactions = generate_or_load_txns(ch, nAcc, nTxns)
-
 ch.start(start_timeout = 0)
+
+transactions = generate_or_load_txns(ch, nAcc, nTxns)
 
 t1 = time.time()
 

@@ -73,6 +73,7 @@ def generate_or_load_txns(ch, nAcc, nTxns):
             transactions = pickle.load(fd)
         print("Loaded transactions from file")
     except Exception as ex:
+        ch.wait_start()
         print("Generating txns")
         for i in range(nTxns):
             acc1 = i % nAcc

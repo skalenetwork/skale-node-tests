@@ -443,6 +443,14 @@ class SChain:
         self.eth = self.nodes[0].eth
         self.running = True  # TODO Duplicates functionality in Starter!
 
+    def wait_start(self):
+        while True:
+            try:
+                self.eth.blockNumber
+                break
+            except Exception as ex:
+                time.sleep(1)
+
     def stop(self):
         self.starter.stop()
         self.running = False
