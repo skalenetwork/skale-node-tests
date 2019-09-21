@@ -22,12 +22,15 @@ def dump_node_state(obj):
     return json.dumps(obj, indent=1, cls=HexJsonEncoder)
 
 
-def create_default_chain(num_nodes=2, num_accounts=2):
+def create_default_chain(num_nodes=2, num_accounts=2, empty_blocks = False):
     nodes = []
     balances = []
 
     for i in range(num_nodes):
-        nodes.append(Node())
+        emptyBlockIntervalMs = -1
+        if empty_blocks:
+            emptyBlockIntervalMs = 1000
+        nodes.append(Node(emptyBlockIntervalMs = emptyBlockIntervalMs))
 
     for i in range(num_accounts):
         balances.append(str((i + 1) * 1000000000000000000000))

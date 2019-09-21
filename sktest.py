@@ -302,7 +302,9 @@ class Node:
         self.running = False
         self.eth = None
         self.ipcPath = None
-
+        self.emptyBlockIntervalMs = kwargs.get('emptyBlockIntervalMs', -1)
+        self.snapshotInterval = kwargs.get('snapshotInterval', -1)
+        self.snapshottedStartSeconds = kwargs.get('snapshottedStartSeconds', -1)
 
 class SChain:
 
@@ -475,7 +477,8 @@ def _make_config_node(node):
         "basePort": node.basePort,
         "logLevel": "trace",
         "logLevelConfig": "trace",
-        "emptyBlockIntervalMs": -1
+        "emptyBlockIntervalMs": node.emptyBlockIntervalMs,
+        "snapshotInterval": node.snapshotInterval,
     }
 
 def _make_config_schain_node(node, index):
@@ -540,8 +543,7 @@ class LocalStarter:
             env = os.environ.copy()
             env['DATA_DIR'] = node_dir
 
-            self.exe_popens.append(
-                Popen([#"/usr/bin/strace", '-o'+node_dir+'/aleth.trace',
+            popen_args = [#"/usr/bin/strace", '-o'+node_dir+'/aleth.trace',
                        "stdbuf", "-oL",
                        self.exe,
                        "--http-port", str(n.basePort + 3),
@@ -552,7 +554,15 @@ class LocalStarter:
                        "-v", "4",
                        "--web3-trace",
                        "--acceptors", "1"
-                       ],
+                       ]
+                       
+            if n.snapshottedStartSeconds >= 0:
+                popen_args.append("--download-snapshot")
+                popen_args.append("http://" + self.chain.nodes[0].bindIP + ":" + str(self.chain.nodes[0].basePort + 3))
+                time.sleep(n.snapshottedStartSeconds)
+
+            self.exe_popens.append(
+                Popen(popen_args,
                       stdout=aleth_out,
                       stderr=aleth_err,
                       env = env
