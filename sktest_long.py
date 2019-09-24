@@ -2,7 +2,7 @@ from sktest_helpers import *
 import time
 
 nAcc = int(os.getenv("NUM_ACCOUNTS", 10))
-nTxns = 100
+nTxns = 10000
 num_nodes = int(os.getenv("NUM_NODES", 4))
 
 # node = Node()
@@ -14,7 +14,7 @@ num_nodes = int(os.getenv("NUM_NODES", 4))
 # starter = NoStarter()
 # ch = SChain([node], starter, balances)
 
-ch = create_default_chain(num_nodes=num_nodes, num_accounts=nAcc)
+ch = create_default_chain(num_nodes=num_nodes, num_accounts=nAcc, empty_blocks=True)
 
 ch.start(start_timeout = 0)
 # input("press enter")
@@ -41,9 +41,9 @@ for i in range(nTxns):
 
     while True:
         try:
+            print(f"Send from account #{acc1} (nonce={nonce})")
             while ch.nonce(acc1) < nonce:
                 time.sleep(0.2)
-            print(f"Send from account #{acc1} (nonce={nonce})")
             ch.transaction_async(value=1, _from=acc1, to=acc2, nonce=nonce)
             break
         except ValueError as e:
@@ -52,6 +52,9 @@ for i in range(nTxns):
                 print(f"Nonce = {nonce} is invalid for account {acc1}. Current nonce is {current_nonce}.")
             else:
                 raise e
+        except Exception as e:
+            print(e)
+            time.sleep(1)
 
             # if not hasattr(e, 'args') or e.args[0]['message'] != 'Invalid transaction nonce.':
             #     raise

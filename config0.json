@@ -31,7 +31,7 @@
     "gasLimit": "0xFFFFFFF"
   },
         "accounts": {
-	    "0xc80a77a587442f60537d2ef6dd6bef3778335939":{
+	    "0xD9e934d088c3f7c68BA81A5FDC26640058ff6E66":{
 	        "balance": "1000000000000000000000"
 	    },
 	    "0x88a733ff9fc70fb07ba3767ab9578cf9cf0e3ad1":{
@@ -40,28 +40,33 @@
 	    "0xae4f0cbd0dcf6fc32e345b0d1b39d262719697e2":{
 	        "balance": "1000000000000000000000"
 	    },
-	    "0xc3b9aea6b4b3045e1c0a4887ed10d2054e110549":{
-	        "balance": "1000000000000000000000"
+	    "0x66c5a87f4a49DD75e970055A265E8dd5C3F8f852":{
+	        "balance": "1000000000000000000000000"
 	    },
-	    "0xde6aa2724b2e800f65cf54c3c632fded758aff7c":{
-	        "balance": "1000000000000000000000"
+	    "0x6196d135CdDb9d73A0756C1E44b5b02B11acf594":{
+	        "balance": "2000000000000000000000",
+	        "nonce": "5076",
+   	        "code": "",
+			"storage":{}
 	    }
         },
 	 "skaleConfig": {
 	    "nodeInfo": {
 	      "nodeName": "Node1",
 	      "nodeID": 1112,
-	      "bindIP": "192.168.2.195",
+	      "bindIP": "0.0.0.0",
 	      "basePort": 1231,
-              "logLevel": "critical",
-              "emptyBlockIntervalMs": -1
+              "logLevel": "trace",
+              "logLevelProposal": "trace",
+              "emptyBlockIntervalMs": 1000,
+              "snapshotInterval": 100
 	    },
 	    "sChain":
 	      {
 	        "schainName": "TestChain",
 	        "schainID": 1,
 	        "nodes": [
-	          { "nodeID": 1112, "ip": "192.168.2.195", "basePort": 1231, "schainIndex" : 0}
+	          { "nodeID": 1112, "ip": "127.0.0.1", "basePort": 1231, "schainIndex" : 1}
 	        ]
 	      }
   }

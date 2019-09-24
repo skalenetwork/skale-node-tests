@@ -18,7 +18,7 @@ def send_func(eth, arr, begin, count):
                 print(e)
                 time.sleep(1)
 
-ch = create_default_chain(num_nodes=nNodes, num_accounts=nAcc)
+ch = create_default_chain(num_nodes=nNodes, num_accounts=nAcc, empty_blocks = True)
 
 ch.start(start_timeout = 0)
 

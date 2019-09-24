@@ -18,7 +18,7 @@ n4 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs, snapshotInterval=snapshotIn
 
 starter = LocalStarter(sktest_exe)
 ch = SChain([n1, n2, n3, n4], starter, prefill=[1000000000000000000, 2000000000000000000])
-ch.start()
+ch.start(start_timeout = 0)
 
 print("Waiting for full catch-up")
 
@@ -26,7 +26,11 @@ while True:
     bn1 = n1.eth.blockNumber
     bn2 = n2.eth.blockNumber
     bn3 = n3.eth.blockNumber
-    bn4 = n4.eth.blockNumber
+    
+    try:
+        bn4 = n4.eth.blockNumber
+    except:
+        bn4 = None
 
     print(f"blockNumber's: {bn1} {bn2} {bn3} {bn4}")
 
@@ -34,5 +38,7 @@ while True:
         break
 
     time.sleep(0.6)
+
+print("Exiting")
 
 ch.stop()

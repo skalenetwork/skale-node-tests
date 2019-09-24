@@ -3,5 +3,5 @@ EXE=~/skaled/build-no-mp/skaled/skaled
 trap -- '' SIGINT SIGTERM SIGHUP EXIT
 until $EXE $@; do
 	echo "Restarting $EXE $@"
-	sleep 2
+	sleep 5
 done
