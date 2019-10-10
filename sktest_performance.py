@@ -3,8 +3,8 @@ import time
 import threading
 
 nNodes = int(os.getenv("NUM_NODES", 4))
-nTxns = 4000 #24000
-nAcc  = 1000 #8000
+nTxns = 24000 #24000
+nAcc  = 240 #8000
 nThreads = 0
 
 def send_func(eth, arr, begin, count):
@@ -26,27 +26,34 @@ transactions = generate_or_load_txns(ch, nAcc, nTxns)
 
 t1 = time.time()
 
-if nThreads == 0:
-    for i in range(len(transactions)):
+MAX_RETRIES = 30
 
-        if i % 100 == 0:
-            print(str(i))
+if nThreads == 0:
+    i = 0
+    while i < len(transactions):
 
         t = transactions[i]
+        retries = 0
         while True:
             try:
                 hash = ch.nodes[0].eth.sendRawTransaction(t)
                 print(i, "0x" + binascii.hexlify(hash).decode("utf-8"))
                 break
             except Exception as e:
-                print(e)
+#                print(e)
                 try:
                     hash = ch.nodes[1].eth.sendRawTransaction(t)
-                    print(i, "0x" + binascii.hexlify(hash).decode("utf-8"))
+                    print(i, "0x" + binascii.hexlify(hash).decode("utf-8") + " (2)")
                     break
                 except Exception as e2:
                     print(e2)
+                    retries += 1
+                    if retries == MAX_RETRIES:
+                    	i -= nAcc			# repeat previous nonce!
+                    	i = max(i, 0)
+                    	print(f"Stepping back to {i}")
                     time.sleep(1)
+        i += 1
 else:
     txns_per_thread = nTxns // nThreads
 
@@ -61,7 +68,7 @@ else:
 
 print("Waiting for blocks")
 
-dt = wait_for_txns(ch, nTxns)
+dt = wait_for_txns(ch, nTxns-1)
 
 print("Txns: "+str(nTxns)+" Time: "+str(dt)+" => "+str(nTxns/(dt))+" tx/sec")
 

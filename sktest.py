@@ -297,6 +297,7 @@ class Node:
         self.nodeID = kwargs.get('nodeID', Node._counter)
         self.bindIP = kwargs.get('bindIP', "127.0.0." + str(Node._counter))
         self.basePort = kwargs.get('basePort', 1231)
+        self.wsPort   = kwargs.get('wsPort', 7000+Node._counter)
         self.sChain = None
         self.config = None
         self.running = False
@@ -530,6 +531,7 @@ class LocalStarter:
                 "nodeInfo": _make_config_node(n),
                 "sChain": _make_config_schain(self.chain)
             }
+            
             f = io.open(cfg_file, "w")
             #            f = io.open("/home/dimalit/config.js", "w")
             json.dump(cfg, f, indent=1)
@@ -547,6 +549,7 @@ class LocalStarter:
                        "stdbuf", "-oL",
                        self.exe,
                        "--http-port", str(n.basePort + 3),
+                       "--ws-port", str(n.wsPort),
                        "--aa", "always",
                        "--config", cfg_file,
                        "-d", node_dir,

@@ -9,7 +9,7 @@ from hexbytes import HexBytes
  
 global sktest_exe
 #sktest_exe = os.getenv("SKTEST_EXE", "/home/dimalit/skale-ethereum/scripts/aleth")
-sktest_exe = os.getenv("SKTEST_EXE", "/home/dimalit/skale-ethereum/build/Debug/skaled/skaled")
+sktest_exe = os.getenv("SKTEST_EXE", "/home/dimalit/skaled/build-no-mp/skaled/skaled")
 
 class HexJsonEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -22,7 +22,7 @@ def dump_node_state(obj):
     return json.dumps(obj, indent=1, cls=HexJsonEncoder)
 
 
-def create_default_chain(num_nodes=2, num_accounts=2, empty_blocks = False):
+def create_default_chain(num_nodes=2, num_accounts=2, empty_blocks = False, config_file = None):
     nodes = []
     balances = []
 
@@ -35,9 +35,20 @@ def create_default_chain(num_nodes=2, num_accounts=2, empty_blocks = False):
     for i in range(num_accounts):
         balances.append(str((i + 1) * 1000000000000000000000))
 
+    
+    config = None
+    if config_file:
+        with open(config_file) as f:
+            config = json.load(f)
+            print(f"Loaded ${config_file}")
+
     global sktest_exe
     starter = LocalStarter(sktest_exe)
-    chain = SChain(nodes, starter, balances)
+    if config:
+        chain = SChain(nodes, starter, balances, config = config)
+    else:
+        chain = SChain(nodes, starter, balances)
+
     return chain
 
 def load_private_keys(path, password, count=0):
@@ -95,7 +106,7 @@ def wait_for_txns(ch, nTxns):
     t1 = time.time()
     count = 0
 
-    while count != nTxns:
+    while count < nTxns:
 
         while True:
             try:
@@ -114,6 +125,30 @@ def wait_for_txns(ch, nTxns):
     t2 = time.time()
 
     return t2-t1
+    
+def wait_for_blocks(ch, nBlocks):
+    t1 = time.time()
+    count = 0
+
+    while count != nBlocks:
+
+        while True:
+            try:
+                count = ch.eth.blockNumber
+                break
+            except Exception as e:
+                print(e)
+
+        t2 = time.time()
+
+        if t2!=t1:
+            print("%d blocks rate = %f blocks/sec" % (count, count/(t2-t1)))
+
+        time.sleep(1)
+
+    t2 = time.time()
+
+    return t2-t1    
 
 def print_states_difference(ch):
     nNodes = len(ch.nodes)
