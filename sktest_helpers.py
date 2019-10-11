@@ -108,12 +108,15 @@ def wait_for_txns(ch, nTxns):
 
     while count < nTxns:
 
+        do_not_print = False
         while True:
             try:
                 count = count_txns(ch.eth)
                 break
             except Exception as e:
-                print(e)
+                if not do_not_print:
+                    print(e)
+                do_not_print = True
 
         t2 = time.time()
 
