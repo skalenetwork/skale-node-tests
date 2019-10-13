@@ -3,7 +3,7 @@ from sktest import *
 import web3
 from web3.auto import w3
 
-w3.eth.enable_unaudited_features()
+#w3.eth.enable_unaudited_features()
 
 from hexbytes import HexBytes
  

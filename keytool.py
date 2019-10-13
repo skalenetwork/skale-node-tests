@@ -9,7 +9,7 @@ from tempfile import TemporaryDirectory
 from subprocess import Popen
 import time
 
-w3.eth.enable_unaudited_features()
+#w3.eth.enable_unaudited_features()
 
 def usage():
     print("USAGE:")

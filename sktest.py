@@ -13,7 +13,7 @@ from web3.auto import w3
 import signal
 import types
 
-w3.eth.enable_unaudited_features()
+#w3.eth.enable_unaudited_features()
 
 def safe_input_with_timeout(s, timeout):
 
@@ -251,8 +251,8 @@ def get_config(other=None):
             "chainID": "0x01",
             "maximumExtraDataSize": "0x20",
             "tieBreakingGas": False,
-            "minGasLimit": "0x47E7C4",
-            "maxGasLimit": "0x47E7C4",
+            "minGasLimit": "0x47E7C40",
+            "maxGasLimit": "0x47E7C40",
             "gasLimitBoundDivisor": "0x0400",
             "minimumDifficulty": "0x020000",
             "difficultyBoundDivisor": "0x0800",
@@ -267,7 +267,7 @@ def get_config(other=None):
             "timestamp": "0x00",
             "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
             "extraData": "0x11bbe8db4e347b4e8c937c1c8370e4b5ed33adb3db69cbdb7a38e1e50b1b82fa",
-            "gasLimit": "0x47E7C4"
+            "gasLimit": "0x47E7C40"
         },
         "accounts": {}
     }
@@ -547,6 +547,7 @@ class LocalStarter:
                        "stdbuf", "-oL",
                        self.exe,
                        "--http-port", str(n.basePort + 3),
+                       "--ws-port", str(7000 + n.nodeID),
                        "--aa", "always",
                        "--config", cfg_file,
                        "-d", node_dir,
