@@ -1,6 +1,7 @@
 from sktest_helpers import *
 import time
 import threading
+from functools import reduce
 
 nNodes = int(os.getenv("NUM_NODES", 4))
 nTxns = 24000 #24000
@@ -23,7 +24,7 @@ def send_func(eth, arr, begin, count):
 def compare_nodes(nodes):
     bn1 = 0
     bn2 = 0
-    
+
     try:
         bn1 = nodes[0].eth.blockNumber
     except:
@@ -38,15 +39,25 @@ def compare_nodes(nodes):
     b = 0
     while b <= bn:
         line = ""
+        arr = []
         for n in nodes:
             try:
-                line += str(len(n.eth.getBlock(b).transactions)) + " "
+                val = len(n.eth.getBlock(b).transactions)
+                line += str(val) + " "
+                arr.append(val)
             except Exception as ex:
                 b -= 1
                 time.sleep(1)
                 break
     
-        print(f"block {b}: {line}")
+        equal = True
+        if len(arr)==len(nodes):
+            equal = all(arr[0]==e for e in arr)
+
+        if not equal:
+            print(f"\nblock {b}: {line}")
+        else:
+            print('.', end='')
         b += 1
 
 ch = create_default_chain(num_nodes=nNodes, num_accounts=nAcc, empty_blocks = True)
@@ -78,6 +89,7 @@ if nThreads == 0:
                     print(e2)
                     retries += 1
                     if retries == MAX_RETRIES:
+                        os.system("pkill -9 -f kill4")
                         compare_nodes(ch.nodes)
                         raw_prev = None
                         if i-nAcc >= 0:
