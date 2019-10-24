@@ -1,6 +1,7 @@
 from sktest_helpers import *
 import time
 import threading
+from compare_nodes import compare_nodes
 from functools import reduce
 
 nNodes = int(os.getenv("NUM_NODES", 4))
@@ -21,48 +22,13 @@ def send_func(eth, arr, begin, count):
                 print(e)
                 time.sleep(1)
 
-def compare_nodes(nodes):
-    bn1 = 0
-    bn2 = 0
-
-    try:
-        bn1 = nodes[0].eth.blockNumber
-    except:
-        pass
-    try:
-        bn2 = nodes[1].eth.blockNumber
-    except:
-        pass
-    
-    bn = max(bn1, bn2)
-    
-    b = 0
-    while b <= bn:
-        line = ""
-        arr = []
-        for n in nodes:
-            try:
-                val = len(n.eth.getBlock(b).transactions)
-                line += str(val) + " "
-                arr.append(val)
-            except Exception as ex:
-                b -= 1
-                time.sleep(1)
-                break
-    
-        equal = True
-        if len(arr)==len(nodes):
-            equal = all(arr[0]==e for e in arr)
-
-        if not equal:
-            print(f"\nblock {b}: {line}")
-        else:
-            print('.', end='')
-        b += 1
-
 ch = create_default_chain(num_nodes=nNodes, num_accounts=nAcc, empty_blocks = True)
 
 ch.start(start_timeout = 10)
+
+eths = []
+for n in ch.nodes:
+    eths.append(n.eth)
 
 transactions = generate_or_load_txns(ch, nAcc, nTxns)
 
@@ -90,7 +56,7 @@ if nThreads == 0:
                     retries += 1
                     if retries == MAX_RETRIES:
                         os.system("pkill -9 -f kill4")
-                        compare_nodes(ch.nodes)
+                        compare_nodes(eths)
                         raw_prev = None
                         if i-nAcc >= 0:
                             raw_prev = transactions[i-nAcc] 
@@ -115,22 +81,26 @@ else:
         thread.start()
 
 print("Waiting for blocks")
+os.system("pkill -9 -f kill4")
 
 dt = wait_for_txns(ch, nTxns-1)
 
 print("Txns: "+str(nTxns)+" Time: "+str(dt)+" => "+str(nTxns/(dt))+" tx/sec")
 
-ok = True
-for i in range(nNodes):
-    ntx = count_txns(ch.nodes[i].eth)
-    print("Node%d: %d txns" % (i, ntx))
-    if ntx != nTxns:
-        ok = False
+print("Comparing blocks:")
+ok = compare_nodes(eths)
+
+#ok = True
+#for i in range(nNodes):
+#    ntx = count_txns(ch.nodes[i].eth)
+#    print("Node%d: %d txns" % (i, ntx))
+#    if ntx != nTxns:
+#        ok = False
 
 if ok:
-    print('*** Test passed ***')
+    print('\n*** Test passed ***')
 else:
-    print('*** Test failed ***')
+    print('\n*** Test failed ***')
 
 #ch.stop()
 

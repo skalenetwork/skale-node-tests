@@ -105,13 +105,20 @@ def generate_or_load_txns(ch, nAcc, nTxns):
 def wait_for_txns(ch, nTxns):
     t1 = time.time()
     count = 0
+    from_block = 0
 
     while count < nTxns:
 
         do_not_print = False
         while True:
             try:
-                count = count_txns(ch.eth)
+                to_block = ch.eth.blockNumber
+                n = 0
+                for i in range(from_block, to_block+1):
+                    b = ch.eth.getBlock(i)
+                    n += len(b.transactions)
+                count += n
+                from_block = to_block + 1
                 break
             except Exception as e:
                 if not do_not_print:

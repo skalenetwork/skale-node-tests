@@ -6,7 +6,7 @@ nTxns = 240000
 nBlocks = 10000
 nAcc  = 240
 
-ch = create_default_chain(num_nodes=nNodes, num_accounts=nAcc, config_file="/home/dimalit/SkaleExperimental/skaled-tests/cat-cycle/init.json")
+ch = create_default_chain(num_nodes=nNodes, num_accounts=nAcc, empty_blocks = True, config_file="/home/dimalit/SkaleExperimental/skaled-tests/cat-cycle/init.json")
 
 ch.start()
 
