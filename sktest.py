@@ -395,6 +395,7 @@ class SChain:
         nonce = kwargs.get("nonce", self.nonce(_from))
         data  = kwargs.get("data", "0x")
         gas   = int(kwargs.get("gas", 21000))
+        chainId = kwargs.get("chain_id", None)
 
         from_addr = self.accounts[_from]
         if type(to) is str:
@@ -409,7 +410,8 @@ class SChain:
             "gas": gas,
             "gasPrice": 1000,
             "nonce": nonce,
-            "data": data
+            "data": data,
+            "chainId": chainId
         }
         signed = w3.eth.account.signTransaction(transaction, private_key=self.privateKeys[_from])
         return "0x" + binascii.hexlify(signed.rawTransaction).decode("utf-8")
@@ -479,7 +481,8 @@ def _make_config_node(node):
         "logLevel": "trace",
         "logLevelConfig": "trace",
         "emptyBlockIntervalMs": node.emptyBlockIntervalMs,
-        "snapshotInterval": node.snapshotInterval,
+        "snapshotInterval": node.snapshotInterval
+#        "catchupIntervalMs": 1000000000
     }
 
 def _make_config_schain_node(node, index):

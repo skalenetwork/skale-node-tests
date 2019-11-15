@@ -22,7 +22,7 @@ def dump_node_state(obj):
     return json.dumps(obj, indent=1, cls=HexJsonEncoder)
 
 
-def create_default_chain(num_nodes=2, num_accounts=2, empty_blocks = False, config_file = None):
+def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks = False, config_file = None, chainID = None):
     nodes = []
     balances = []
 
@@ -41,15 +41,22 @@ def create_default_chain(num_nodes=2, num_accounts=2, empty_blocks = False, conf
         with open(config_file) as f:
             config = json.load(f)
             print(f"Loaded ${config_file}")
+    else:
+        config=get_config()
+    if chainID:
+        config["params"]["chainID"] = chainID
 
     global sktest_exe
     starter = LocalStarter(sktest_exe)
-    if config:
-        chain = SChain(nodes, starter, balances, config = config)
-    else:
-        chain = SChain(nodes, starter, balances)
+    chain = SChain(nodes, starter, balances, config = config)
 
     return chain
+
+def create_default_chain(num_nodes=2, num_accounts=2, empty_blocks = False, config_file = None):
+    return create_custom_chain(num_nodes, num_accounts, empty_blocks, config_file)
+
+def create_chain_with_id(num_nodes=2, num_accounts=2, empty_blocks = False, chain_id = None):
+    return create_custom_chain(num_nodes, num_accounts, empty_blocks, None, chain_id)
 
 def load_private_keys(path, password, count=0):
     #TODO Exceptions?!
