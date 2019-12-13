@@ -147,7 +147,7 @@ def wait_for_blocks(ch, nBlocks):
     t1 = time.time()
     count = 0
 
-    while count != nBlocks:
+    while count < nBlocks:
 
         while True:
             try:
