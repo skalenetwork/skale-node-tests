@@ -546,6 +546,9 @@ class LocalStarter:
 
             env = os.environ.copy()
             env['DATA_DIR'] = node_dir
+            env['LD_PRELOAD'] = "/home/dimalit/.just_works/libleak-linux-x86_64.so"
+            env['LEAK_EXPIRE'] = '20'
+            env['LEAK_PID_CHECK'] = '1'
 
             popen_args = [#"/usr/bin/strace", '-o'+node_dir+'/aleth.trace',
                        "stdbuf", "-oL",
@@ -566,12 +569,15 @@ class LocalStarter:
                 popen_args.append("http://" + self.chain.nodes[0].bindIP + ":" + str(self.chain.nodes[0].basePort + 3))
                 time.sleep(n.snapshottedStartSeconds)
 
-            self.exe_popens.append(
-                Popen(popen_args,
+            popen = Popen(popen_args,
                       stdout=aleth_out,
                       stderr=aleth_err,
                       env = env
-                ))
+            )
+            
+            n.pid = popen.pid
+
+            self.exe_popens.append( popen )
             # HACK +0 +1 +2 are used by consensus
             url = f"http://{n.bindIP}:{n.basePort + 3}"
 

@@ -1,9 +1,9 @@
 from sktest_helpers import *
 import time
 
-nAcc = int(os.getenv("NUM_ACCOUNTS", 10))
+nAcc = int(os.getenv("NUM_ACCOUNTS", 10000))
 nTxns = 10000
-num_nodes = int(os.getenv("NUM_NODES", 4))
+num_nodes = int(os.getenv("NUM_NODES", 1))
 
 # node = Node()
 # print(node.__dict__)
@@ -22,14 +22,14 @@ ch.start(start_timeout = 0)
 # wait for answer
 while True:
     try:
-        start_nonce = {account: ch.nonce(account) for account in range(nAcc)}
+        start_nonce = {account: 0 for account in range(nAcc)}#ch.nonce(account)
     except:
         time.sleep(0.1)			# poll
         continue
     break
 
-start_balance = {account: ch.balance(account) for account in range(nAcc)}
-print('Balances:', start_balance)
+#start_balance = {account: ch.balance(account) for account in range(nAcc)}
+#print('Balances:', start_balance)
 
 t1 = time.time()
 
@@ -42,8 +42,8 @@ for i in range(nTxns):
     while True:
         try:
             print(f"Send from account #{acc1} (nonce={nonce})")
-            while ch.nonce(acc1) < nonce:
-                time.sleep(0.2)
+#            while ch.nonce(acc1) < nonce:
+#                time.sleep(0.2)
             ch.transaction_async(value=1, _from=acc1, to=acc2, nonce=nonce)
             break
         except ValueError as e:
