@@ -551,7 +551,8 @@ class LocalStarter:
             env['LEAK_PID_CHECK'] = '1'
 
             popen_args = [#"/usr/bin/strace", '-o'+node_dir+'/aleth.trace',
-                       "stdbuf", "-oL",
+                       #"stdbuf", "-oL",
+                       #"heaptrack",
                        self.exe,
                        "--http-port", str(n.basePort + 3),
                        "--ws-port", str(n.wsPort),
@@ -597,15 +598,27 @@ class LocalStarter:
     def stop(self):
         assert hasattr(self, "chain")
 
-        # TODO race conditions?
-        for n in self.chain.nodes:
-            n.running = False
-        for p in self.exe_popens:
-            if p.poll() is None:
-                p.terminate()
-                p.wait()
+        for pos in range(len(self.chain.nodes)):
+            self.stop_node(pos)
+            
+        for pos in range(len(self.chain.nodes)):
+            self.wait_node_stop(pos)
+
         self.running = False
         self.dir.cleanup()
+
+    # TODO race conditions?
+    def stop_node(self, pos):
+        self.chain.nodes[pos].running = False
+        p = self.exe_popens[pos]
+        if p.poll() is None:
+            p.terminate()
+
+    # TODO race conditions?
+    def wait_node_stop(self, pos):
+        p = self.exe_popens[pos]
+        if p.poll() is None:
+            p.wait()
 
 def ssh_exec(address, command):
     ssh = Popen( [ "ssh", address ], stdin=PIPE, stdout=PIPE, stderr=STDOUT, bufsize=1 )    # line-buffered
