@@ -459,6 +459,12 @@ class SChain:
     def stop(self):
         self.starter.stop()
         self.running = False
+        
+    def stop_node(self, pos):
+        self.starter.stop_node(pos)
+
+    def wait_node_stop(self, pos):
+        self.starter.wait_node_stop(pos)
 
     def state(self, i):
         return _node2json(self.nodes[i].eth)
@@ -481,7 +487,8 @@ def _make_config_node(node):
         "logLevel": "trace",
         "logLevelConfig": "trace",
         "emptyBlockIntervalMs": node.emptyBlockIntervalMs,
-        "snapshotInterval": node.snapshotInterval
+        "snapshotInterval": node.snapshotInterval,
+        "enable-debug-behavior-apis": True,
 #        "catchupIntervalMs": 1000000000
     }
 
