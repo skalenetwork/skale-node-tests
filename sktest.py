@@ -466,6 +466,9 @@ class SChain:
     def wait_node_stop(self, pos):
         self.starter.wait_node_stop(pos)
 
+    def node_exited(self, pos):
+        return self.starter.node_exited(pos)
+
     def state(self, i):
         return _node2json(self.nodes[i].eth)
 
@@ -616,6 +619,8 @@ class LocalStarter:
 
     # TODO race conditions?
     def stop_node(self, pos):
+        if not self.chain.nodes[pos].running:
+            return
         self.chain.nodes[pos].running = False
         p = self.exe_popens[pos]
         if p.poll() is None:
@@ -624,8 +629,12 @@ class LocalStarter:
     # TODO race conditions?
     def wait_node_stop(self, pos):
         p = self.exe_popens[pos]
-        if p.poll() is None:
+        if p and p.poll() is None:
             p.wait()
+            self.exe_popens[pos] = None
+
+    def node_exited(self, pos):
+        return self.exe_popens[pos].poll() is not None
 
 def ssh_exec(address, command):
     ssh = Popen( [ "ssh", address ], stdin=PIPE, stdout=PIPE, stderr=STDOUT, bufsize=1 )    # line-buffered

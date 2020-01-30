@@ -17,7 +17,7 @@ def final_check(ch):
 
 @pytest.fixture
 def schain2():
-    ch = create_default_chain(num_nodes=2, num_accounts=2)
+    ch = create_default_chain(num_nodes=2, num_accounts=2, empty_blocks = True)
     ch.start()
 
     eth1  = ch.nodes[0].eth
@@ -27,35 +27,29 @@ def schain2():
 
     yield (ch, eth1, eth2)
 
-    final_check(ch)
     ch.stop()
 
 def test_stop_in_block(schain2):
     (ch, eth1, eth2) = schain2
 
-    # 1 stop consensus in both
-    eth1.callSkaleHost("trace break drop_bad_transactions")
+    # 1 stop consensus in node2
     eth2.callSkaleHost("trace break drop_bad_transactions")
-    b1 = eth1.blockNumber
-
-    # 2 continue till new block
-    eth1.callSkaleHost("trace break create_block")
-    eth1.callSkaleHost("trace continue drop_bad_transactions")
 
     time.sleep(2) # allow it to start new block
+
     ch.stop_node(0)
+
     time.sleep(10) # wait long for stop if it happens
+
+    # check that it's alive
+    assert(ch.node_exited(0) == False)
 
     # continue node2
     eth2.callSkaleHost("trace continue drop_bad_transactions")
 
-    eth1.callSkaleHost("trace wait create_block")   # will throw if it's stopped
-    b2 = eth1.blockNumber
+    time.sleep(10)          # give it time to stop
 
-    assert(b2 == b1 + 1)
-
-    eth1.callSkaleHost("trace continue create_block")
-
-    # TODO check that node1 has exited
+    # check that it's not alive
+    assert (ch.node_exited(0) == True)
 
     pass
