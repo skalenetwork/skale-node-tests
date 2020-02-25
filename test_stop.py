@@ -39,17 +39,17 @@ def test_stop_in_block(schain2):
 
     ch.stop_node(0)
 
-    time.sleep(10) # wait long for stop if it happens
+    time.sleep(20) # wait long for stop if it happens
 
     # check that it's alive
-    assert(ch.node_exited(0) == False)
+    delayed1 = ch.node_exited(0) == False
 
     # continue node2
     eth2.callSkaleHost("trace continue drop_bad_transactions")
 
-    time.sleep(10)          # give it time to stop
+    assert(delayed1)
+
+    time.sleep(20)          # give it time to stop
 
     # check that it's not alive
     assert (ch.node_exited(0) == True)
-
-    pass
