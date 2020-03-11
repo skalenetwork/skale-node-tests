@@ -53,3 +53,5 @@ def test_stop_in_block(schain2):
 
     # check that it's not alive
     assert (ch.node_exited(0) == True)
+
+    # 2nd will be terminated after yield()
