@@ -99,7 +99,10 @@ def test_rotation(schain):
                 time.sleep(1)
 
         # just ask for some old block
-        b1 = eth.getBlock(1)
+        try:
+            b1 = eth.getBlock(1)
+        except:
+            eth.getBlock(1)
         assert(b1 is None or b1['hash'] == hash1)
 
         # end this if block #300 has gone
