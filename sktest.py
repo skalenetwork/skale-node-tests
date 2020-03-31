@@ -12,6 +12,7 @@ import web3
 from web3.auto import w3
 import signal
 import types
+import random
 
 #w3.eth.enable_unaudited_features()
 
@@ -291,6 +292,32 @@ class Node:
 
     _counter = 0
 
+    _dkg_id = 25173913614032725772447313683684947427847158886339
+
+    _nodes_bls_key_name = ['BLS_KEY:SCHAIN_ID:0:NODE_ID:0:DKG_ID:'+str(_dkg_id),
+                           'BLS_KEY:SCHAIN_ID:0:NODE_ID:1:DKG_ID:'+str(_dkg_id),
+                           'BLS_KEY:SCHAIN_ID:0:NODE_ID:2:DKG_ID:'+str(_dkg_id),
+                           'BLS_KEY:SCHAIN_ID:0:NODE_ID:3:DKG_ID:'+str(_dkg_id)
+                           ]
+
+    _nodes_bls_public_key = [['12617705323582344166433995608041995640020216843837092006225706072601019392454',
+                              '19624377741401009085715238842649171729850468232052485494060020566291139441135',
+                              '13476639010458871889325377088155360457141813718556818694497941835973170256756',
+                              '12822681926264980828703446186797647126165680985376308884136750928733120770517'],
+                             ['8789949904794280450334786552454037296292814991310488369738737503601277174147',
+                              '21224324191449141166167084512266663753827111411001028429433399207096397731581',
+                              '6380638631444275192603842952965563379627411122531975618631845327392653829566',
+                              '6931876096765094777622471493892773345371540871729619593270833726982808009810'],
+                              ['299772608565817414802246364107883973794467775827611358382342851362551667804',
+                               '18996169779460391872333888532421372154911329703695637613200552122065950782590',
+                               '15545361516533592735216114189926247319996276309375164982899680431686146359226',
+                               '12683124837341592187885873947848417107393710730762813775121115645927016233141'],
+                               ['8167995209626452854252511224391622848185597815305959346930593708960222021055',
+                                '17833981952669127922640127913465786759085121007475644256769167854818078330072',
+                                '3833731934729457057773062183742330370151293352496407313229811249937623623368',
+                                '20677227170883708969108843941583185540643108459223374140189541305412819743970']
+                               ]
+
     def __init__(self, **kwargs):
         Node._counter = Node._counter + 1
         self.nodeName = kwargs.get('nodeName', "Node" + str(Node._counter))
@@ -304,8 +331,13 @@ class Node:
         self.eth = None
         self.ipcPath = None
         self.emptyBlockIntervalMs = kwargs.get('emptyBlockIntervalMs', -1)
-        self.snapshotInterval = kwargs.get('snapshotInterval', -1)
+        self.snapshotIntervalMs = kwargs.get('snapshotIntervalMs', -1)
         self.snapshottedStartSeconds = kwargs.get('snapshottedStartSeconds', -1)
+        self.keyShareName = Node._nodes_bls_key_name[Node._counter - 1]
+        self.insecureBLSPublicKey0 = Node._nodes_bls_public_key[Node._counter - 1][0]
+        self.insecureBLSPublicKey1 = Node._nodes_bls_public_key[Node._counter - 1][1]
+        self.insecureBLSPublicKey2 = Node._nodes_bls_public_key[Node._counter - 1][2]
+        self.insecureBLSPublicKey3 = Node._nodes_bls_public_key[Node._counter - 1][3]
 
 class SChain:
 
@@ -459,15 +491,6 @@ class SChain:
     def stop(self):
         self.starter.stop()
         self.running = False
-        
-    def stop_node(self, pos):
-        self.starter.stop_node(pos)
-
-    def wait_node_stop(self, pos):
-        self.starter.wait_node_stop(pos)
-
-    def node_exited(self, pos):
-        return self.starter.node_exited(pos)
 
     def state(self, i):
         return _node2json(self.nodes[i].eth)
@@ -490,8 +513,23 @@ def _make_config_node(node):
         "logLevel": "trace",
         "logLevelConfig": "trace",
         "emptyBlockIntervalMs": node.emptyBlockIntervalMs,
-        "snapshotInterval": node.snapshotInterval,
-        "enable-debug-behavior-apis": True,
+        "snapshotIntervalMs": node.snapshotIntervalMs,
+        "wallets": {
+            "ima": {
+                "url": "https://45.63.65.79:1026",
+                "keyShareName": node.keyShareName,
+                "t": 3,
+                "n": 4,
+                "insecureBLSPublicKey0": node.insecureBLSPublicKey0,
+                "insecureBLSPublicKey1": node.insecureBLSPublicKey1,
+                "insecureBLSPublicKey2": node.insecureBLSPublicKey2,
+                "insecureBLSPublicKey3": node.insecureBLSPublicKey3,
+                "insecureCommonBLSPublicKey0": "12212130550697803151564290524339395496767149058645990800921471029386389088606",
+                "insecureCommonBLSPublicKey1": "13495723142051640317069838328283638336146464538226595642277096832749942131633",
+                "insecureCommonBLSPublicKey2": "20747599681898460625674034527966385021024028393596723254148889654135097673725",
+                "insecureCommonBLSPublicKey3": "891807367956640661308585255414224011971693197742484826054387525258882731938"
+            }
+        }
 #        "catchupIntervalMs": 1000000000
     }
 
@@ -556,13 +594,10 @@ class LocalStarter:
 
             env = os.environ.copy()
             env['DATA_DIR'] = node_dir
-            env['LD_PRELOAD'] = "/home/dimalit/.just_works/libleak-linux-x86_64.so"
-            env['LEAK_EXPIRE'] = '20'
-            env['LEAK_PID_CHECK'] = '1'
 
             popen_args = [#"/usr/bin/strace", '-o'+node_dir+'/aleth.trace',
-                       #"stdbuf", "-oL",
-                       #"heaptrack",
+                       "stdbuf", "-oL",
+                       #"valgrind", "--tool=memcheck", "--leak-check=yes", "-s",# "--vgdb=yes", "--vgdb-error=0",
                        self.exe,
                        "--http-port", str(n.basePort + 3),
                        "--ws-port", str(n.wsPort),
@@ -580,15 +615,12 @@ class LocalStarter:
                 popen_args.append("http://" + self.chain.nodes[0].bindIP + ":" + str(self.chain.nodes[0].basePort + 3))
                 time.sleep(n.snapshottedStartSeconds)
 
-            popen = Popen(popen_args,
+            self.exe_popens.append(
+                Popen(popen_args,
                       stdout=aleth_out,
                       stderr=aleth_err,
                       env = env
-            )
-            
-            n.pid = popen.pid
-
-            self.exe_popens.append( popen )
+                ))
             # HACK +0 +1 +2 are used by consensus
             url = f"http://{n.bindIP}:{n.basePort + 3}"
 
@@ -608,33 +640,15 @@ class LocalStarter:
     def stop(self):
         assert hasattr(self, "chain")
 
-        for pos in range(len(self.chain.nodes)):
-            self.stop_node(pos)
-            
-        for pos in range(len(self.chain.nodes)):
-            self.wait_node_stop(pos)
-
+        # TODO race conditions?
+        for n in self.chain.nodes:
+            n.running = False
+        for p in self.exe_popens:
+            if p.poll() is None:
+                p.terminate()
+                p.wait()
         self.running = False
         self.dir.cleanup()
-
-    # TODO race conditions?
-    def stop_node(self, pos):
-        if not self.chain.nodes[pos].running:
-            return
-        self.chain.nodes[pos].running = False
-        p = self.exe_popens[pos]
-        if p.poll() is None:
-            p.terminate()
-
-    # TODO race conditions?
-    def wait_node_stop(self, pos):
-        p = self.exe_popens[pos]
-        if p and p.poll() is None:
-            p.wait()
-            self.exe_popens[pos] = None
-
-    def node_exited(self, pos):
-        return self.exe_popens[pos].poll() is not None
 
 def ssh_exec(address, command):
     ssh = Popen( [ "ssh", address ], stdin=PIPE, stdout=PIPE, stderr=STDOUT, bufsize=1 )    # line-buffered
