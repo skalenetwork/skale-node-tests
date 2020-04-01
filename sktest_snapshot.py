@@ -14,7 +14,7 @@ snapshotIntervalMs = 10
 n1 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs, snapshotIntervalMs=snapshotIntervalMs)
 n2 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs, snapshotIntervalMs=snapshotIntervalMs)
 n3 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs, snapshotIntervalMs=snapshotIntervalMs)
-n4 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs, snapshotIntervalMs=snapshotIntervalMs, snapshottedStartSeconds=40) #90 #18
+n4 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs, snapshotIntervalMs=snapshotIntervalMs, snapshottedStartSeconds=120) #90 #18
 
 starter = LocalStarter(sktest_exe)
 ch = SChain([n1, n2, n3, n4], starter, prefill=[1000000000000000000, 2000000000000000000])
