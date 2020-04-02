@@ -304,6 +304,7 @@ class Node:
         self.eth = None
         self.ipcPath = None
         self.emptyBlockIntervalMs = kwargs.get('emptyBlockIntervalMs', -1)
+        self.rotateAfterBlock     = kwargs.get('rotateAfterBlock', -1)
         self.snapshotInterval = kwargs.get('snapshotInterval', -1)
         self.snapshottedStartSeconds = kwargs.get('snapshottedStartSeconds', -1)
 
@@ -491,7 +492,8 @@ def _make_config_node(node):
         "logLevelConfig": "trace",
         "emptyBlockIntervalMs": node.emptyBlockIntervalMs,
         "snapshotInterval": node.snapshotInterval,
-        "enable-debug-behavior-apis": True,
+        "rotateAfterBlock": node.rotateAfterBlock,
+        "enable-debug-behavior-apis": True
 #        "catchupIntervalMs": 1000000000
     }
 
@@ -706,6 +708,83 @@ class RemoteStarter:
         for n in self.chain.nodes:
             n.running = False
         self.running = False
+
+class RemoteDockerStarter:
+    # TODO Implement monitoring of dead processes!
+    chain = None
+    started = False
+
+    # condif is array of hashes: {address, dir, exe}
+    def __init__(self, ssh_config):
+        self.ssh_config = copy.deepcopy(ssh_config)
+        self.running = False
+
+    def start(self, chain):
+        assert not self.started
+        assert len(self.ssh_config) == len(chain.nodes)
+        self.started = True
+        self.chain = chain
+
+        # TODO Handle exceptions!
+        for i in range(len(self.chain.nodes)):
+            n = self.chain.nodes[i]
+            ssh_conf = self.ssh_config[i]
+
+            assert not n.running
+
+            node_dir = ssh_conf["dir"]
+            cfg_file = node_dir + "/config.json"
+
+            command = ""
+            command += "mkdir -p "+node_dir
+            command += "; cd " + node_dir
+
+            cfg = copy.deepcopy(chain.config)
+            cfg["skaleConfig"] = {
+                "nodeInfo": _make_config_node(n),
+                "sChain": _make_config_schain(self.chain)
+            }
+            json_str = json.dumps(cfg)
+            n.config = cfg
+
+            command += "; echo '" + json_str + "' >" + cfg_file
+
+            command += ("; bash -c \" nohup " +
+                       "docker run -d " +                       
+ #                      " -e CONFIG_FILE=" + cfg_file +
+ #                      " -d $DATA_DIR \
+ #                      " --ipcpath $DATA_DIR \
+ #                      " --http-port $HTTP_RPC_PORT \
+ #                      " --https-port $HTTPS_RPC_PORT \
+ #                      " --ws-port $WS_RPC_PORT \
+ #                      " --wss-port $WSS_RPC_PORT \
+ #                      " --ssl-key $SSL_KEY_PATH \
+ #                      " --ssl-cert $SSL_CERT_PATH \
+ #                      " -v 4  \
+ #                      " --web3-trace \
+ #                      " --enable-debug-behavior-apis \
+ #                      " --aa no $DOWNLOAD_SNAPSHOT_OPTION                       
+ #                      
+                       " -v " + node_dir + ":/schain_data" +
+                       " -e DATA_DIR=/schain_data" +
+                       " -e CONFIG_FILE=" + cfg_file +
+                       "\" 2>nohup.err >nohup.out&")
+            command += "\nexit\n"
+
+            ssh_exec(ssh_conf['address'], command)
+
+            n.running = True
+
+        self.running = True
+
+    def stop(self):
+        assert hasattr(self, "chain")
+
+        # TODO race conditions?
+        for n in self.chain.nodes:
+            n.running = False
+        self.running = False
+
 
 class NoStarter:
     chain = None

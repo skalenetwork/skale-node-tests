@@ -22,15 +22,17 @@ def dump_node_state(obj):
     return json.dumps(obj, indent=1, cls=HexJsonEncoder)
 
 
-def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks = False, config_file = None, chainID = None):
+def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks = False, rotate_after_block = -1, config_file = None, chainID = None):
     nodes = []
     balances = []
+
+    print(f"custom {rotate_after_block}")
 
     for i in range(num_nodes):
         emptyBlockIntervalMs = -1
         if empty_blocks:
             emptyBlockIntervalMs = 1000
-        nodes.append(Node(emptyBlockIntervalMs = emptyBlockIntervalMs))
+        nodes.append(Node(emptyBlockIntervalMs = emptyBlockIntervalMs, rotateAfterBlock = rotate_after_block))
 
     for i in range(num_accounts):
         balances.append(str((i + 1) * 1000000000000000000000))
@@ -53,10 +55,10 @@ def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks = False, confi
     return chain
 
 def create_default_chain(num_nodes=2, num_accounts=2, empty_blocks = False, config_file = None):
-    return create_custom_chain(num_nodes, num_accounts, empty_blocks, config_file)
+    return create_custom_chain(num_nodes, num_accounts, empty_blocks, -1, config_file)
 
 def create_chain_with_id(num_nodes=2, num_accounts=2, empty_blocks = False, chain_id = None):
-    return create_custom_chain(num_nodes, num_accounts, empty_blocks, None, chain_id)
+    return create_custom_chain(num_nodes, num_accounts, empty_blocks, -1, None, chain_id)
 
 def load_private_keys(path, password, count=0):
     #TODO Exceptions?!

@@ -29,5 +29,5 @@ else:
     print_states_difference(ch)
     print('*** Test failed ***')
 
-#ch.stop()
-#print("Stopped")
+ch.stop()
+print("Stopped")
