@@ -6,7 +6,10 @@ from web3.auto import w3
 #w3.eth.enable_unaudited_features()
 
 from hexbytes import HexBytes
- 
+
+PORT_RANGE = 11
+
+
 global sktest_exe
 #sktest_exe = os.getenv("SKTEST_EXE", "/home/dimalit/skale-ethereum/scripts/aleth")
 sktest_exe = os.getenv("SKTEST_EXE", "/home/dimalit/skaled/build-no-mp/skaled/skaled")
@@ -22,22 +25,40 @@ def dump_node_state(obj):
     return json.dumps(obj, indent=1, cls=HexJsonEncoder)
 
 
-def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks = False, rotate_after_block = -1, config_file = None, chainID = None):
+def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks=False,
+                        rotate_after_block=-1,
+                        config_file=None, chainID=None):
     nodes = []
     balances = []
 
     print(f"custom {rotate_after_block}")
 
+    base_port = 10000
     for i in range(num_nodes):
         emptyBlockIntervalMs = -1
         if empty_blocks:
             emptyBlockIntervalMs = 1000
-        nodes.append(Node(emptyBlockIntervalMs = emptyBlockIntervalMs, rotateAfterBlock = rotate_after_block))
+        nodes.append(
+            Node(
+                emptyBlockIntervalMs=emptyBlockIntervalMs,
+                rotateAfterBlock=rotate_after_block,
+                bindIP='127.0.0.1',
+                basePort=base_port
+            )
+        )
+        base_port += PORT_RANGE
+
+    # for i in range(num_nodes):
+    #     emptyBlockIntervalMs = -1
+    #     if empty_blocks:
+    #         emptyBlockIntervalMs = 1000
+    #     nodes.append(Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
+    #                       rotateAfterBlock=rotate_after_block))
 
     for i in range(num_accounts):
         balances.append(str((i + 1) * 1000000000000000000000))
 
-    
+
     config = None
     if config_file:
         with open(config_file) as f:
@@ -49,10 +70,11 @@ def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks = False, rotat
         config["params"]["chainID"] = chainID
 
     global sktest_exe
-    starter = LocalStarter(sktest_exe)
+    starter = LocalDockerStarter(sktest_exe)
     chain = SChain(nodes, starter, balances, config = config)
 
     return chain
+
 
 def create_default_chain(num_nodes=2, num_accounts=2, empty_blocks = False, config_file = None):
     return create_custom_chain(num_nodes, num_accounts, empty_blocks, -1, config_file)
@@ -144,7 +166,7 @@ def wait_for_txns(ch, nTxns):
     t2 = time.time()
 
     return t2-t1
-    
+
 def wait_for_blocks(ch, nBlocks):
     t1 = time.time()
     count = 0
@@ -167,7 +189,7 @@ def wait_for_blocks(ch, nBlocks):
 
     t2 = time.time()
 
-    return t2-t1    
+    return t2-t1
 
 def print_states_difference(ch):
     nNodes = len(ch.nodes)

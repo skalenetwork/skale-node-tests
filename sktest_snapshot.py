@@ -26,7 +26,7 @@ while True:
     bn1 = n1.eth.blockNumber
     bn2 = n2.eth.blockNumber
     bn3 = n3.eth.blockNumber
-    
+
     try:
         bn4 = n4.eth.blockNumber
     except:

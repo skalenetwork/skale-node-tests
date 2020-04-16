@@ -12,6 +12,10 @@ import web3
 from web3.auto import w3
 import signal
 import types
+import docker
+from docker.types import LogConfig
+
+IMAGE = 'skalenetwork/schain:test'
 
 #w3.eth.enable_unaudited_features()
 
@@ -297,7 +301,7 @@ class Node:
         self.nodeID = kwargs.get('nodeID', Node._counter)
         self.bindIP = kwargs.get('bindIP', "127.0.0." + str(Node._counter))
         self.basePort = kwargs.get('basePort', 1231)
-        self.wsPort   = kwargs.get('wsPort', 7000+Node._counter)
+        self.wsPort = kwargs.get('wsPort', 7000+Node._counter)
         self.sChain = None
         self.config = None
         self.running = False
@@ -460,7 +464,7 @@ class SChain:
     def stop(self):
         self.starter.stop()
         self.running = False
-        
+
     def stop_node(self, pos):
         self.starter.stop_node(pos)
 
@@ -502,7 +506,7 @@ def _make_config_schain_node(node, index):
         "nodeID"   : node.nodeID,
         "ip"       : node.bindIP,
         "basePort" : node.basePort,
-        "schainIndex": index+1
+        "schainIndex": index + 1
     }
 
 
@@ -515,6 +519,169 @@ def _make_config_schain(chain):
     for i in range(len(chain.nodes)):
         ret["nodes"].append(_make_config_schain_node(chain.nodes[i], i))
     return ret
+
+
+class LocalDockerStarter:
+    # TODO Implement monitoring of dead processes!
+    chain = None
+    started = False
+
+    def __init__(self, exe):
+        self.exe = exe
+        self.dir = TemporaryDirectory()
+        self.running = False
+        self.client = docker.client.from_env()
+        self.containers = []
+        self.volumes = []
+
+    def create_volume(self, volume_name):
+        self.volumes.append(
+            self.client.volumes.create(
+                name=volume_name, driver='lvmpy',
+                driver_opts={})
+        )
+
+    def run_container(self, name, node_dir, data_dir_volume_name, env, **kwargs):
+        print(name, node_dir, data_dir_volume_name, env, kwargs)
+        self.containers.append(
+           self.client.containers.run(
+               image=IMAGE, name=name,
+               detach=True,
+               network='host',
+               volumes={
+                   data_dir_volume_name: {
+                       'bind': '/data_dir', 'mode': 'rw'
+                   },
+                   node_dir: {
+                       'bind': '/skale_node_data', 'mode': 'rw'
+                   }
+               },
+               environment=env,
+               **kwargs,
+           ))
+
+    def create_schain_node(self, chain, node):
+        assert not node.running
+
+        data_dir_volume_name = f'data-dir{node.nodeID}'
+        self.create_volume(data_dir_volume_name)
+
+        node_dir = os.getenv('DATA_DIR', self.dir.name) + "/" + str(node.nodeID)
+        ipc_dir = node_dir
+        os.makedirs(node_dir, exist_ok=True)
+        cfg_filepath = node_dir + "/config.json"
+
+        cfg = copy.deepcopy(chain.config)
+        cfg["skaleConfig"] = {
+            "nodeInfo": _make_config_node(node),
+            "sChain": _make_config_schain(self.chain)
+        }
+        with open(cfg_filepath, 'w') as cfg_file:
+            json.dump(cfg, cfg_file, indent=1)
+        node.config = cfg
+        container_cfg_filepath = '/skale_node_data/config.json'
+        container_node_dir = '/skale_node_data/'
+
+        # env['LD_PRELOAD'] = "/home/dimalit/.just_works/libleak-linux-x86_64.so"
+        # custom_args = {
+        #   "ulimits_list": [
+        #     {
+        #       "name": "core",
+        #       "soft": -1,
+        #       "hard": -1
+        #     }
+        #   ],
+        #   "logs": {
+        #     "max-size": "250m",
+        #     "max-file": "5"
+        #   }
+        # }
+        kargs = {
+          "security_opt": [
+            "seccomp=unconfined"
+          ],
+          "restart_policy": {
+            "MaximumRetryCount": 10,
+            "Name": "on-failure"
+          },
+          "cap_add": [
+              "SYS_PTRACE", "SYS_ADMIN"
+          ],
+            "log_config": LogConfig(
+                type=LogConfig.types.JSON,
+                config={"max-size": "250m", "max-file": "5"}),
+        }
+        env = {
+            **os.environ,
+            'HTTP_RPC_PORT': self.chain.nodes[node.nodeID - 1].basePort + 3,
+            'WS_RPC_PORT': self.chain.nodes[node.nodeID - 1].basePort + 2,
+            'HTTPS_RPC_PORT': self.chain.nodes[node.nodeID - 1].basePort + 7,
+            'WSS_RPC_PORT': self.chain.nodes[node.nodeID - 1].basePort + 8,
+            'DATA_DIR': '/data_dir/',
+            'CONFIG_FILE': container_cfg_filepath,
+
+            'ARGS': ' '.join([
+                "--ws-port", str(node.basePort + 2),
+                "--http-port", str(node.basePort + 3),
+                "--aa", "always",
+                "--config", container_cfg_filepath,
+                "-d", '/data_dir/',
+#               "--ipcpath", ipc_dir,		# ACHTUNG!!! 107 characters max!!
+                "-v", "4",
+                "--web3-trace",
+                "--acceptors", "1"
+            ])
+            # 'SSL_CERT_PATH': os.path.join(node_dir, 'ssl', 'ssl_cert'),
+            # 'SSL_KEY_PATH': os.path.join(node_dir, 'ssl', 'ssl_key')
+        }
+
+        env['LEAK_EXPIRE'] = '20'
+        env['LEAK_PID_CHECK'] = '1'
+        if False and node.snapshottedStartSeconds >= -1:
+            url = 'http://{}:{}'.format(
+                self.chain.nodes[0].bindIP,
+                self.chain.nodes[0].basePort + 3
+            )
+            env['ARGS'] += f' --download-snapshot {url}'
+            time.sleep(max(node.snapshottedStartSeconds, 1))
+
+        container_name = f'schain-node{node.nodeID}'
+        self.run_container(container_name, node_dir,
+                           data_dir_volume_name, env, **kargs)
+        node.ipcPath = ipc_dir + "/geth.ipc"
+        node.running = True
+
+    def start(self, chain, start_timeout=40):
+        assert not self.started
+        self.started = True
+        self.chain = chain
+        for node in self.chain.nodes:
+            assert not node.running
+            # TODO Handle exceptions!
+            self.create_schain_node(chain, node)
+
+        assert len(self.client.volumes.list()) == len(self.chain.nodes)
+        assert len(self.client.containers.list()) == len(self.chain.nodes)
+        safe_input_with_timeout('Press enter when nodes start', start_timeout)
+        self.running = True
+
+    def stop(self):
+        assert hasattr(self, "chain")
+
+        for c in self.containers:
+            c.remove(force=True)
+        print('Containers removed')
+
+        for v in self.volumes:
+            v.remove()
+        print('Volumes removed')
+
+        self.running = False
+        self.dir.cleanup()
+
+    def node_exited(self, pos):
+        return self.exe_popens[pos].poll() is not None
+
 
 class LocalStarter:
     # TODO Implement monitoring of dead processes!
@@ -576,8 +743,8 @@ class LocalStarter:
                        "--web3-trace",
                        "--acceptors", "1"
                        ]
-                       
-            if n.snapshottedStartSeconds >= 0:
+
+            if n.snapshottedStartSeconds >= -1:
                 popen_args.append("--download-snapshot")
                 popen_args.append("http://" + self.chain.nodes[0].bindIP + ":" + str(self.chain.nodes[0].basePort + 3))
                 time.sleep(n.snapshottedStartSeconds)
@@ -587,7 +754,7 @@ class LocalStarter:
                       stderr=aleth_err,
                       env = env
             )
-            
+
             n.pid = popen.pid
 
             self.exe_popens.append( popen )
@@ -612,7 +779,7 @@ class LocalStarter:
 
         for pos in range(len(self.chain.nodes)):
             self.stop_node(pos)
-            
+
         for pos in range(len(self.chain.nodes)):
             self.wait_node_stop(pos)
 
@@ -646,6 +813,7 @@ def ssh_exec(address, command):
         print(comm[0].decode())
     except TimeoutExpired:
         pass
+
 
 class RemoteStarter:
     # TODO Implement monitoring of dead processes!
@@ -691,7 +859,7 @@ class RemoteStarter:
                        ssh_conf["exe"] +
                        " --no-discovery" +
                        " --config " + cfg_file +
-                       " -d " + node_dir + 
+                       " -d " + node_dir +
                        " -v " + "4" + "\" 2>nohup.err >nohup.out&")
             command += "\nexit\n"
 
@@ -708,6 +876,7 @@ class RemoteStarter:
         for n in self.chain.nodes:
             n.running = False
         self.running = False
+
 
 class RemoteDockerStarter:
     # TODO Implement monitoring of dead processes!
@@ -750,7 +919,7 @@ class RemoteDockerStarter:
             command += "; echo '" + json_str + "' >" + cfg_file
 
             command += ("; bash -c \" nohup " +
-                       "docker run -d " +                       
+                       "docker run -d " +
  #                      " -e CONFIG_FILE=" + cfg_file +
  #                      " -d $DATA_DIR \
  #                      " --ipcpath $DATA_DIR \
@@ -763,8 +932,8 @@ class RemoteDockerStarter:
  #                      " -v 4  \
  #                      " --web3-trace \
  #                      " --enable-debug-behavior-apis \
- #                      " --aa no $DOWNLOAD_SNAPSHOT_OPTION                       
- #                      
+ #                      " --aa no $DOWNLOAD_SNAPSHOT_OPTION
+ #
                        " -v " + node_dir + ":/schain_data" +
                        " -e DATA_DIR=/schain_data" +
                        " -e CONFIG_FILE=" + cfg_file +
