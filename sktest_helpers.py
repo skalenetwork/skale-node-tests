@@ -70,7 +70,7 @@ def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks=False,
         config["params"]["chainID"] = chainID
 
     global sktest_exe
-    starter = LocalDockerStarter(sktest_exe)
+    starter = LocalStarter(sktest_exe)
     chain = SChain(nodes, starter, balances, config = config)
 
     return chain

@@ -1,23 +1,24 @@
-from tempfile import TemporaryDirectory
-import os
-import io
-import json
-from subprocess import Popen, DEVNULL, PIPE, STDOUT, TimeoutExpired
-import copy
-import time
 import binascii
+import copy
+import json
+import io
+import os
 import pickle
-from threading import Timer
-import web3
-from web3.auto import w3
 import signal
+import time
 import types
+
+from tempfile import TemporaryDirectory
+from subprocess import Popen, DEVNULL, PIPE, STDOUT, TimeoutExpired
+
 import docker
+import web3
 from docker.types import LogConfig
+from web3.auto import w3
 
-IMAGE = 'skalenetwork/schain:test'
+DEFAULT_IMAGE = 'skalenetwork/schain:test'
 
-#w3.eth.enable_unaudited_features()
+# w3.eth.enable_unaudited_features()
 
 def safe_input_with_timeout(s, timeout):
 
@@ -486,11 +487,12 @@ class SChain:
     def __del__(self):
         self.stop()
 
+
 def _make_config_node(node):
     return {
         "nodeName": node.nodeName,
-        "nodeID"  : node.nodeID,
-        "bindIP"  : node.bindIP,
+        "nodeID": node.nodeID,
+        "bindIP": node.bindIP,
         "basePort": node.basePort,
         "logLevel": "trace",
         "logLevelConfig": "trace",
@@ -498,14 +500,15 @@ def _make_config_node(node):
         "snapshotInterval": node.snapshotInterval,
         "rotateAfterBlock": node.rotateAfterBlock,
         "enable-debug-behavior-apis": True
-#        "catchupIntervalMs": 1000000000
+        # "catchupIntervalMs": 1000000000
     }
+
 
 def _make_config_schain_node(node, index):
     return {
-        "nodeID"   : node.nodeID,
-        "ip"       : node.bindIP,
-        "basePort" : node.basePort,
+        "nodeID": node.nodeID,
+        "ip": node.bindIP,
+        "basePort": node.basePort,
         "schainIndex": index + 1
     }
 
@@ -513,8 +516,8 @@ def _make_config_schain_node(node, index):
 def _make_config_schain(chain):
     ret = {
         "schainName": chain.sChainName,
-        "schainID"  : chain.sChainID,
-        "nodes"     : []
+        "schainID": chain.sChainID,
+        "nodes": []
     }
     for i in range(len(chain.nodes)):
         ret["nodes"].append(_make_config_schain_node(chain.nodes[i], i))
@@ -522,12 +525,12 @@ def _make_config_schain(chain):
 
 
 class LocalDockerStarter:
-    # TODO Implement monitoring of dead processes!
     chain = None
     started = False
 
-    def __init__(self, exe):
+    def __init__(self, exe, image=DEFAULT_IMAGE):
         self.exe = exe
+        self.image = image
         self.dir = TemporaryDirectory()
         self.running = False
         self.client = docker.client.from_env()
@@ -541,11 +544,12 @@ class LocalDockerStarter:
                 driver_opts={})
         )
 
-    def run_container(self, name, node_dir, data_dir_volume_name, env, **kwargs):
+    def run_container(self, name, node_dir, data_dir_volume_name, env,
+                      **kwargs):
         print(name, node_dir, data_dir_volume_name, env, kwargs)
         self.containers.append(
            self.client.containers.run(
-               image=IMAGE, name=name,
+               image=self.image, name=name,
                detach=True,
                network='host',
                volumes={
@@ -560,43 +564,41 @@ class LocalDockerStarter:
                **kwargs,
            ))
 
-    def create_schain_node(self, chain, node):
-        assert not node.running
+    def compose_env_options(self, node):
+        env = {
+            **os.environ,
+            'HTTP_RPC_PORT': self.chain.nodes[node.nodeID - 1].basePort + 3,
+            'WS_RPC_PORT': self.chain.nodes[node.nodeID - 1].basePort + 2,
+            'HTTPS_RPC_PORT': self.chain.nodes[node.nodeID - 1].basePort + 7,
+            'WSS_RPC_PORT': self.chain.nodes[node.nodeID - 1].basePort + 8,
+            'DATA_DIR': '/data_dir/',
+            'CONFIG_FILE': '/skale_node_data/config.json',
+            'LEAK_EXPIRE': '20',
+            'LEAK_PID_CHECK': '1',
 
-        data_dir_volume_name = f'data-dir{node.nodeID}'
-        self.create_volume(data_dir_volume_name)
-
-        node_dir = os.getenv('DATA_DIR', self.dir.name) + "/" + str(node.nodeID)
-        ipc_dir = node_dir
-        os.makedirs(node_dir, exist_ok=True)
-        cfg_filepath = node_dir + "/config.json"
-
-        cfg = copy.deepcopy(chain.config)
-        cfg["skaleConfig"] = {
-            "nodeInfo": _make_config_node(node),
-            "sChain": _make_config_schain(self.chain)
+            'ARGS': ' '.join([
+                "--ws-port", str(node.basePort + 2),
+                "--http-port", str(node.basePort + 3),
+                "--aa", "always",
+                "--config", '/skale_node_data/config.json',
+                "-d", '/data_dir/',
+                "-v", "4",
+                "--web3-trace",
+                "--acceptors", "1"
+            ])
         }
-        with open(cfg_filepath, 'w') as cfg_file:
-            json.dump(cfg, cfg_file, indent=1)
-        node.config = cfg
-        container_cfg_filepath = '/skale_node_data/config.json'
-        container_node_dir = '/skale_node_data/'
+        if node.snapshottedStartSeconds > -1:
+            url = 'http://{}:{}'.format(
+                self.chain.nodes[0].bindIP,
+                self.chain.nodes[0].basePort + 3
+            )
+            env['ARGS'] += f' --download-snapshot {url}'
+            time.sleep(node.snapshottedStartSeconds)
+        return env
 
-        # env['LD_PRELOAD'] = "/home/dimalit/.just_works/libleak-linux-x86_64.so"
-        # custom_args = {
-        #   "ulimits_list": [
-        #     {
-        #       "name": "core",
-        #       "soft": -1,
-        #       "hard": -1
-        #     }
-        #   ],
-        #   "logs": {
-        #     "max-size": "250m",
-        #     "max-file": "5"
-        #   }
-        # }
-        kargs = {
+    @classmethod
+    def compose_docker_options(cls):
+        return {
           "security_opt": [
             "seccomp=unconfined"
           ],
@@ -607,51 +609,50 @@ class LocalDockerStarter:
           "cap_add": [
               "SYS_PTRACE", "SYS_ADMIN"
           ],
-            "log_config": LogConfig(
-                type=LogConfig.types.JSON,
-                config={"max-size": "250m", "max-file": "5"}),
-        }
-        env = {
-            **os.environ,
-            'HTTP_RPC_PORT': self.chain.nodes[node.nodeID - 1].basePort + 3,
-            'WS_RPC_PORT': self.chain.nodes[node.nodeID - 1].basePort + 2,
-            'HTTPS_RPC_PORT': self.chain.nodes[node.nodeID - 1].basePort + 7,
-            'WSS_RPC_PORT': self.chain.nodes[node.nodeID - 1].basePort + 8,
-            'DATA_DIR': '/data_dir/',
-            'CONFIG_FILE': container_cfg_filepath,
-
-            'ARGS': ' '.join([
-                "--ws-port", str(node.basePort + 2),
-                "--http-port", str(node.basePort + 3),
-                "--aa", "always",
-                "--config", container_cfg_filepath,
-                "-d", '/data_dir/',
-#               "--ipcpath", ipc_dir,		# ACHTUNG!!! 107 characters max!!
-                "-v", "4",
-                "--web3-trace",
-                "--acceptors", "1"
-            ])
-            # 'SSL_CERT_PATH': os.path.join(node_dir, 'ssl', 'ssl_cert'),
-            # 'SSL_KEY_PATH': os.path.join(node_dir, 'ssl', 'ssl_key')
+          "log_config": LogConfig(
+              type=LogConfig.types.JSON,
+              config={"max-size": "250m", "max-file": "5"}),
         }
 
-        env['LEAK_EXPIRE'] = '20'
-        env['LEAK_PID_CHECK'] = '1'
-        if False and node.snapshottedStartSeconds >= -1:
-            url = 'http://{}:{}'.format(
-                self.chain.nodes[0].bindIP,
-                self.chain.nodes[0].basePort + 3
-            )
-            env['ARGS'] += f' --download-snapshot {url}'
-            time.sleep(max(node.snapshottedStartSeconds, 1))
+    def make_config(self, node, chain):
+        cfg = copy.deepcopy(chain.config)
+        cfg["skaleConfig"] = {
+            "nodeInfo": _make_config_node(node),
+            "sChain": _make_config_schain(self.chain)
+        }
+        return cfg
+
+    @classmethod
+    def save_config(cls, config, node_dir):
+        os.makedirs(node_dir, exist_ok=True)
+        cfg_filepath = node_dir + "/config.json"
+        with open(cfg_filepath, 'w') as cfg_file:
+            json.dump(config, cfg_file, indent=1)
+
+    def create_schain_node(self, chain, node):
+        assert not node.running
+
+        data_dir_volume_name = f'data-dir{node.nodeID}'
+        self.create_volume(data_dir_volume_name)
+
+        node_dir = os.path.join(os.getenv('DATA_DIR', self.dir.name),
+                                str(node.nodeID))
+
+        node.config = self.make_config(node, chain)
+        LocalDockerStarter.save_config(node.config, node_dir)
+
+        ipc_dir = node_dir
+        node.ipcPath = ipc_dir + "/geth.ipc"
+
+        docker_options = LocalDockerStarter.compose_docker_options()
+        env = self.compose_env_options(node)
 
         container_name = f'schain-node{node.nodeID}'
         self.run_container(container_name, node_dir,
-                           data_dir_volume_name, env, **kargs)
-        node.ipcPath = ipc_dir + "/geth.ipc"
+                           data_dir_volume_name, env, **docker_options)
         node.running = True
 
-    def start(self, chain, start_timeout=40):
+    def start(self, chain, start_timeout=100):
         assert not self.started
         self.started = True
         self.chain = chain
@@ -665,17 +666,26 @@ class LocalDockerStarter:
         safe_input_with_timeout('Press enter when nodes start', start_timeout)
         self.running = True
 
-    def stop(self):
-        assert hasattr(self, "chain")
-
+    def destroy_containers(self):
         for c in self.containers:
-            c.remove(force=True)
+            try:
+                c.remove(force=True)
+            except docker.errors.NotFound:
+                continue
         print('Containers removed')
 
+    def destroy_volumes(self):
         for v in self.volumes:
-            v.remove()
+            try:
+                v.remove(force=True)
+            except docker.errors.NotFound:
+                continue
         print('Volumes removed')
 
+    def stop(self):
+        assert hasattr(self, "chain")
+        self.destroy_containers()
+        self.destroy_volumes()
         self.running = False
         self.dir.cleanup()
 
