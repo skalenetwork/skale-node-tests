@@ -1,19 +1,24 @@
-from tempfile import TemporaryDirectory
-import os
-import io
-import json
-from subprocess import Popen, DEVNULL, PIPE, STDOUT, TimeoutExpired
-import copy
-import time
 import binascii
+import copy
+import json
+import io
+import os
 import pickle
-from threading import Timer
-import web3
-from web3.auto import w3
 import signal
+import time
 import types
 
-#w3.eth.enable_unaudited_features()
+from tempfile import TemporaryDirectory
+from subprocess import Popen, DEVNULL, PIPE, STDOUT, TimeoutExpired
+
+import docker
+import web3
+from docker.types import LogConfig
+from web3.auto import w3
+
+DEFAULT_IMAGE = 'skalenetwork/schain:test'
+
+# w3.eth.enable_unaudited_features()
 
 def safe_input_with_timeout(s, timeout):
 
@@ -297,7 +302,7 @@ class Node:
         self.nodeID = kwargs.get('nodeID', Node._counter)
         self.bindIP = kwargs.get('bindIP', "127.0.0." + str(Node._counter))
         self.basePort = kwargs.get('basePort', 1231)
-        self.wsPort   = kwargs.get('wsPort', 7000+Node._counter)
+        self.wsPort = kwargs.get('wsPort', 7000+Node._counter)
         self.sChain = None
         self.config = None
         self.running = False
@@ -460,7 +465,7 @@ class SChain:
     def stop(self):
         self.starter.stop()
         self.running = False
-        
+
     def stop_node(self, pos):
         self.starter.stop_node(pos)
 
@@ -482,11 +487,12 @@ class SChain:
     def __del__(self):
         self.stop()
 
+
 def _make_config_node(node):
     return {
         "nodeName": node.nodeName,
-        "nodeID"  : node.nodeID,
-        "bindIP"  : node.bindIP,
+        "nodeID": node.nodeID,
+        "bindIP": node.bindIP,
         "basePort": node.basePort,
         "logLevel": "trace",
         "logLevelConfig": "trace",
@@ -494,27 +500,198 @@ def _make_config_node(node):
         "snapshotInterval": node.snapshotInterval,
         "rotateAfterBlock": node.rotateAfterBlock,
         "enable-debug-behavior-apis": True
-#        "catchupIntervalMs": 1000000000
+        # "catchupIntervalMs": 1000000000
     }
+
 
 def _make_config_schain_node(node, index):
     return {
-        "nodeID"   : node.nodeID,
-        "ip"       : node.bindIP,
-        "basePort" : node.basePort,
-        "schainIndex": index+1
+        "nodeID": node.nodeID,
+        "ip": node.bindIP,
+        "basePort": node.basePort,
+        "schainIndex": index + 1
     }
 
 
 def _make_config_schain(chain):
     ret = {
         "schainName": chain.sChainName,
-        "schainID"  : chain.sChainID,
-        "nodes"     : []
+        "schainID": chain.sChainID,
+        "nodes": []
     }
     for i in range(len(chain.nodes)):
         ret["nodes"].append(_make_config_schain_node(chain.nodes[i], i))
     return ret
+
+
+class LocalDockerStarter:
+    chain = None
+    started = False
+
+    def __init__(self, exe, image=DEFAULT_IMAGE):
+        self.exe = exe
+        self.image = image
+        self.dir = TemporaryDirectory()
+        self.running = False
+        self.client = docker.client.from_env()
+        self.containers = []
+        self.volumes = []
+
+    def create_volume(self, volume_name):
+        self.volumes.append(
+            self.client.volumes.create(
+                name=volume_name, driver='lvmpy',
+                driver_opts={})
+        )
+
+    def run_container(self, name, node_dir, data_dir_volume_name, env,
+                      **kwargs):
+        print(name, node_dir, data_dir_volume_name, env, kwargs)
+        self.containers.append(
+           self.client.containers.run(
+               image=self.image, name=name,
+               detach=True,
+               network='host',
+               volumes={
+                   data_dir_volume_name: {
+                       'bind': '/data_dir', 'mode': 'rw'
+                   },
+                   node_dir: {
+                       'bind': '/skale_node_data', 'mode': 'rw'
+                   }
+               },
+               environment=env,
+               **kwargs,
+           ))
+
+    def compose_env_options(self, node):
+        env = {
+            **os.environ,
+            'HTTP_RPC_PORT': self.chain.nodes[node.nodeID - 1].basePort + 3,
+            'WS_RPC_PORT': self.chain.nodes[node.nodeID - 1].basePort + 2,
+            'HTTPS_RPC_PORT': self.chain.nodes[node.nodeID - 1].basePort + 7,
+            'WSS_RPC_PORT': self.chain.nodes[node.nodeID - 1].basePort + 8,
+            'DATA_DIR': '/data_dir/',
+            'CONFIG_FILE': '/skale_node_data/config.json',
+            'LEAK_EXPIRE': '20',
+            'LEAK_PID_CHECK': '1',
+
+            'ARGS': ' '.join([
+                "--ws-port", str(node.basePort + 2),
+                "--http-port", str(node.basePort + 3),
+                "--aa", "always",
+                "--config", '/skale_node_data/config.json',
+                "-d", '/data_dir/',
+                "-v", "4",
+                "--web3-trace",
+                "--acceptors", "1"
+            ])
+        }
+        if node.snapshottedStartSeconds > -1:
+            url = 'http://{}:{}'.format(
+                self.chain.nodes[0].bindIP,
+                self.chain.nodes[0].basePort + 3
+            )
+            env['ARGS'] += f' --download-snapshot {url}'
+            time.sleep(node.snapshottedStartSeconds)
+        return env
+
+    @classmethod
+    def compose_docker_options(cls):
+        return {
+          "security_opt": [
+            "seccomp=unconfined"
+          ],
+          "restart_policy": {
+            "MaximumRetryCount": 10,
+            "Name": "on-failure"
+          },
+          "cap_add": [
+              "SYS_PTRACE", "SYS_ADMIN"
+          ],
+          "log_config": LogConfig(
+              type=LogConfig.types.JSON,
+              config={"max-size": "250m", "max-file": "5"}),
+        }
+
+    def make_config(self, node, chain):
+        cfg = copy.deepcopy(chain.config)
+        cfg["skaleConfig"] = {
+            "nodeInfo": _make_config_node(node),
+            "sChain": _make_config_schain(self.chain)
+        }
+        return cfg
+
+    @classmethod
+    def save_config(cls, config, node_dir):
+        os.makedirs(node_dir, exist_ok=True)
+        cfg_filepath = node_dir + "/config.json"
+        with open(cfg_filepath, 'w') as cfg_file:
+            json.dump(config, cfg_file, indent=1)
+
+    def create_schain_node(self, chain, node):
+        assert not node.running
+
+        data_dir_volume_name = f'data-dir{node.nodeID}'
+        self.create_volume(data_dir_volume_name)
+
+        node_dir = os.path.join(os.getenv('DATA_DIR', self.dir.name),
+                                str(node.nodeID))
+
+        node.config = self.make_config(node, chain)
+        LocalDockerStarter.save_config(node.config, node_dir)
+
+        ipc_dir = node_dir
+        node.ipcPath = ipc_dir + "/geth.ipc"
+
+        docker_options = LocalDockerStarter.compose_docker_options()
+        env = self.compose_env_options(node)
+
+        container_name = f'schain-node{node.nodeID}'
+        self.run_container(container_name, node_dir,
+                           data_dir_volume_name, env, **docker_options)
+        node.running = True
+
+    def start(self, chain, start_timeout=100):
+        assert not self.started
+        self.started = True
+        self.chain = chain
+        for node in self.chain.nodes:
+            assert not node.running
+            # TODO Handle exceptions!
+            self.create_schain_node(chain, node)
+
+        assert len(self.client.volumes.list()) == len(self.chain.nodes)
+        assert len(self.client.containers.list()) == len(self.chain.nodes)
+        safe_input_with_timeout('Press enter when nodes start', start_timeout)
+        self.running = True
+
+    def destroy_containers(self):
+        for c in self.containers:
+            try:
+                c.remove(force=True)
+            except docker.errors.NotFound:
+                continue
+        print('Containers removed')
+
+    def destroy_volumes(self):
+        for v in self.volumes:
+            try:
+                v.remove(force=True)
+            except docker.errors.NotFound:
+                continue
+        print('Volumes removed')
+
+    def stop(self):
+        assert hasattr(self, "chain")
+        self.destroy_containers()
+        self.destroy_volumes()
+        self.running = False
+        self.dir.cleanup()
+
+    def node_exited(self, pos):
+        return self.exe_popens[pos].poll() is not None
+
 
 class LocalStarter:
     # TODO Implement monitoring of dead processes!
@@ -576,8 +753,8 @@ class LocalStarter:
                        "--web3-trace",
                        "--acceptors", "1"
                        ]
-                       
-            if n.snapshottedStartSeconds >= 0:
+
+            if n.snapshottedStartSeconds >= -1:
                 popen_args.append("--download-snapshot")
                 popen_args.append("http://" + self.chain.nodes[0].bindIP + ":" + str(self.chain.nodes[0].basePort + 3))
                 time.sleep(n.snapshottedStartSeconds)
@@ -587,7 +764,7 @@ class LocalStarter:
                       stderr=aleth_err,
                       env = env
             )
-            
+
             n.pid = popen.pid
 
             self.exe_popens.append( popen )
@@ -612,7 +789,7 @@ class LocalStarter:
 
         for pos in range(len(self.chain.nodes)):
             self.stop_node(pos)
-            
+
         for pos in range(len(self.chain.nodes)):
             self.wait_node_stop(pos)
 
@@ -646,6 +823,7 @@ def ssh_exec(address, command):
         print(comm[0].decode())
     except TimeoutExpired:
         pass
+
 
 class RemoteStarter:
     # TODO Implement monitoring of dead processes!
@@ -691,7 +869,7 @@ class RemoteStarter:
                        ssh_conf["exe"] +
                        " --no-discovery" +
                        " --config " + cfg_file +
-                       " -d " + node_dir + 
+                       " -d " + node_dir +
                        " -v " + "4" + "\" 2>nohup.err >nohup.out&")
             command += "\nexit\n"
 
@@ -708,6 +886,7 @@ class RemoteStarter:
         for n in self.chain.nodes:
             n.running = False
         self.running = False
+
 
 class RemoteDockerStarter:
     # TODO Implement monitoring of dead processes!
@@ -750,7 +929,7 @@ class RemoteDockerStarter:
             command += "; echo '" + json_str + "' >" + cfg_file
 
             command += ("; bash -c \" nohup " +
-                       "docker run -d " +                       
+                       "docker run -d " +
  #                      " -e CONFIG_FILE=" + cfg_file +
  #                      " -d $DATA_DIR \
  #                      " --ipcpath $DATA_DIR \
@@ -763,8 +942,8 @@ class RemoteDockerStarter:
  #                      " -v 4  \
  #                      " --web3-trace \
  #                      " --enable-debug-behavior-apis \
- #                      " --aa no $DOWNLOAD_SNAPSHOT_OPTION                       
- #                      
+ #                      " --aa no $DOWNLOAD_SNAPSHOT_OPTION
+ #
                        " -v " + node_dir + ":/schain_data" +
                        " -e DATA_DIR=/schain_data" +
                        " -e CONFIG_FILE=" + cfg_file +
