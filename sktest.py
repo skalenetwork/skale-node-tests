@@ -330,8 +330,6 @@ class Node:
         self.running = False
         self.eth = None
         self.ipcPath = None
-        self.emptyBlockIntervalMs = kwargs.get('emptyBlockIntervalMs', -1)
-        self.snapshotIntervalMs = kwargs.get('snapshotIntervalMs', -1)
         self.snapshottedStartSeconds = kwargs.get('snapshottedStartSeconds', -1)
         self.keyShareName = Node._nodes_bls_key_name[Node._counter - 1]
         self.insecureBLSPublicKey0 = Node._nodes_bls_public_key[Node._counter - 1][0]
@@ -351,6 +349,8 @@ class SChain:
         SChain._counter = SChain._counter + 1
         self.sChainName = kwargs.get('schainName', "Chain" + str(SChain._counter))
         self.sChainID = kwargs.get('schainID', SChain._counter)
+        self.emptyBlockIntervalMs = kwargs.get('emptyBlockIntervalMs', -1)
+        self.snapshotIntervalMs = kwargs.get('snapshotIntervalMs', -1)
         self.nodes = list(nodes)
         self.config = copy.deepcopy(config)
         self.starter = starter
@@ -512,8 +512,6 @@ def _make_config_node(node):
         "basePort": node.basePort,
         "logLevel": "trace",
         "logLevelConfig": "trace",
-        "emptyBlockIntervalMs": node.emptyBlockIntervalMs,
-        "snapshotIntervalMs": node.snapshotIntervalMs,
         "wallets": {
             "ima": {
                 "url": "https://45.63.65.79:1026",
@@ -546,6 +544,9 @@ def _make_config_schain(chain):
     ret = {
         "schainName": chain.sChainName,
         "schainID"  : chain.sChainID,
+        "emptyBlockIntervalMs": chain.emptyBlockIntervalMs,
+        "snapshotIntervalMs": chain.snapshotIntervalMs,
+        "storageLimit": 100000000,
         "nodes"     : []
     }
     for i in range(len(chain.nodes)):
@@ -613,6 +614,8 @@ class LocalStarter:
             if n.snapshottedStartSeconds >= 0:
                 popen_args.append("--download-snapshot")
                 popen_args.append("http://" + self.chain.nodes[0].bindIP + ":" + str(self.chain.nodes[0].basePort + 3))
+                popen_args.append("--public-key")
+                popen_args.append("11087880408379223720179864713155560103154798592635045798293882410743651570446:3564106700478864553326232013660949455083826448005354972026557092863213195493:11447019497857856092493405784790665626780763256081713143842436936251732746449:1772291325702049391502102464643150908631803508034733810722819621406995840280")
                 time.sleep(n.snapshottedStartSeconds)
 
             self.exe_popens.append(

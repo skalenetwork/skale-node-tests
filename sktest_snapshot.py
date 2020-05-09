@@ -11,13 +11,13 @@ sktest_exe = os.getenv("SKTEST_EXE", "/home/dimalit/skaled/build-no-mp/skaled/sk
 emptyBlockIntervalMs = 2000
 snapshotIntervalMs = 10
 
-n1 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs, snapshotIntervalMs=snapshotIntervalMs)
-n2 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs, snapshotIntervalMs=snapshotIntervalMs)
-n3 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs, snapshotIntervalMs=snapshotIntervalMs)
-n4 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs, snapshotIntervalMs=snapshotIntervalMs, snapshottedStartSeconds=120) #90 #18
+n1 = Node()
+n2 = Node()
+n3 = Node()
+n4 = Node(snapshottedStartSeconds=140) #90 #18
 
 starter = LocalStarter(sktest_exe)
-ch = SChain([n1, n2, n3, n4], starter, prefill=[1000000000000000000, 2000000000000000000])
+ch = SChain([n1, n2, n3, n4], starter, prefill=[1000000000000000000, 2000000000000000000], emptyBlockIntervalMs=emptyBlockIntervalMs, snapshotIntervalMs=snapshotIntervalMs)
 ch.start(start_timeout = 0) # 300
 
 print("Waiting for full catch-up")
