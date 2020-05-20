@@ -4,7 +4,7 @@ import time
 import json
 
 num_nodes=int(os.getenv("NUM_NODES", 2))
-ch = create_default_chain(num_nodes=2, num_accounts=2)
+ch = create_default_chain(num_nodes=num_nodes, num_accounts=2)
 ch.start()
 
 # input("press enter")

@@ -1,12 +1,15 @@
-from sktest import *
+import os
 
 import web3
+from hexbytes import HexBytes
+
 from web3.auto import w3
+from sktest import *
 
 #w3.eth.enable_unaudited_features()
 
-from hexbytes import HexBytes
 
+BASE_PORT = 10000
 PORT_RANGE = 11
 
 
@@ -27,33 +30,32 @@ def dump_node_state(obj):
 
 def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks=False,
                         rotate_after_block=-1,
-                        config_file=None, chainID=None):
+                        config_file=None, chainID=None, same_ip=False,
+                        run_container=False):
     nodes = []
     balances = []
 
     print(f"custom {rotate_after_block}")
 
-    base_port = 10000
-    for i in range(num_nodes):
+    base_ports = [BASE_PORT + PORT_RANGE * i for i in range(num_nodes)]
+    print(base_ports)
+    for i, port in enumerate(base_ports):
         emptyBlockIntervalMs = -1
         if empty_blocks:
             emptyBlockIntervalMs = 1000
-        nodes.append(
-            Node(
+        if run_container or same_ip:
+            node = Node(
                 emptyBlockIntervalMs=emptyBlockIntervalMs,
                 rotateAfterBlock=rotate_after_block,
                 bindIP='127.0.0.1',
-                basePort=base_port
+                basePort=port
             )
-        )
-        base_port += PORT_RANGE
+        else:
+            node = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
+                        rotateAfterBlock=rotate_after_block)
 
-    # for i in range(num_nodes):
-    #     emptyBlockIntervalMs = -1
-    #     if empty_blocks:
-    #         emptyBlockIntervalMs = 1000
-    #     nodes.append(Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
-    #                       rotateAfterBlock=rotate_after_block))
+        nodes.append(node)
+
 
     for i in range(num_accounts):
         balances.append(str((i + 1) * 1000000000000000000000))
@@ -69,18 +71,26 @@ def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks=False,
     if chainID:
         config["params"]["chainID"] = chainID
 
-    global sktest_exe
-    starter = LocalStarter(sktest_exe)
+    if run_container:
+        image = os.getenv('IMAGE')
+        starter = LocalDockerStarter(image)
+    else:
+        global sktest_exe
+        starter = LocalStarter(sktest_exe)
     chain = SChain(nodes, starter, balances, config = config)
 
     return chain
 
 
 def create_default_chain(num_nodes=2, num_accounts=2, empty_blocks = False, config_file = None):
-    return create_custom_chain(num_nodes, num_accounts, empty_blocks, -1, config_file)
+    run_container = os.getenv('RUN_CONTAINER') is not None
+    return create_custom_chain(num_nodes, num_accounts, empty_blocks, -1, config_file,
+                               run_container=run_container)
 
 def create_chain_with_id(num_nodes=2, num_accounts=2, empty_blocks = False, chain_id = None):
-    return create_custom_chain(num_nodes, num_accounts, empty_blocks, -1, None, chain_id)
+    run_container = os.getenv('RUN_CONTAINER') is not None
+    return create_custom_chain(num_nodes, num_accounts, empty_blocks, -1, None, chain_id,
+                               run_container=run_container)
 
 def load_private_keys(path, password, count=0):
     #TODO Exceptions?!

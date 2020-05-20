@@ -16,8 +16,6 @@ import web3
 from docker.types import LogConfig
 from web3.auto import w3
 
-DEFAULT_IMAGE = 'skalenetwork/schain:test'
-
 # w3.eth.enable_unaudited_features()
 
 def safe_input_with_timeout(s, timeout):
@@ -528,9 +526,10 @@ class LocalDockerStarter:
     chain = None
     started = False
 
-    def __init__(self, exe, image=DEFAULT_IMAGE):
-        self.exe = exe
-        self.image = image
+    DEFAULT_IMAGE = 'skalenetwork/schain:test'
+
+    def __init__(self, image=None):
+        self.image = image or LocalDockerStarter.DEFAULT_IMAGE
         self.dir = TemporaryDirectory()
         self.running = False
         self.client = docker.client.from_env()
@@ -546,7 +545,6 @@ class LocalDockerStarter:
 
     def run_container(self, name, node_dir, data_dir_volume_name, env,
                       **kwargs):
-        print(name, node_dir, data_dir_volume_name, env, kwargs)
         self.containers.append(
            self.client.containers.run(
                image=self.image, name=name,
@@ -689,8 +687,20 @@ class LocalDockerStarter:
         self.running = False
         self.dir.cleanup()
 
+    def stop_node(self, pos):
+        if not self.chain.nodes[pos].running:
+            return
+        self.containers[pos].stop(timeout=10)
+        self.chain.nodes[pos].running = False
+
+    def wait_node_stop(self, pos):
+        if not self.chain.nodes[pos].running:
+            return
+        self.containers[pos].wait(timeout=60)
+        self.chain.nodes[pos].running = False
+
     def node_exited(self, pos):
-        return self.exe_popens[pos].poll() is not None
+        return self.containers[pos].status == 'exited'
 
 
 class LocalStarter:

@@ -59,7 +59,7 @@ if nThreads == 0:
                         compare_nodes(eths)
                         raw_prev = None
                         if i-nAcc >= 0:
-                            raw_prev = transactions[i-nAcc] 
+                            raw_prev = transactions[i-nAcc]
                         print(f"i={i} offending tx is {t}")
                         print(f"prev tx i={i-nAcc} is {raw_prev}")
                         exit()
