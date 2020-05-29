@@ -7,12 +7,12 @@ from web3.auto import w3
 
 from hexbytes import HexBytes
 
-PORT_RANGE = 11
+PORT_RANGE = 10
 
 
 global sktest_exe
 #sktest_exe = os.getenv("SKTEST_EXE", "/home/dimalit/skale-ethereum/scripts/aleth")
-sktest_exe = os.getenv("SKTEST_EXE", "/home/dimalit/skaled/build-no-mp/skaled/skaled")
+sktest_exe = os.getenv("SKTEST_EXE", "/home/dimalit/skaled/build-no-mp-no-tsan/skaled/skaled")
 
 class HexJsonEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -31,9 +31,7 @@ def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks=False,
     nodes = []
     balances = []
 
-    print(f"custom {rotate_after_block}")
-
-    base_port = 10000
+    base_port = 1231
     for i in range(num_nodes):
         emptyBlockIntervalMs = -1
         if empty_blocks:
@@ -74,7 +72,6 @@ def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks=False,
     chain = SChain(nodes, starter, balances, config = config)
 
     return chain
-
 
 def create_default_chain(num_nodes=2, num_accounts=2, empty_blocks = False, config_file = None):
     return create_custom_chain(num_nodes, num_accounts, empty_blocks, -1, config_file)
@@ -133,8 +130,7 @@ def generate_or_load_txns(ch, nAcc, nTxns):
 
     return transactions
 
-def wait_for_txns(ch, nTxns):
-    t1 = time.time()
+def wait_for_txns(ch, nTxns, t1 = 0):
     count = 0
     from_block = 0
 
@@ -159,14 +155,16 @@ def wait_for_txns(ch, nTxns):
         t2 = time.time()
 
         if t2!=t1:
-            print("%d txns %d blocks perf = %f tx/sec" % (count, ch.eth.blockNumber, count/(t2-t1)))
-
+            print("%d txns %d blocks" % (count, ch.eth.blockNumber), end = ' ')
+            if t1 > 0:
+                print("perf = %f tx/sec" % (count / (t2 - t1)), end = '')
+            print()
         time.sleep(1)
 
     t2 = time.time()
 
     return t2-t1
-
+    
 def wait_for_blocks(ch, nBlocks):
     t1 = time.time()
     count = 0
@@ -189,7 +187,7 @@ def wait_for_blocks(ch, nBlocks):
 
     t2 = time.time()
 
-    return t2-t1
+    return t2-t1    
 
 def print_states_difference(ch):
     nNodes = len(ch.nodes)

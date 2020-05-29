@@ -1,7 +1,9 @@
 #!/bin/bash
-EXE=~/skaled/build-no-mp/skaled/skaled
-trap -- '' SIGINT SIGTERM SIGHUP EXIT
+EXE=~/skaled/build-no-mp-no-tsan/skaled/skaled
+trap -- '' SIGTERM SIGHUP SIGINT
 until $EXE $@; do
+#while :; do
+#	$EXE $@
 	echo "Restarting $EXE $@"
 	sleep 5
 done

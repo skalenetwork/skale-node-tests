@@ -246,7 +246,7 @@
 	      "basePort": 1231,
               "logLevel": "trace",
               "logLevelProposal": "trace",
-              "emptyBlockIntervalMs": 1000,
+              "emptyBlockIntervalMs": -1,
               "snapshotInterval": 0
 	    },
 	    "sChain":
@@ -256,7 +256,7 @@
 	        "schainOwner": "0x6196d135CdDb9d73A0756C1E44b5b02B11acf594",
 	        "storageLimit": 1000000,
 	        "nodes": [
-	          { "nodeID": 1112, "ip": "127.0.0.1", "basePort": 1231, "schainIndex" : 1}
+	          { "nodeID": 1112, "ip": "127.0.0.1", "publicIP": "127.0.0.1", "basePort": 1231, "schainIndex" : 1}
 	        ]
 	      }
   }

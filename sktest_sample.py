@@ -9,8 +9,10 @@ ch.start()
 
 # input("press enter")
 
-ch.transaction()
-ch.transaction()
+ch.nodes[0].eth.pauseConsensus(True)
+ch.transaction_async(_from=0, nonce=0)
+ch.transaction_async(_from=1, nonce=0)
+ch.nodes[0].eth.pauseConsensus(False)
 
 # print("State at node 1:")
 # print(dump_node_state(ch.main_state()))

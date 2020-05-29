@@ -5,8 +5,8 @@ from compare_nodes import compare_nodes
 from functools import reduce
 
 nNodes = int(os.getenv("NUM_NODES", 4))
-nTxns = 24000 #24000
-nAcc  = 240 #8000
+nTxns = 24000
+nAcc  = 8000
 nThreads = 0
 
 MAX_RETRIES = 30
@@ -83,7 +83,10 @@ else:
 print("Waiting for blocks")
 os.system("pkill -9 -f kill4")
 
-dt = wait_for_txns(ch, nTxns-1)
+wait_for_txns(ch, nTxns-1, t1)
+
+t2 = time.time()
+dt = t2 - t1
 
 print("Txns: "+str(nTxns)+" Time: "+str(dt)+" => "+str(nTxns/(dt))+" tx/sec")
 

@@ -16,7 +16,7 @@ num_nodes = int(os.getenv("NUM_NODES", 1))
 
 ch = create_default_chain(num_nodes=num_nodes, num_accounts=nAcc, empty_blocks=True)
 
-ch.start(start_timeout = 0)
+ch.start(start_timeout = 30)
 # input("press enter")
 
 # wait for answer
@@ -28,7 +28,7 @@ while True:
         continue
     break
 
-#start_balance = {account: ch.balance(account) for account in range(nAcc)}
+start_balance = {account: ch.balance(account) for account in range(nAcc)}
 #print('Balances:', start_balance)
 
 t1 = time.time()
