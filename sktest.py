@@ -11,9 +11,9 @@ import types
 from tempfile import TemporaryDirectory
 from subprocess import Popen, DEVNULL, PIPE, STDOUT, TimeoutExpired
 
-import docker
+#import docker
 import web3
-from docker.types import LogConfig
+#from docker.types import LogConfig
 from web3.auto import w3
 
 # w3.eth.enable_unaudited_features()
@@ -306,7 +306,6 @@ class Node:
         self.running = False
         self.eth = None
         self.ipcPath = None
-        self.emptyBlockIntervalMs = kwargs.get('emptyBlockIntervalMs', -1)
         self.rotateAfterBlock     = kwargs.get('rotateAfterBlock', -1)
         self.snapshotInterval = kwargs.get('snapshotInterval', -1)
         self.snapshottedStartSeconds = kwargs.get('snapshottedStartSeconds', -1)
@@ -323,6 +322,7 @@ class SChain:
         SChain._counter = SChain._counter + 1
         self.sChainName = kwargs.get('schainName', "Chain" + str(SChain._counter))
         self.sChainID = kwargs.get('schainID', SChain._counter)
+        self.emptyBlockIntervalMs = kwargs.get('emptyBlockIntervalMs', -1)
         self.nodes = list(nodes)
         self.config = copy.deepcopy(config)
         self.starter = starter
@@ -494,7 +494,6 @@ def _make_config_node(node):
         "basePort": node.basePort,
         "logLevel": "trace",
         "logLevelConfig": "trace",
-        "emptyBlockIntervalMs": node.emptyBlockIntervalMs,
         "snapshotInterval": node.snapshotInterval,
         "rotateAfterBlock": node.rotateAfterBlock,
         "enable-debug-behavior-apis": True
@@ -515,7 +514,8 @@ def _make_config_schain(chain):
     ret = {
         "schainName": chain.sChainName,
         "schainID": chain.sChainID,
-        "nodes": []
+        "nodes": [],
+        "emptyBlockIntervalMs": chain.emptyBlockIntervalMs
     }
     for i in range(len(chain.nodes)):
         ret["nodes"].append(_make_config_schain_node(chain.nodes[i], i))
@@ -764,7 +764,7 @@ class LocalStarter:
                        "--acceptors", "1"
                        ]
 
-            if n.snapshottedStartSeconds >= -1:
+            if n.snapshottedStartSeconds > -1:
                 popen_args.append("--download-snapshot")
                 popen_args.append("http://" + self.chain.nodes[0].bindIP + ":" + str(self.chain.nodes[0].basePort + 3))
                 time.sleep(n.snapshottedStartSeconds)

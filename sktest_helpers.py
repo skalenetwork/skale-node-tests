@@ -12,7 +12,6 @@ from sktest import *
 BASE_PORT = 10000
 PORT_RANGE = 11
 
-
 global sktest_exe
 #sktest_exe = os.getenv("SKTEST_EXE", "/home/dimalit/skale-ethereum/scripts/aleth")
 sktest_exe = os.getenv("SKTEST_EXE", "/home/dimalit/skaled/build-no-mp/skaled/skaled")
@@ -38,7 +37,6 @@ def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks=False,
     print(f"custom {rotate_after_block}")
 
     base_ports = [BASE_PORT + PORT_RANGE * i for i in range(num_nodes)]
-    print(base_ports)
     for i, port in enumerate(base_ports):
         emptyBlockIntervalMs = -1
         if empty_blocks:
@@ -51,15 +49,14 @@ def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks=False,
                 basePort=port
             )
         else:
-            node = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
+            node = Node(bindIP=f'127.0.0.{i+1}', basePort=1231,
+                        emptyBlockIntervalMs=emptyBlockIntervalMs,
                         rotateAfterBlock=rotate_after_block)
 
         nodes.append(node)
 
-
     for i in range(num_accounts):
         balances.append(str((i + 1) * 1000000000000000000000))
-
 
     config = None
     if config_file:
@@ -77,10 +74,16 @@ def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks=False,
     else:
         global sktest_exe
         starter = LocalStarter(sktest_exe)
+
     chain = SChain(nodes, starter, balances, config = config)
+    emptyBlockIntervalMs = -1
+    if empty_blocks:
+        emptyBlockIntervalMs = 1000
+
+
+    chain = SChain(nodes, starter, balances, config = config, emptyBlockIntervalMs = emptyBlockIntervalMs)
 
     return chain
-
 
 def create_default_chain(num_nodes=2, num_accounts=2, empty_blocks = False, config_file = None):
     run_container = os.getenv('RUN_CONTAINER') is not None
