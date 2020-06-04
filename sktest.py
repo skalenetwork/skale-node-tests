@@ -1,19 +1,24 @@
-from tempfile import TemporaryDirectory
-import os
-import io
-import json
-from subprocess import Popen, DEVNULL, PIPE, STDOUT, TimeoutExpired
-import copy
-import time
 import binascii
+import copy
+import json
+import io
+import os
 import pickle
-from threading import Timer
-import web3
-from web3.auto import w3
 import signal
+import time
 import types
 
-#w3.eth.enable_unaudited_features()
+from tempfile import TemporaryDirectory
+from subprocess import Popen, DEVNULL, PIPE, STDOUT, TimeoutExpired
+
+#import docker
+import web3
+#from docker.types import LogConfig
+from web3.auto import w3
+
+DEFAULT_IMAGE = 'skalenetwork/schain:test'
+
+# w3.eth.enable_unaudited_features()
 
 def safe_input_with_timeout(s, timeout):
 
@@ -50,28 +55,12 @@ def patch_eth(eth):
     def callSkaleHost(eth, arg):
         res = eth._provider.make_request("debug_callSkaleHost", [arg]);
         return res["result"]
-    def getVersion(eth):
-        res = eth._provider.make_request("debug_getVersion", []);
-        return res["result"]
-    def getArguments(eth):
-        res = eth._provider.make_request("debug_getArguments", []);
-        return res["result"]
-    def getConfig(eth):
-        res = eth._provider.make_request("debug_getConfig", []);
-        return res["result"]
-    def getSchainName(eth):
-        res = eth._provider.make_request("debug_getSchainName", []);
-        return res["result"]
 
     eth.pauseConsensus = types.MethodType(pauseConsensus, eth)
     eth.pauseBroadcast = types.MethodType(pauseBroadcast, eth)
     eth.forceBlock     = types.MethodType(forceBlock, eth)
     eth.forceBroadcast = types.MethodType(forceBroadcast, eth)
     eth.callSkaleHost  = types.MethodType(callSkaleHost, eth)
-    eth.getVersion     = types.MethodType(getVersion, eth)
-    eth.getArguments   = types.MethodType(getArguments, eth)
-    eth.getConfig      = types.MethodType(getConfig, eth)
-    eth.getSchainName  = types.MethodType(getSchainName, eth)
 
 def _transaction2json(eth, t, accounts):
 #    print("_transaction2json", t)
@@ -313,16 +302,16 @@ class Node:
         self.nodeID = kwargs.get('nodeID', Node._counter)
         self.bindIP = kwargs.get('bindIP', "127.0.0." + str(Node._counter))
         self.basePort = kwargs.get('basePort', 1231)
-        self.wsPort   = kwargs.get('wsPort', 7000+Node._counter)
+        self.wsPort = kwargs.get('wsPort', 7000+Node._counter)
         self.sChain = None
         self.config = None
         self.running = False
         self.eth = None
         self.ipcPath = None
         self.emptyBlockIntervalMs = kwargs.get('emptyBlockIntervalMs', -1)
+        self.rotateAfterBlock     = kwargs.get('rotateAfterBlock', -1)
         self.snapshotInterval = kwargs.get('snapshotInterval', -1)
         self.snapshottedStartSeconds = kwargs.get('snapshottedStartSeconds', -1)
-        self.rotateAfterBlock = kwargs.get('rotateAfterBlock', -1)
 
 class SChain:
 
@@ -476,7 +465,7 @@ class SChain:
     def stop(self):
         self.starter.stop()
         self.running = False
-        
+
     def stop_node(self, pos):
         self.starter.stop_node(pos)
 
@@ -498,6 +487,7 @@ class SChain:
     def __del__(self):
         self.stop()
 
+
 def _make_config_node(node):
     return {
         "nodeName": node.nodeName,
@@ -506,18 +496,19 @@ def _make_config_node(node):
         "basePort": node.basePort,
         "logLevel": "trace",
         "logLevelConfig": "trace",
-        "emptyBlockIntervalMs": node.emptyBlockIntervalMs,
         "snapshotInterval": node.snapshotInterval,
-        "enable-debug-behavior-apis": True,
-#        "catchupIntervalMs": 1000000000
+        "rotateAfterBlock": node.rotateAfterBlock,
+        "enable-debug-behavior-apis": True
+        # "catchupIntervalMs": 1000000000
     }
+
 
 def _make_config_schain_node(node, index):
     return {
         "nodeID"   : node.nodeID,
         "ip"       : node.bindIP,
         "basePort" : node.basePort,
-        "schainIndex": index+1
+        "schainIndex": index + 1
     }
 
 
@@ -525,7 +516,8 @@ def _make_config_schain(chain):
     ret = {
         "schainName": chain.sChainName,
         "schainID"  : chain.sChainID,
-        "nodes"     : []
+        "nodes"     : [],
+        "emptyBlockIntervalMs": chain.emptyBlockIntervalMs
     }
     for i in range(len(chain.nodes)):
         ret["nodes"].append(_make_config_schain_node(chain.nodes[i], i))
@@ -748,7 +740,7 @@ class LocalStarter:
             env['LEAK_PID_CHECK'] = '1'
 
             popen_args = [#"/usr/bin/strace", '-o'+node_dir+'/aleth.trace',
-                       "stdbuf", "-oL",
+                       #"stdbuf", "-oL",
                        #"heaptrack",
                        self.exe,
                        "--http-port", str(n.basePort + 3),
@@ -762,7 +754,7 @@ class LocalStarter:
                        "--acceptors", "1"
                        ]
 
-            if n.snapshottedStartSeconds >= 0:
+            if n.snapshottedStartSeconds > -1:
                 popen_args.append("--download-snapshot")
                 popen_args.append("http://" + self.chain.nodes[0].bindIP + ":" + str(self.chain.nodes[0].basePort + 3))
                 time.sleep(n.snapshottedStartSeconds)
@@ -831,6 +823,7 @@ def ssh_exec(address, command):
         print(comm[0].decode())
     except TimeoutExpired:
         pass
+
 
 class RemoteStarter:
     # TODO Implement monitoring of dead processes!

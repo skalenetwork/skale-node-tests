@@ -37,6 +37,8 @@ def test_rotation(schain):
     block_no = 0
     def on_block():
 
+        print('-------------------')
+
         b1 = 0
         b2 = block_no
 
@@ -51,16 +53,19 @@ def test_rotation(schain):
             next_to_find = 2        # 0 is genesis, 1 is contract creation
         for i in range(len(logs)):
             t1 = web3.Web3.toInt(logs[i]['topics'][0])
+            print(t1, next_to_find)
             if t1 < next_to_find:
                 continue
             assert(t1  == next_to_find)
             next_to_find += 1
 
+        print('====================')
+
         b1 = block_no - 400
         b2 = block_no - 100
 
         if b1 >= 2:   # 0 is genesis, 1 is contract creation
-            logs2 = eth.getLogs({
+            logs = eth.getLogs({
                 'fromBlock'   : b1,
                 'toBlock'     : b2,
                 'address': contractAddress
@@ -69,6 +74,7 @@ def test_rotation(schain):
             next_to_find = block_no - 255
             for i in range(len(logs)):
                 t1 = web3.Web3.toInt(logs[i]['topics'][0])
+                print(t1, next_to_find)
                 if t1 < next_to_find:
                     continue
                 assert (t1 == next_to_find)
@@ -94,19 +100,24 @@ def test_rotation(schain):
                 on_block()
                 break
             except Exception as e:
-                assert(e.message.contains('transaction nonce'))
-                print(e)
+                if str(e).find('transaction nonce') == -1:
+                	raise
                 time.sleep(1)
 
         # just ask for some old block
         try:
             b1 = eth.getBlock(1)
-        except:
-            eth.getBlock(1)
+        except Exception as ex:
+            assert(str(ex).find('not found') != -1)
+            b1 = None
         assert(b1 is None or b1['hash'] == hash1)
 
         # end this if block #300 has gone
-        if block_no >= 300+256 and eth.getBlock(300) is None:
-            break
+        if block_no >= 300+256:
+            try:
+                eth.getBlock(300)
+            except Exception as ex:
+                assert(str(ex).find('not found') != -1)
+                break
 
         i += 1
