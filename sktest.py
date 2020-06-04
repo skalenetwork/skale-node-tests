@@ -308,7 +308,6 @@ class Node:
         self.running = False
         self.eth = None
         self.ipcPath = None
-        self.emptyBlockIntervalMs = kwargs.get('emptyBlockIntervalMs', -1)
         self.rotateAfterBlock     = kwargs.get('rotateAfterBlock', -1)
         self.snapshotInterval = kwargs.get('snapshotInterval', -1)
         self.snapshottedStartSeconds = kwargs.get('snapshottedStartSeconds', -1)
@@ -325,6 +324,7 @@ class SChain:
         SChain._counter = SChain._counter + 1
         self.sChainName = kwargs.get('schainName', "Chain" + str(SChain._counter))
         self.sChainID = kwargs.get('schainID', SChain._counter)
+        self.emptyBlockIntervalMs = kwargs.get('emptyBlockIntervalMs', -1)
         self.nodes = list(nodes)
         self.config = copy.deepcopy(config)
         self.starter = starter

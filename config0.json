@@ -49,6 +49,7 @@
    	        "code": "",
 			"storage":{}
 	    },
+        "0x66c5a87f4a49DD75e970055A265E8dd5C3F8f852": { "balance": "1000000000000000000000000000000" } ,
         "0xa68f946090c600eda6f139783077ee802afeb990": { "balance": "1000000000000000000000000000000" } ,
         "0x88fd5e01078629cc194c933d9631b9448fe10b1d": { "balance": "1000000000000000000000000000000" } ,
         "0x77a0bc73442d3d9cb993e8d9752f95babf0ccaa6": { "balance": "1000000000000000000000000000000" } ,
@@ -244,19 +245,21 @@
 	      "nodeID": 1112,
 	      "bindIP": "0.0.0.0",
 	      "basePort": 1231,
-              "logLevel": "trace",
-              "logLevelProposal": "trace",
-              "emptyBlockIntervalMs": -1,
-              "snapshotInterval": 0
+          "logLevel": "trace",
+          "logLevelProposal": "trace",
+          "emptyBlockIntervalMs": -1,
+          "snapshotInterval": 0,
+          "rotateAfterBlock": 64
 	    },
 	    "sChain":
 	      {
 	        "schainName": "TestChain",
 	        "schainID": 1,
-	        "schainOwner": "0x6196d135CdDb9d73A0756C1E44b5b02B11acf594",
+	        "schainOwner": "0x66c5a87f4a49DD75e970055A265E8dd5C3F8f852",
 	        "storageLimit": 1000000,
+	        "emptyBlockIntervalMs": 3000,
 	        "nodes": [
-	          { "nodeID": 1112, "ip": "127.0.0.1", "publicIP": "127.0.0.1", "basePort": 1231, "schainIndex" : 1}
+	          { "nodeID": 1112, "ip": "127.0.0.1", "basePort": 1231, "schainIndex" : 1}
 	        ]
 	      }
   }
