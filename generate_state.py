@@ -30,7 +30,7 @@ CHUNK_SIZE=1024*1024
 nchunks = (storage_size + CHUNK_SIZE - 1) // CHUNK_SIZE
 
 for i in range (nchunks):
-  raw_call = ch.transaction_obj(gas=180000 + CHUNK_SIZE * 21000, to=contractAddress, value=storage_size)
+  raw_call = ch.transaction_obj(gas=181000 + CHUNK_SIZE * 99000, to=contractAddress, value=CHUNK_SIZE)
   call_hash = eth.sendRawTransaction(raw_call)
   call_receipt = None
   while not call_receipt:
