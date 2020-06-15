@@ -31,7 +31,7 @@
     "gasLimit": "0xFFFFFFF"
   },
         "accounts": {
-	    "0xf65a90e26bcca0f147887df929f4703e3b815ed4":{
+	    "0x66c5a87f4a49DD75e970055A265E8dd5C3F8f852":{
 	        "balance": "1000000000000000000000"
 	    },
 	    "0x6d80aAC61F6d92c7F4A3c412850474ba963B698E":{
@@ -49,7 +49,6 @@
    	        "code": "",
 			"storage":{}
 	    },
-        "0x66c5a87f4a49DD75e970055A265E8dd5C3F8f852": { "balance": "1000000000000000000000000000000" } ,
         "0xa68f946090c600eda6f139783077ee802afeb990": { "balance": "1000000000000000000000000000000" } ,
         "0x88fd5e01078629cc194c933d9631b9448fe10b1d": { "balance": "1000000000000000000000000000000" } ,
         "0x77a0bc73442d3d9cb993e8d9752f95babf0ccaa6": { "balance": "1000000000000000000000000000000" } ,
@@ -245,11 +244,11 @@
 	      "nodeID": 1112,
 	      "bindIP": "0.0.0.0",
 	      "basePort": 1231,
-          "logLevel": "trace",
-          "logLevelProposal": "trace",
-          "emptyBlockIntervalMs": -1,
-          "snapshotInterval": 0,
-          "rotateAfterBlock": 64
+              "logLevel": "trace",
+              "logLevelProposal": "trace",
+              "emptyBlockIntervalMs": 1000,
+              "snapshotInterval": 0,
+	      "rotateAfterBlock": 0
 	    },
 	    "sChain":
 	      {
