@@ -256,8 +256,8 @@ def get_config(other=None):
             "chainID": "0x01",
             "maximumExtraDataSize": "0x20",
             "tieBreakingGas": False,
-            "minGasLimit": "0x1122334455667788",
-            "maxGasLimit": "0x1122334455667788",
+            "minGasLimit": "0x1234567890abc",
+            "maxGasLimit": "0x1234567890abc",
             "gasLimitBoundDivisor": "0x0400",
             "minimumDifficulty": "0x020000",
             "difficultyBoundDivisor": "0x0800",
@@ -272,7 +272,7 @@ def get_config(other=None):
             "timestamp": "0x00",
             "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
             "extraData": "0x11bbe8db4e347b4e8c937c1c8370e4b5ed33adb3db69cbdb7a38e1e50b1b82fa",
-            "gasLimit": "0x1122334455667788"
+            "gasLimit": "0x1234567890abc"
         },
         "accounts": {}
     }
