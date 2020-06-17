@@ -1,10 +1,11 @@
-from sktest import *
-from sktest_helpers import *
-import time
-import json
+import os
 
-num_nodes=int(os.getenv("NUM_NODES", 2))
-ch = create_default_chain(num_nodes=num_nodes, num_accounts=2)
+from sktest_helpers import create_default_chain, dump_node_state, \
+    print_states_difference
+
+num_nodes = int(os.getenv("NUM_NODES", 2))
+ch = create_default_chain(num_nodes=num_nodes, num_accounts=2,
+                          empty_blocks=True)
 ch.start()
 
 # input("press enter")

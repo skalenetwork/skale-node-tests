@@ -1,20 +1,27 @@
+import json
 import os
+import pickle
+import time
 
-import web3
 from hexbytes import HexBytes
 
 from web3.auto import w3
-from sktest import *
+from sktest import get_config, list_differences, \
+    LocalDockerStarter, LocalStarter, Node, \
+    SChain, safe_input_with_timeout
 
-#w3.eth.enable_unaudited_features()
+# w3.eth.enable_unaudited_features()
 
 
 BASE_PORT = 10000
 PORT_RANGE = 11
 
 global sktest_exe
-#sktest_exe = os.getenv("SKTEST_EXE", "/home/dimalit/skale-ethereum/scripts/aleth")
-sktest_exe = os.getenv("SKTEST_EXE", "/home/dimalit/skaled/build-no-mp/skaled/skaled")
+# sktest_exe = os.getenv("SKTEST_EXE",
+#                        "/home/dimalit/skale-ethereum/scripts/aleth")
+sktest_exe = os.getenv("SKTEST_EXE",
+                       "/home/dimalit/skaled/build-no-mp/skaled/skaled")
+
 
 class HexJsonEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -45,7 +52,7 @@ def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks=False,
             node = Node(
                 emptyBlockIntervalMs=emptyBlockIntervalMs,
                 rotateAfterBlock=rotate_after_block,
-                bindIP='127.0.0.1',
+                bindIP='0.0.0.0',
                 basePort=port
             )
         else:
@@ -54,6 +61,9 @@ def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks=False,
                         rotateAfterBlock=rotate_after_block)
 
         nodes.append(node)
+
+    for node in nodes:
+        assert node.sChain is None
 
     for i in range(num_accounts):
         balances.append(str((i + 1) * 1000000000000000000000))
@@ -64,7 +74,7 @@ def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks=False,
             config = json.load(f)
             print(f"Loaded ${config_file}")
     else:
-        config=get_config()
+        config = get_config()
     if chainID:
         config["params"]["chainID"] = chainID
 
@@ -75,28 +85,33 @@ def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks=False,
         global sktest_exe
         starter = LocalStarter(sktest_exe)
 
-    chain = SChain(nodes, starter, balances, config = config)
     emptyBlockIntervalMs = -1
     if empty_blocks:
         emptyBlockIntervalMs = 1000
 
-
-    chain = SChain(nodes, starter, balances, config = config, emptyBlockIntervalMs = emptyBlockIntervalMs)
+    chain = SChain(nodes, starter, balances, config=config,
+                   emptyBlockIntervalMs=emptyBlockIntervalMs)
 
     return chain
 
-def create_default_chain(num_nodes=2, num_accounts=2, empty_blocks = False, config_file = None):
-    run_container = os.getenv('RUN_CONTAINER') is not None
-    return create_custom_chain(num_nodes, num_accounts, empty_blocks, -1, config_file,
+
+def create_default_chain(num_nodes=2, num_accounts=2, empty_blocks=False,
+                         config_file=None):
+    run_container = os.getenv('RUN_CONTAINER')
+    return create_custom_chain(num_nodes, num_accounts, empty_blocks, -1,
+                               config_file,
                                run_container=run_container)
 
-def create_chain_with_id(num_nodes=2, num_accounts=2, empty_blocks = False, chain_id = None):
-    run_container = os.getenv('RUN_CONTAINER') is not None
-    return create_custom_chain(num_nodes, num_accounts, empty_blocks, -1, None, chain_id,
-                               run_container=run_container)
+
+def create_chain_with_id(num_nodes=2, num_accounts=2, empty_blocks=False,
+                         chain_id=None):
+    run_container = os.getenv('RUN_CONTAINER')
+    return create_custom_chain(num_nodes, num_accounts, empty_blocks, -1,
+                               None, chain_id, run_container=run_container)
+
 
 def load_private_keys(path, password, count=0):
-    #TODO Exceptions?!
+    # TODO Exceptions?!
     files = os.listdir(path)
     res = []
     i = 0
@@ -113,6 +128,7 @@ def load_private_keys(path, password, count=0):
             print(f"Loaded {i} of {count} keys")
     return res
 
+
 def count_txns(eth):
     sum = 0
     for i in range(eth.blockNumber+1):
@@ -121,8 +137,8 @@ def count_txns(eth):
         sum += n
     return sum
 
-def generate_or_load_txns(ch, nAcc, nTxns):
 
+def generate_or_load_txns(ch, nAcc, nTxns):
     transactions = []
     file = "transactions_"+str(nAcc)+"_"+str(nTxns)
 
@@ -130,7 +146,7 @@ def generate_or_load_txns(ch, nAcc, nTxns):
         with open(file, "rb") as fd:
             transactions = pickle.load(fd)
         print("Loaded transactions from file")
-    except Exception as ex:
+    except Exception:
         ch.wait_start()
         print("Generating txns")
         for i in range(nTxns):
@@ -138,13 +154,15 @@ def generate_or_load_txns(ch, nAcc, nTxns):
             acc2 = (i+1) % nAcc
             nonce = i // nAcc
             print("from=%d nonce=%d %s" % (acc1, nonce, ch.accounts[acc1]))
-            txn_str = ch.transaction_obj(value=1, _from=acc1, to=acc2, nonce=nonce)
-            transactions.append( txn_str )
+            txn_str = ch.transaction_obj(value=1,
+                                         _from=acc1, to=acc2, nonce=nonce)
+            transactions.append(txn_str)
         safe_input_with_timeout("Sending txns - press", 10)
         with open(file, "wb") as fd:
             pickle.dump(transactions, fd)
 
     return transactions
+
 
 def wait_for_txns(ch, nTxns):
     t1 = time.time()
@@ -171,14 +189,19 @@ def wait_for_txns(ch, nTxns):
 
         t2 = time.time()
 
-        if t2!=t1:
-            print("%d txns %d blocks perf = %f tx/sec" % (count, ch.eth.blockNumber, count/(t2-t1)))
+        if t2 != t1:
+            print(
+                "%d txns %d blocks perf = %f tx/sec" % (
+                    count, ch.eth.blockNumber, count/(t2-t1)
+                )
+            )
 
         time.sleep(1)
 
     t2 = time.time()
 
-    return t2-t1
+    return t2 - t1
+
 
 def wait_for_blocks(ch, nBlocks):
     t1 = time.time()
@@ -195,14 +218,15 @@ def wait_for_blocks(ch, nBlocks):
 
         t2 = time.time()
 
-        if t2!=t1:
+        if t2 != t1:
             print("%d blocks rate = %f blocks/sec" % (count, count/(t2-t1)))
 
         time.sleep(1)
 
     t2 = time.time()
 
-    return t2-t1
+    return t2 - t1
+
 
 def print_states_difference(ch):
     nNodes = len(ch.nodes)
@@ -211,7 +235,6 @@ def print_states_difference(ch):
         for b_index in range(a_index + 1, nNodes):
             diff = list_differences(states[a_index], states[b_index])
             if diff:
-                print('')
-                print(f'Difference between node #{a_index + 1} and #{b_index + 1}')
+                print(f'\nDifference between node '
+                      f'#{a_index + 1} and #{b_index + 1}')
                 print('\n'.join(diff))
-
