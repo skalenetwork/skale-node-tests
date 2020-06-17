@@ -636,7 +636,7 @@ class LocalDockerStarter:
                 self.chain.nodes[0].bindIP,
                 self.chain.nodes[0].basePort + 3
             )
-            env['ARGS'] += f' --download-snapshot {url}'
+            env['OPTIONS'] += f' --download-snapshot {url}'
             time.sleep(node.snapshottedStartSeconds)
         return env
 
