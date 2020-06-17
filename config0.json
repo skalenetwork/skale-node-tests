@@ -31,7 +31,7 @@
     "gasLimit": "0xFFFFFFF"
   },
         "accounts": {
-	    "0xf65a90e26bcca0f147887df929f4703e3b815ed4":{
+	    "0x66c5a87f4a49DD75e970055A265E8dd5C3F8f852":{
 	        "balance": "1000000000000000000000"
 	    },
 	    "0x6d80aAC61F6d92c7F4A3c412850474ba963B698E":{
@@ -247,14 +247,16 @@
               "logLevel": "trace",
               "logLevelProposal": "trace",
               "emptyBlockIntervalMs": 1000,
-              "snapshotInterval": 0
+              "snapshotInterval": 0,
+	      "rotateAfterBlock": 0
 	    },
 	    "sChain":
 	      {
 	        "schainName": "TestChain",
 	        "schainID": 1,
-	        "schainOwner": "0x6196d135CdDb9d73A0756C1E44b5b02B11acf594",
+	        "schainOwner": "0x66c5a87f4a49DD75e970055A265E8dd5C3F8f852",
 	        "storageLimit": 1000000,
+	        "emptyBlockIntervalMs": 3000,
 	        "nodes": [
 	          { "nodeID": 1112, "ip": "127.0.0.1", "basePort": 1231, "schainIndex" : 1}
 	        ]

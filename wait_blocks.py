@@ -2,8 +2,8 @@ from sktest_helpers import *
 import time
 
 nNodes = int(os.getenv("NUM_NODES", 4))
-nTxns = 240000
-nBlocks = 10000
+nTxns = 24000
+nBlocks = 10000000000
 nAcc  = 240
 
 ch = create_custom_chain(num_nodes=nNodes, num_accounts=nAcc, empty_blocks = True, rotate_after_block=128, config_file="/home/dimalit/SkaleExperimental/skaled-tests/cat-cycle/init.json", chainID="0xD39D")
@@ -11,9 +11,20 @@ ch = create_custom_chain(num_nodes=nNodes, num_accounts=nAcc, empty_blocks = Tru
 ch.start()
 
 print("Waiting for blocks")
+pid = ch.nodes[0].pid
+with open("/tmp/libleak.enabled", "w") as fp:
+    fp.write(str(pid))
 
-wait_for_txns(ch, nTxns)
-#wait_for_blocks(ch, nBlocks)
+#time.sleep(60);
+wait_for_blocks(ch, nBlocks)
+
+with open("/tmp/libleak.enabled", "w") as fp:
+    fp.write("")
+
+#wait_for_txns(ch, nTxns)
 
 #print("Txns: "+str(nTxns)+" Time: "+str(t2-t1)+" => "+str(nTxns/(t2-t1))+" tx/sec")
+
+input("Press enter")
+
 ch.stop()

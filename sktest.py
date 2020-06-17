@@ -279,8 +279,8 @@ def get_config(other=None):
             "chainID": "0x01",
             "maximumExtraDataSize": "0x20",
             "tieBreakingGas": False,
-            "minGasLimit": "0x47E7C400",
-            "maxGasLimit": "0x47E7C400",
+            "minGasLimit": "0x1234567890abc",
+            "maxGasLimit": "0x1234567890abc",
             "gasLimitBoundDivisor": "0x0400",
             "minimumDifficulty": "0x020000",
             "difficultyBoundDivisor": "0x0800",
@@ -293,9 +293,9 @@ def get_config(other=None):
             "mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000",  # noqa
             "author": "0x0000000000000000000000000000000000000000",
             "timestamp": "0x00",
-            "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",  # noqa
-            "extraData": "0x11bbe8db4e347b4e8c937c1c8370e4b5ed33adb3db69cbdb7a38e1e50b1b82fa",  # noqa
-            "gasLimit": "0x47E7C400"
+            "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "extraData": "0x11bbe8db4e347b4e8c937c1c8370e4b5ed33adb3db69cbdb7a38e1e50b1b82fa",
+            "gasLimit": "0x1234567890abc"
         },
         "accounts": {}
     }
@@ -332,7 +332,7 @@ class Node:
         self.eth = None
         self.ipcPath = None
         self.rotateAfterBlock = kwargs.get('rotateAfterBlock', -1)
-        self.snapshotInterval = kwargs.get('snapshotInterval', -1)
+        # self.snapshotInterval = kwargs.get('snapshotInterval', -1)
         self.snapshottedStartSeconds = kwargs.get(
             'snapshottedStartSeconds', -1
         )
@@ -353,6 +353,7 @@ class SChain:
                                      "Chain" + str(SChain._counter))
         self.sChainID = kwargs.get('schainID', SChain._counter)
         self.emptyBlockIntervalMs = kwargs.get('emptyBlockIntervalMs', -1)
+        self.snapshotIntervalMs = kwargs.get('snapshotIntervalMs', -1)
         self.nodes = list(nodes)
         self.config = copy.deepcopy(config)
         self.starter = starter
@@ -452,6 +453,9 @@ class SChain:
             "data": data,
             "chainId": chainId
         }
+        if "code" in kwargs:
+            transaction["code"] = kwargs["code"]
+
         signed = w3.eth.account.signTransaction(
             transaction,
             private_key=self.privateKeys[_from]
@@ -533,7 +537,6 @@ def _make_config_node(node):
         "basePort": node.basePort,
         "logLevel": "trace",
         "logLevelConfig": "trace",
-        "snapshotInterval": node.snapshotInterval,
         "rotateAfterBlock": node.rotateAfterBlock,
         "enable-debug-behavior-apis": True
         # "catchupIntervalMs": 1000000000
@@ -554,7 +557,10 @@ def _make_config_schain(chain):
         "schainName": chain.sChainName,
         "schainID": chain.sChainID,
         "nodes": [],
-        "emptyBlockIntervalMs": chain.emptyBlockIntervalMs
+        "emptyBlockIntervalMs": chain.emptyBlockIntervalMs,
+        "snapshotIntervalMs": chain.snapshotIntervalMs,
+        # "schainOwner": chain.accounts[0],
+        "storageLimit": 1000*1000*1000*1000
     }
     for i in range(len(chain.nodes)):
         ret["nodes"].append(_make_config_schain_node(chain.nodes[i], i))

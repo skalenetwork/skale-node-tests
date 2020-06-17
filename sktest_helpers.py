@@ -56,7 +56,8 @@ def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks=False,
                 basePort=port
             )
         else:
-            node = Node(bindIP=f'127.0.0.{i+1}', basePort=1231,
+            base_port = 1231
+            node = Node(bindIP=f'127.0.0.{i+1}', basePort=base_port,
                         emptyBlockIntervalMs=emptyBlockIntervalMs,
                         rotateAfterBlock=rotate_after_block)
 
@@ -164,8 +165,7 @@ def generate_or_load_txns(ch, nAcc, nTxns):
     return transactions
 
 
-def wait_for_txns(ch, nTxns):
-    t1 = time.time()
+def wait_for_txns(ch, nTxns, t1=0):
     count = 0
     from_block = 0
 
@@ -190,11 +190,9 @@ def wait_for_txns(ch, nTxns):
         t2 = time.time()
 
         if t2 != t1:
-            print(
-                "%d txns %d blocks perf = %f tx/sec" % (
-                    count, ch.eth.blockNumber, count/(t2-t1)
-                )
-            )
+            print("%d txns %d blocks" % (count, ch.eth.blockNumber), end=' ')
+            if t1 > 0:
+                print("perf = %f tx/sec" % (count / (t2 - t1)), end='')
 
         time.sleep(1)
 
