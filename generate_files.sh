@@ -10,6 +10,6 @@ fi
 
 for (( i=1; i<=$N; i++ ))
 do
-#	echo "$i/$N" >$i.gfn
-	cp 4kdata $i.gfn
+	echo "$i/$N" >$i.gfn
+#	cp 4kdata $i.gfn
 done

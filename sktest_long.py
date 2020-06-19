@@ -16,7 +16,9 @@ num_nodes = int(os.getenv("NUM_NODES", 1))
 
 ch = create_default_chain(num_nodes=num_nodes, num_accounts=nAcc, empty_blocks=True)
 
-ch.start(start_timeout = 30)
+ch.start(start_timeout=30)
+
+time.sleep(5)
 # input("press enter")
 
 # wait for answer

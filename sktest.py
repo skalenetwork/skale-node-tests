@@ -3,28 +3,37 @@ import copy
 import json
 import io
 import os
+import glob
 import pickle
 import signal
+import shutil
 import time
 import types
 
 from tempfile import TemporaryDirectory
-from subprocess import Popen, DEVNULL, PIPE, STDOUT, TimeoutExpired
+from subprocess import Popen, PIPE, STDOUT, TimeoutExpired
 
-#import docker
+import docker
 import web3
-#from docker.types import LogConfig
+from docker.types import LogConfig
 from web3.auto import w3
-
-DEFAULT_IMAGE = 'skalenetwork/schain:test'
 
 # w3.eth.enable_unaudited_features()
 
-def safe_input_with_timeout(s, timeout):
 
+def cleanup_dir(directory):
+    if isinstance(directory, TemporaryDirectory):
+        directory.cleanup()
+    else:
+        files = glob.glob(directory)
+        for f in files:
+            shutil.rmtree(f)
+
+
+def safe_input_with_timeout(s, timeout):
     if timeout == 0:
-       print("Zero wait")
-       return
+        print("Zero wait")
+        return
 
     def signal_handler(signum, frame):
         raise Exception("Timed out!")
@@ -41,33 +50,40 @@ def safe_input_with_timeout(s, timeout):
             print("nowhere to input from: " + repr(ex))
             signal.alarm(0)
             time.sleep(timeout)
-        #Exception("Timed out!")
+        # Exception("Timed out!")
+
 
 def patch_eth(eth):
     def pauseConsensus(eth, pause):
         eth._provider.make_request("debug_pauseConsensus", [pause])
+
     def pauseBroadcast(eth, pause):
         eth._provider.make_request("debug_pauseBroadcast", [pause])
+
     def forceBlock(eth):
-        eth._provider.make_request("debug_forceBlock", []);
+        eth._provider.make_request("debug_forceBlock", [])
+
     def forceBroadcast(eth, h):
-        eth._provider.make_request("debug_forceBroadcast", [h]);
+        eth._provider.make_request("debug_forceBroadcast", [h])
+
     def callSkaleHost(eth, arg):
-        res = eth._provider.make_request("debug_callSkaleHost", [arg]);
+        res = eth._provider.make_request("debug_callSkaleHost", [arg])
         return res["result"]
 
     eth.pauseConsensus = types.MethodType(pauseConsensus, eth)
     eth.pauseBroadcast = types.MethodType(pauseBroadcast, eth)
-    eth.forceBlock     = types.MethodType(forceBlock, eth)
+    eth.forceBlock = types.MethodType(forceBlock, eth)
     eth.forceBroadcast = types.MethodType(forceBroadcast, eth)
-    eth.callSkaleHost  = types.MethodType(callSkaleHost, eth)
+    eth.callSkaleHost = types.MethodType(callSkaleHost, eth)
+
 
 def _transaction2json(eth, t, accounts):
-#    print("_transaction2json", t)
+    # print("_transaction2json", t)
     res = eth.getTransaction(t).__dict__
     accounts[res["from"]] = {}
-    accounts[res["to"]]   = {}
+    accounts[res["to"]] = {}
     return res
+
 
 def _block2json(eth, block, accounts):
     # print("_block2json", block['number'])
@@ -78,6 +94,7 @@ def _block2json(eth, block, accounts):
         transactions[t.hex()] = _transaction2json(eth, t.hex(), accounts)
     block["transactions"] = transactions
     return block
+
 
 def _node2json(eth):
     blocks = []
@@ -121,8 +138,9 @@ def _iterate_dicts(a, b):
 
 
 def _iterate_lists(a, b):
-    """Returns None for equal arrays,\
-    else returns nulls in positions of equal elements, or their 'difference' if unequal"""
+    """Returns None for equal arrays,
+    else returns nulls in positions of equal elements,
+    or their 'difference' if unequal"""
 
     difference = []
     different = False
@@ -144,10 +162,11 @@ def _iterate_lists(a, b):
     else:
         return None
 
+
 def deep_compare(a, b):
-    """Returns None for equal objects,
-    pair for unequal simple objects,
-    tree with paths to unequal elements of array with nulls on place of equal elements"""
+    """Returns None for equal objects, pair for unequal simple objects,
+    tree with paths to unequal elements of array with nulls
+    on place of equal elements"""
 
     if type(a) != type(b):
         return a, b
@@ -160,6 +179,7 @@ def deep_compare(a, b):
         return _iterate_dicts(a, b)
     else:
         return _iterate_lists(a, b)
+
 
 def _compare_states(nodes):
     assert len(nodes) > 1
@@ -195,16 +215,19 @@ def list_differences(a, b, path=''):
         if len(a) != len(b):
             return [f'{_print_path(path)}lists have different lengths']
         for index, (value_a, value_b) in enumerate(zip(a, b)):
-            difference += list_differences(value_a, value_b, f'{path}[{index}]')
+            difference += list_differences(
+                value_a, value_b, f'{path}[{index}]'
+            )
     elif type(a) is dict:
         for key in a:
             if key not in b:
-                difference += [f'{_print_path(path)}key {key} does not present in the second object']
+                difference += [f'{_print_path(path)}key {key} does not present in the second object']  # noqa
             else:
-                difference += list_differences(a[key], b[key], f'{path}[\'{key}\']')
+                difference += list_differences(a[key], b[key],
+                                               f'{path}[\'{key}\']')
         for key in b:
             if key not in a:
-                difference += [f'{_print_path(path)}key {key} does not present in the first object']
+                difference += [f'{_print_path(path)}key {key} does not present in the first object']  # noqa
     elif a != b:
         difference += [f'{_print_path(path)}{a} != {b}']
     return difference
@@ -256,8 +279,8 @@ def get_config(other=None):
             "chainID": "0x01",
             "maximumExtraDataSize": "0x20",
             "tieBreakingGas": False,
-            "minGasLimit": "0x1122334455667788",
-            "maxGasLimit": "0x1122334455667788",
+            "minGasLimit": "0x1234567890abc",
+            "maxGasLimit": "0x1234567890abc",
             "gasLimitBoundDivisor": "0x0400",
             "minimumDifficulty": "0x020000",
             "difficultyBoundDivisor": "0x0800",
@@ -267,12 +290,12 @@ def get_config(other=None):
         "genesis": {
             "nonce": "0x0000000000000042",
             "difficulty": "0x020000",
-            "mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000",  # noqa
             "author": "0x0000000000000000000000000000000000000000",
             "timestamp": "0x00",
             "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
             "extraData": "0x11bbe8db4e347b4e8c937c1c8370e4b5ed33adb3db69cbdb7a38e1e50b1b82fa",
-            "gasLimit": "0x1122334455667788"
+            "gasLimit": "0x1234567890abc"
         },
         "accounts": {}
     }
@@ -308,20 +331,26 @@ class Node:
         self.running = False
         self.eth = None
         self.ipcPath = None
-        self.rotateAfterBlock     = kwargs.get('rotateAfterBlock', -1)
-        self.snapshottedStartSeconds = kwargs.get('snapshottedStartSeconds', -1)
+        self.rotateAfterBlock = kwargs.get('rotateAfterBlock', -1)
+        # self.snapshotInterval = kwargs.get('snapshotInterval', -1)
+        self.snapshottedStartSeconds = kwargs.get(
+            'snapshottedStartSeconds', -1
+        )
+
 
 class SChain:
 
     _counter = 0
     _pollInterval = 0.2
 
-    def __init__(self, nodes, starter, prefill=None, config=get_config(), keys_file="./keys.all", keys_password="1234",
+    def __init__(self, nodes, starter, prefill=None, config=get_config(),
+                 keys_file="./keys.all", keys_password="1234",
                  **kwargs):
         # TODO throw if len(prefill)>9
         # TODO throw if repeating node IDs
         SChain._counter = SChain._counter + 1
-        self.sChainName = kwargs.get('schainName', "Chain" + str(SChain._counter))
+        self.sChainName = kwargs.get('schainName',
+                                     "Chain" + str(SChain._counter))
         self.sChainID = kwargs.get('schainID', SChain._counter)
         self.emptyBlockIntervalMs = kwargs.get('emptyBlockIntervalMs', -1)
         self.snapshotIntervalMs = kwargs.get('snapshotIntervalMs', -1)
@@ -331,7 +360,7 @@ class SChain:
         self.running = False
         self.eth = None
         for n in self.nodes:
-            assert n.sChain is None
+            assert n.sChain is None, n.sChain
             n.sChain = self
             n.config = self.config
 
@@ -353,17 +382,22 @@ class SChain:
                     private_key = self.privateKeys[i]
                     balance = prefill[i]
                     address = self.accounts[i]
-                    self.config["accounts"][address] = {"balance": str(balance)}
+                    self.config["accounts"][address] = {
+                        "balance": str(balance)
+                    }
             print("Loaded public keys (addresses)")
-        except Exception as ex:
+        except Exception:
             self.accounts = []
             if prefill is not None:
                 for i in range(len(prefill)):
                     private_key = self.privateKeys[i]
                     balance = prefill[i]
-                    address = w3.eth.account.privateKeyToAccount(private_key).address
+                    address = w3.eth.account.privateKeyToAccount(
+                        private_key).address
                     self.accounts.append(address)
-                    self.config["accounts"][address] = {"balance": str(balance)}
+                    self.config["accounts"][address] = {
+                        "balance": str(balance)
+                    }
 
             with open("./addresses.all", "wb") as fd:
                 pickle.dump(self.accounts, fd)
@@ -399,8 +433,8 @@ class SChain:
         to = kwargs.get("to", 1)
         value = kwargs.get("value", self.balance(_from) // 2)
         nonce = kwargs.get("nonce", self.nonce(_from))
-        data  = kwargs.get("data", "0x")
-        gas   = int(kwargs.get("gas", 21000))
+        data = kwargs.get("data", "0x")
+        gas = int(kwargs.get("gas", 21000))
         chainId = kwargs.get("chain_id", None)
 
         from_addr = self.accounts[_from]
@@ -419,11 +453,13 @@ class SChain:
             "data": data,
             "chainId": chainId
         }
-        
         if "code" in kwargs:
             transaction["code"] = kwargs["code"]
-        
-        signed = w3.eth.account.signTransaction(transaction, private_key=self.privateKeys[_from])
+
+        signed = w3.eth.account.signTransaction(
+            transaction,
+            private_key=self.privateKeys[_from]
+        )
         return "0x" + binascii.hexlify(signed.rawTransaction).decode("utf-8")
 
     def transaction_async(self, **kwargs):
@@ -447,11 +483,12 @@ class SChain:
     def start(self, **kwargs):
         self.starter.start(self, **kwargs)
 
-        #proxies = {'http': 'http://127.0.0.1:2234'};
-        #, request_kwargs={'proxies': proxies}
+        # proxies = {'http': 'http://127.0.0.1:2234'};
+        # , request_kwargs={'proxies': proxies}
 
         for n in self.nodes:
-            provider = web3.Web3.HTTPProvider("http://" + n.bindIP + ":" + str(n.basePort + 3))
+            provider = web3.Web3.HTTPProvider(
+                "http://" + n.bindIP + ":" + str(n.basePort + 3))
             n.eth = web3.Web3(provider).eth
             n.eth._provider = provider
             patch_eth(n.eth)
@@ -463,7 +500,7 @@ class SChain:
             try:
                 self.eth.blockNumber
                 break
-            except Exception as ex:
+            except Exception:
                 time.sleep(1)
 
     def stop(self):
@@ -495,8 +532,8 @@ class SChain:
 def _make_config_node(node):
     return {
         "nodeName": node.nodeName,
-        "nodeID"  : node.nodeID,
-        "bindIP"  : node.bindIP,
+        "nodeID": node.nodeID,
+        "bindIP": node.bindIP,
         "basePort": node.basePort,
         "logLevel": "trace",
         "logLevelConfig": "trace",
@@ -508,9 +545,9 @@ def _make_config_node(node):
 
 def _make_config_schain_node(node, index):
     return {
-        "nodeID"   : node.nodeID,
-        "ip"       : node.bindIP,
-        "basePort" : node.basePort,
+        "nodeID": node.nodeID,
+        "ip": node.bindIP,
+        "basePort": node.basePort,
         "schainIndex": index + 1
     }
 
@@ -518,11 +555,11 @@ def _make_config_schain_node(node, index):
 def _make_config_schain(chain):
     ret = {
         "schainName": chain.sChainName,
-        "schainID"  : chain.sChainID,
-        "nodes"     : [],
+        "schainID": chain.sChainID,
+        "nodes": [],
         "emptyBlockIntervalMs": chain.emptyBlockIntervalMs,
         "snapshotIntervalMs": chain.snapshotIntervalMs,
-#        "schainOwner": chain.accounts[0],
+        # "schainOwner": chain.accounts[0],
         "storageLimit": 1000*1000*1000*1000
     }
     for i in range(len(chain.nodes)):
@@ -534,10 +571,12 @@ class LocalDockerStarter:
     chain = None
     started = False
 
-    def __init__(self, exe, image=DEFAULT_IMAGE):
-        self.exe = exe
-        self.image = image
-        self.dir = TemporaryDirectory()
+    DEFAULT_IMAGE = 'skalenetwork/schain:1.46-develop.14'
+
+    def __init__(self, image=None):
+        self.image = image or LocalDockerStarter.DEFAULT_IMAGE
+        self.temp_dir = TemporaryDirectory()
+        self.dir = os.getenv('DATA_DIR', self.temp_dir.name)
         self.running = False
         self.client = docker.client.from_env()
         self.containers = []
@@ -552,7 +591,6 @@ class LocalDockerStarter:
 
     def run_container(self, name, node_dir, data_dir_volume_name, env,
                       **kwargs):
-        print(name, node_dir, data_dir_volume_name, env, kwargs)
         self.containers.append(
            self.client.containers.run(
                image=self.image, name=name,
@@ -582,7 +620,7 @@ class LocalDockerStarter:
             'LEAK_EXPIRE': '20',
             'LEAK_PID_CHECK': '1',
 
-            'ARGS': ' '.join([
+            'OPTIONS': ' '.join([
                 "--ws-port", str(node.basePort + 2),
                 "--http-port", str(node.basePort + 3),
                 "--aa", "always",
@@ -598,7 +636,7 @@ class LocalDockerStarter:
                 self.chain.nodes[0].bindIP,
                 self.chain.nodes[0].basePort + 3
             )
-            env['ARGS'] += f' --download-snapshot {url}'
+            env['OPTIONS'] += f' --download-snapshot {url}'
             time.sleep(node.snapshottedStartSeconds)
         return env
 
@@ -641,8 +679,7 @@ class LocalDockerStarter:
         data_dir_volume_name = f'data-dir{node.nodeID}'
         self.create_volume(data_dir_volume_name)
 
-        node_dir = os.path.join(os.getenv('DATA_DIR', self.dir.name),
-                                str(node.nodeID))
+        node_dir = os.path.join(self.dir, str(node.nodeID))
 
         node.config = self.make_config(node, chain)
         LocalDockerStarter.save_config(node.config, node_dir)
@@ -693,10 +730,22 @@ class LocalDockerStarter:
         self.destroy_containers()
         self.destroy_volumes()
         self.running = False
-        self.dir.cleanup()
+        cleanup_dir(self.dir)
+
+    def stop_node(self, pos):
+        if not self.chain.nodes[pos].running:
+            return
+        self.containers[pos].stop(timeout=10)
+        self.chain.nodes[pos].running = False
+
+    def wait_node_stop(self, pos):
+        if not self.chain.nodes[pos].running:
+            return
+        self.containers[pos].wait(timeout=60)
+        self.chain.nodes[pos].running = False
 
     def node_exited(self, pos):
-        return self.exe_popens[pos].poll() is not None
+        return self.containers[pos].status == 'exited'
 
 
 class LocalStarter:
@@ -706,11 +755,12 @@ class LocalStarter:
 
     def __init__(self, exe):
         self.exe = exe
-        self.dir = TemporaryDirectory()
+        self.temp_dir = TemporaryDirectory()
+        self.dir = os.getenv('DATA_DIR', self.temp_dir.name)
         self.exe_popens = []
         self.running = False
 
-    def start(self, chain, start_timeout = 40):
+    def start(self, chain, start_timeout=40):
         assert not self.started
         self.started = True
         self.chain = chain
@@ -719,7 +769,7 @@ class LocalStarter:
         for n in self.chain.nodes:
             assert not n.running
 
-            node_dir = os.getenv('DATA_DIR', self.dir.name) + "/" + str(n.nodeID)
+            node_dir = os.path.join(self.dir, str(n.nodeID))
             ipc_dir = node_dir
             os.makedirs(node_dir)
             cfg_file = node_dir + "/config.json"
@@ -741,41 +791,43 @@ class LocalStarter:
 
             env = os.environ.copy()
             env['DATA_DIR'] = node_dir
-            env['LD_PRELOAD'] = "/home/dimalit/.just_works/libleak-linux-x86_64.so"
+            env['LD_PRELOAD'] = "/home/dimalit/.just_works/libleak-linux-x86_64.so"  # noqa
             env['LEAK_EXPIRE'] = '20'
             env['LEAK_PID_CHECK'] = '1'
 
-            popen_args = [#"/usr/bin/strace", '-o'+node_dir+'/aleth.trace',
-                       #"stdbuf", "-oL",
-                       #"heaptrack",
-                       self.exe,
-                       "--http-port", str(n.basePort + 3),
-                       "--ws-port", str(n.wsPort),
-                       "--aa", "always",
-                       "--config", cfg_file,
-                       "-d", node_dir,
-#                       "--ipcpath", ipc_dir,		# ACHTUNG!!! 107 characters max!!
-                       "-v", "4",
-                       "--web3-trace",
-                       "--acceptors", "1"
-                       ]
+            popen_args = [
+                # "/usr/bin/strace", '-o'+node_dir+'/aleth.trace',
+                # "stdbuf", "-oL",
+                # "heaptrack",
+                self.exe,
+                "--http-port", str(n.basePort + 3),
+                "--ws-port", str(n.wsPort),
+                "--aa", "always",
+                "--config", cfg_file,
+                "-d", node_dir,
+                # "--ipcpath", ipc_dir,		# ACHTUNG!!! 107 characters max!!
+                "-v", "4",
+                "--web3-trace",
+                "--acceptors", "1"
+            ]
 
             if n.snapshottedStartSeconds > -1:
                 popen_args.append("--download-snapshot")
-                popen_args.append("http://" + self.chain.nodes[0].bindIP + ":" + str(self.chain.nodes[0].basePort + 3))
+                popen_args.append("http://" + self.chain.nodes[0].bindIP + ":" + str(self.chain.nodes[0].basePort + 3))  # noqa
                 time.sleep(n.snapshottedStartSeconds)
 
-            popen = Popen(popen_args,
-                      stdout=aleth_out,
-                      stderr=aleth_err,
-                      env = env
+            popen = Popen(
+                popen_args,
+                stdout=aleth_out,
+                stderr=aleth_err,
+                env=env
             )
 
             n.pid = popen.pid
 
-            self.exe_popens.append( popen )
+            self.exe_popens.append(popen)
             # HACK +0 +1 +2 are used by consensus
-            url = f"http://{n.bindIP}:{n.basePort + 3}"
+            # url = f"http://{n.bindIP}:{n.basePort + 3}"
 
             n.ipcPath = ipc_dir + "/geth.ipc"
             n.running = True
@@ -783,7 +835,9 @@ class LocalStarter:
         safe_input_with_timeout('Press enter when nodes start', start_timeout)
 
 #        for p in for_delayed_proxies:
-#            self.proxy_popens.append( Popen(p['args'], stdout = p['stdout'], stderr = p['stderr']) )
+#            self.proxy_popens.append(
+#                Popen(p['args'], stdout = p['stdout'], stderr = p['stderr'])
+#            )
 
 #        print('Wait for json rpc proxies start')
 #        time.sleep(2)
@@ -800,7 +854,7 @@ class LocalStarter:
             self.wait_node_stop(pos)
 
         self.running = False
-        self.dir.cleanup()
+        cleanup_dir(self.dir)
 
     # TODO race conditions?
     def stop_node(self, pos):
@@ -821,8 +875,10 @@ class LocalStarter:
     def node_exited(self, pos):
         return self.exe_popens[pos].poll() is not None
 
+
 def ssh_exec(address, command):
-    ssh = Popen( [ "ssh", address ], stdin=PIPE, stdout=PIPE, stderr=STDOUT, bufsize=1 )    # line-buffered
+    ssh = Popen(["ssh", address], stdin=PIPE, stdout=PIPE,
+                stderr=STDOUT, bufsize=1)    # line-buffered
 
     try:
         comm = ssh.communicate(command.encode(), timeout=1)
@@ -872,11 +928,11 @@ class RemoteStarter:
             command += "; echo '" + json_str + "' >" + cfg_file
 
             command += ("; bash -c \"DATA_DIR="+node_dir+" nohup " +
-                       ssh_conf["exe"] +
-                       " --no-discovery" +
-                       " --config " + cfg_file +
-                       " -d " + node_dir +
-                       " -v " + "4" + "\" 2>nohup.err >nohup.out&")
+                        ssh_conf["exe"] +
+                        " --no-discovery" +
+                        " --config " + cfg_file +
+                        " -d " + node_dir +
+                        " -v " + "4" + "\" 2>nohup.err >nohup.out&")
             command += "\nexit\n"
 
             ssh_exec(ssh_conf['address'], command)
@@ -935,25 +991,25 @@ class RemoteDockerStarter:
             command += "; echo '" + json_str + "' >" + cfg_file
 
             command += ("; bash -c \" nohup " +
-                       "docker run -d " +
- #                      " -e CONFIG_FILE=" + cfg_file +
- #                      " -d $DATA_DIR \
- #                      " --ipcpath $DATA_DIR \
- #                      " --http-port $HTTP_RPC_PORT \
- #                      " --https-port $HTTPS_RPC_PORT \
- #                      " --ws-port $WS_RPC_PORT \
- #                      " --wss-port $WSS_RPC_PORT \
- #                      " --ssl-key $SSL_KEY_PATH \
- #                      " --ssl-cert $SSL_CERT_PATH \
- #                      " -v 4  \
- #                      " --web3-trace \
- #                      " --enable-debug-behavior-apis \
- #                      " --aa no $DOWNLOAD_SNAPSHOT_OPTION
- #
-                       " -v " + node_dir + ":/schain_data" +
-                       " -e DATA_DIR=/schain_data" +
-                       " -e CONFIG_FILE=" + cfg_file +
-                       "\" 2>nohup.err >nohup.out&")
+                        "docker run -d " +
+                        #  " -e CONFIG_FILE=" + cfg_file +
+                        #  " -d $DATA_DIR \
+                        #  " --ipcpath $DATA_DIR \
+                        #  " --http-port $HTTP_RPC_PORT \
+                        #  " --https-port $HTTPS_RPC_PORT \
+                        #  " --ws-port $WS_RPC_PORT \
+                        #  " --wss-port $WSS_RPC_PORT \
+                        #  " --ssl-key $SSL_KEY_PATH \
+                        #  " --ssl-cert $SSL_CERT_PATH \
+                        #  " -v 4  \
+                        #  " --web3-trace \
+                        #  " --enable-debug-behavior-apis \
+                        #  " --aa no $DOWNLOAD_SNAPSHOT_OPTION
+
+                        " -v " + node_dir + ":/schain_data" +
+                        " -e DATA_DIR=/schain_data" +
+                        " -e CONFIG_FILE=" + cfg_file +
+                        "\" 2>nohup.err >nohup.out&")
             command += "\nexit\n"
 
             ssh_exec(ssh_conf['address'], command)
@@ -992,4 +1048,3 @@ class NoStarter:
         for n in self.chain.nodes:
             n.running = False
         self.running = False
-

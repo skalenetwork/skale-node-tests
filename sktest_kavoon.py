@@ -1,4 +1,4 @@
-from sktest_helpers import *
+from sktest_helpers import create_default_chain, list_differences
 import time
 
 num_nodes = 2
@@ -7,8 +7,8 @@ ch.start()
 
 node1 = ch.nodes[0]
 node2 = ch.nodes[1]
-eth1  = node1.eth
-eth2  = node2.eth
+eth1 = node1.eth
+eth2 = node2.eth
 
 eth1.pauseBroadcast(True)
 eth2.pauseBroadcast(True)
@@ -56,4 +56,3 @@ else:
 
 input("press")
 ch.stop()
-
