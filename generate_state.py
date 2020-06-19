@@ -33,7 +33,10 @@ raw_deploy = ch.transaction_obj(gas=180000, data=bytecode, value=0, to="")
 deploy_hash = eth.sendRawTransaction(raw_deploy)
 deploy_receipt = None
 while not deploy_receipt:
-    deploy_receipt = eth.getTransactionReceipt(deploy_hash)
+    try:
+        deploy_receipt = eth.getTransactionReceipt(deploy_hash)
+    except:
+        pass
     time.sleep(0.1)
 
 print(str(deploy_receipt))
@@ -51,7 +54,10 @@ for i in range (nchunks):
   call_hash = eth.sendRawTransaction(raw_call)
   call_receipt = None
   while not call_receipt:
-      call_receipt = eth.getTransactionReceipt(call_hash)
+      try:
+          call_receipt = eth.getTransactionReceipt(call_hash)
+      except:
+          pass
       time.sleep(0.1)
   print(str(call_receipt))
   print(f"i = {i} of {nchunks}")
