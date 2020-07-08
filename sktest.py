@@ -282,14 +282,14 @@ def get_config(other=None):
             "minGasLimit": "0x1234567890abc",
             "maxGasLimit": "0x1234567890abc",
             "gasLimitBoundDivisor": "0x0400",
-            "minimumDifficulty": "0x020000",
+            "minimumDifficulty": "0x0",
             "difficultyBoundDivisor": "0x0800",
             "durationLimit": "0x0d",
             "blockReward": "0x4563918244F40000"
         },
         "genesis": {
             "nonce": "0x0000000000000042",
-            "difficulty": "0x020000",
+            "difficulty": "0x0",
             "mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000",  # noqa
             "author": "0x0000000000000000000000000000000000000000",
             "timestamp": "0x00",
@@ -535,10 +535,11 @@ def _make_config_node(node):
         "nodeID": node.nodeID,
         "bindIP": node.bindIP,
         "basePort": node.basePort,
-        "logLevel": "trace",
-        "logLevelConfig": "trace",
+        "logLevel": "info",
+        "logLevelConfig": "info",
         "rotateAfterBlock": node.rotateAfterBlock,
-        "enable-debug-behavior-apis": True
+        "enable-debug-behavior-apis": True,
+        "ecdsaKeyName": "",
         # "catchupIntervalMs": 1000000000
     }
 
@@ -548,7 +549,8 @@ def _make_config_schain_node(node, index):
         "nodeID": node.nodeID,
         "ip": node.bindIP,
         "basePort": node.basePort,
-        "schainIndex": index + 1
+        "schainIndex": index + 1,
+        "publicKey": ""
     }
 
 
@@ -816,12 +818,13 @@ class LocalStarter:
                 popen_args.append("http://" + self.chain.nodes[0].bindIP + ":" + str(self.chain.nodes[0].basePort + 3))  # noqa
                 time.sleep(n.snapshottedStartSeconds)
 
-            popen = Popen(
-                popen_args,
-                stdout=aleth_out,
-                stderr=aleth_err,
-                env=env
-            )
+            if True: #len(self.exe_popens) < 1:
+                popen = Popen(
+                    popen_args,
+                    stdout=aleth_out,
+                    stderr=aleth_err,
+                    env=env
+                )
 
             n.pid = popen.pid
 
