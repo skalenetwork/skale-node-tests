@@ -34,7 +34,7 @@ def dump_node_state(obj):
     return json.dumps(obj, indent=1, cls=HexJsonEncoder)
 
 
-def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks=False,
+def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks=True,
                         rotate_after_block=-1,
                         config_file=None, chainID=None, same_ip=False,
                         run_container=False):
@@ -47,7 +47,7 @@ def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks=False,
     for i, port in enumerate(base_ports):
         emptyBlockIntervalMs = -1
         if empty_blocks:
-            emptyBlockIntervalMs = 1000
+            emptyBlockIntervalMs = 3000
         if run_container or same_ip:
             node = Node(
                 emptyBlockIntervalMs=emptyBlockIntervalMs,
@@ -96,7 +96,7 @@ def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks=False,
     return chain
 
 
-def create_default_chain(num_nodes=2, num_accounts=2, empty_blocks=False,
+def create_default_chain(num_nodes=2, num_accounts=2, empty_blocks=True,
                          config_file=None):
     run_container = os.getenv('RUN_CONTAINER')
     return create_custom_chain(num_nodes, num_accounts, empty_blocks, -1,
@@ -104,7 +104,7 @@ def create_default_chain(num_nodes=2, num_accounts=2, empty_blocks=False,
                                run_container=run_container)
 
 
-def create_chain_with_id(num_nodes=2, num_accounts=2, empty_blocks=False,
+def create_chain_with_id(num_nodes=2, num_accounts=2, empty_blocks=True,
                          chain_id=None):
     run_container = os.getenv('RUN_CONTAINER')
     return create_custom_chain(num_nodes, num_accounts, empty_blocks, -1,
