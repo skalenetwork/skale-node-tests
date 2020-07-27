@@ -9,7 +9,7 @@
     "byzantiumForkBlock": "0x0",
     "constantinopleForkBlock": "0x0",
     "networkID": "12313219",
-    "chainID": "0x1",
+    "chainID": "0x54A7E",
     "maximumExtraDataSize": "0x20",
     "tieBreakingGas": false,
     "minGasLimit": "0xFFFFFFF",
@@ -244,18 +244,23 @@
 	      "nodeID": 1112,
 	      "bindIP": "0.0.0.0",
 	      "basePort": 1231,
-              "logLevel": "trace",
-              "logLevelProposal": "trace",
-              "emptyBlockIntervalMs": 1000,
-              "snapshotInterval": 0,
+        "logLevel": "trace",
+        "logLevelProposal": "trace",
+        "emptyBlockIntervalMs": 1000,
+        "snapshotInterval": 0,
 	      "rotateAfterBlock": 0,
-	      "ecdsaKeyName": ""
+	      "ecdsaKeyName": "",
+	      "minCacheSize": 8000000,
+	      "maxCacheSize": 16000000,
+	      "collectionQueueSize": 19,
+	      "collectionDuration": 53,
+	      "transactionQueueSize": 999
 	    },
 	    "sChain":
 	      {
 	        "schainName": "TestChain",
 	        "schainID": 1,
-	        "schainOwner": "0x66c5a87f4a49DD75e970055A265E8dd5C3F8f852",
+	        "schainOwner": "0x6d80aAC61F6d92c7F4A3c412850474ba963B698E",
 	        "storageLimit": 1000000,
 	        "emptyBlockIntervalMs": 3000,
 	        "nodes": [
