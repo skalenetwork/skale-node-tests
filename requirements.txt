@@ -26,7 +26,6 @@ multiaddr==0.0.9
 netaddr==0.8.0
 packaging==20.4
 parsimonious==0.8.1
-pkg-resources==0.0.0
 pluggy==0.13.1
 protobuf==3.12.4
 py==1.9.0
