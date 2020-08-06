@@ -108,6 +108,7 @@ pipeline {
             steps {
                 script {
                     try {
+                        sh 'pwd'
                         sh 'SKTEST_EXE=./jobs/runtime/skaled DATA_DIR=./jobs/runtime/skaled_logs/sktest_performance2nodes NUM_NODES=2 /bin/bash ./jobs/skale-node-tests-jenkins/jenkins_sktest_performance.sh'
                     }
                     catch (err) {
