@@ -1,0 +1,7 @@
+#!/bin/bash
+
+source ./jobs/venv/bin/activate
+"$@"
+
+pytest -v test_two_transactions.py::test_n_nodes[2]
+
