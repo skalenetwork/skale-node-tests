@@ -591,13 +591,14 @@ class LocalDockerStarter:
                 driver_opts={})
         )
 
-    def run_container(self, name, node_dir, data_dir_volume_name, env,
-                      **kwargs):
+    def run_container(self, name, node_dir, data_dir_volume_name,
+                      env, cmd, **kwargs):
         self.containers.append(
            self.client.containers.run(
                image=self.image, name=name,
                detach=True,
                network='host',
+               command=cmd,
                volumes={
                    data_dir_volume_name: {
                        'bind': '/data_dir', 'mode': 'rw'
@@ -610,19 +611,8 @@ class LocalDockerStarter:
                **kwargs,
            ))
 
-    def compose_env_options(self, node):
-        env = {
-            **os.environ,
-            'HTTP_RPC_PORT': self.chain.nodes[node.nodeID - 1].basePort + 3,
-            'WS_RPC_PORT': self.chain.nodes[node.nodeID - 1].basePort + 2,
-            'HTTPS_RPC_PORT': self.chain.nodes[node.nodeID - 1].basePort + 7,
-            'WSS_RPC_PORT': self.chain.nodes[node.nodeID - 1].basePort + 8,
-            'DATA_DIR': '/data_dir/',
-            'CONFIG_FILE': '/skale_node_data/config.json',
-            'LEAK_EXPIRE': '20',
-            'LEAK_PID_CHECK': '1',
-
-            'OPTIONS': ' '.join([
+    def compose_cmd(self, node):
+        cmd = ' '.join([
                 "--ws-port", str(node.basePort + 2),
                 "--http-port", str(node.basePort + 3),
                 "--aa", "always",
@@ -632,15 +622,27 @@ class LocalDockerStarter:
                 "--web3-trace",
                 "--acceptors", "1"
             ])
-        }
         if node.snapshottedStartSeconds > -1:
             url = 'http://{}:{}'.format(
                 self.chain.nodes[0].bindIP,
                 self.chain.nodes[0].basePort + 3
             )
-            env['OPTIONS'] += f' --download-snapshot {url}'
+            cmd += f' --download-snapshot {url}'
             time.sleep(node.snapshottedStartSeconds)
-        return env
+        return cmd
+
+    def compose_env_options(self, node):
+        return {
+            **os.environ,
+            'HTTP_RPC_PORT': self.chain.nodes[node.nodeID - 1].basePort + 3,
+            'WS_RPC_PORT': self.chain.nodes[node.nodeID - 1].basePort + 2,
+            'HTTPS_RPC_PORT': self.chain.nodes[node.nodeID - 1].basePort + 7,
+            'WSS_RPC_PORT': self.chain.nodes[node.nodeID - 1].basePort + 8,
+            'DATA_DIR': '/data_dir/',
+            'CONFIG_FILE': '/skale_node_data/config.json',
+            'LEAK_EXPIRE': '20',
+            'LEAK_PID_CHECK': '1',
+        }
 
     @classmethod
     def compose_docker_options(cls):
@@ -691,10 +693,11 @@ class LocalDockerStarter:
 
         docker_options = LocalDockerStarter.compose_docker_options()
         env = self.compose_env_options(node)
+        cmd = self.compose_cmd(node)
 
         container_name = f'schain-node{node.nodeID}'
         self.run_container(container_name, node_dir,
-                           data_dir_volume_name, env, **docker_options)
+                           data_dir_volume_name, env, cmd, **docker_options)
         node.running = True
 
     def start(self, chain, start_timeout=100):
@@ -818,7 +821,7 @@ class LocalStarter:
                 popen_args.append("http://" + self.chain.nodes[0].bindIP + ":" + str(self.chain.nodes[0].basePort + 3))  # noqa
                 time.sleep(n.snapshottedStartSeconds)
 
-            if True: #len(self.exe_popens) < 1:
+            if True:  # len(self.exe_popens) < 1:
                 popen = Popen(
                     popen_args,
                     stdout=aleth_out,
