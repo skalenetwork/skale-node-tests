@@ -25,7 +25,7 @@ pipeline {
                 // RELEASE=$(wget -q https://registry.hub.docker.com/v1/repositories/skalenetwork/schain/tags -O -  | sed -e 's/[][]//g' -e 's/"//g' -e 's/ //g' | tr '}' '\n'  | awk -F: '{print $3}' | grep beta | tail -1)
                 // echo RELEASE = $RELEASE
                 // sh "cp --force /home/ubuntu/.jenkins/jobs/skale-develop/builds/lastSuccessfulBuild/archive/build/skaled/skaled ./jobs/skale-ci-s-n-t_pipeline/skale-node-tests-jenkins/skaled"
-                sh "chmod +x ./jobs/skale-ci-s-n-t_pipeline/skale-node-tests-jenkins/skaled"
+                sh "chmod +x ./jobs/runtime/skaled"
             }
         }
         stage('skaled logs deleting') {
