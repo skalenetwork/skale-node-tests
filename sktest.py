@@ -20,6 +20,7 @@ from web3.auto import w3
 
 # w3.eth.enable_unaudited_features()
 
+print(os.environ)
 
 def cleanup_dir(directory):
     if isinstance(directory, TemporaryDirectory):

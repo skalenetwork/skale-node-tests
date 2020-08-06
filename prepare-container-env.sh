@@ -8,7 +8,7 @@ set -e
 
 BASE_DIR=$PWD
 
-IMAGE_NAME='skalenetwork/schain:test'
+IMAGE_NAME=$IMAGE
 SKALED_BUILD_DIR=$SKALED_REPO/scripts/skale_build
 
 echo 'Preparing schain image'
@@ -22,8 +22,8 @@ docker build -t $IMAGE_NAME .
 cd $BASE_DIR
 echo 'Creating loopback block device'
 dd if=/dev/zero of=loopbackfile.img bs=400M count=10
-losetup -fP loopbackfile.img
-losetup -a
+sudo losetup -fP loopbackfile.img
+sudo losetup -a
 echo 'Block device created from file'
 BLOCK_DEVICE="$(losetup --list -a | grep loopbackfile.img |  awk '{print $1}')"
 
