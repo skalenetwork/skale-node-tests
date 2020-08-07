@@ -144,7 +144,7 @@ pipeline {
                 }
             }
         }
-
+/*
         stage('sktest_performance 4 nodes') {
             options {
                 timeout(time: 25, unit: 'MINUTES')
@@ -290,6 +290,7 @@ pipeline {
                 }
             }
         }
+*/
 /*
         stage('sktest_sample 1 node') {
             options {
