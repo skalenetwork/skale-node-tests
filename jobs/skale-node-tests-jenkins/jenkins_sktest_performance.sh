@@ -1,6 +1,7 @@
 #!/bin/bash
 
+pwd
 source ./jobs/venv/bin/activate
 "$@"
 
-pytest -v -s sktest_performance.py
+pytest -v sktest_performance.py
