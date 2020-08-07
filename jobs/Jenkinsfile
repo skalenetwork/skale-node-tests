@@ -109,7 +109,7 @@ pipeline {
                 script {
                     try {
                         sh 'pwd'
-                        sh 'SKTEST_EXE=./jobs/runtime/skaled DATA_DIR=./jobs/runtime/skaled_logs/sktest_performance2nodes NUM_NODES=2 /bin/bash ./jobs/skale-node-tests-jenkins/jenkins_sktest_performance.sh'
+                        sh 'SKTEST_EXE=./jobs/runtime/skaled NUM_NODES=2 /bin/bash ./jobs/skale-node-tests-jenkins/jenkins_sktest_performance.sh'
                     }
                     catch (err) {
                         echo 'FAILED'
@@ -131,7 +131,7 @@ pipeline {
             steps {
                 script {
                     try {
-                        sh 'ulimit -c unlimited;SKTEST_EXE=./jobs/runtime/skaled DATA_DIR=./jobs/runtime/skaled_logs/sktest_performance1node NUM_NODES=1 /bin/bash ./jobs/skale-node-tests-jenkins/jenkins_sktest_performance.sh'
+                        sh 'ulimit -c unlimited;SKTEST_EXE=./jobs/runtime/skaled NUM_NODES=1 /bin/bash ./jobs/skale-node-tests-jenkins/jenkins_sktest_performance.sh'
                     }
                     catch (err) {
                         echo 'FAILED'
@@ -152,7 +152,7 @@ pipeline {
             steps {
                 script {
                     try {
-                        sh 'SKTEST_EXE=./jobs/runtime/skaled DATA_DIR=./jobs/runtime/skaled_logs/sktest_performance4nodes NUM_NODES=4 /bin/bash ./jobs/skale-node-tests-jenkins/jenkins_sktest_performance.sh'
+                        sh 'SKTEST_EXE=./jobs/runtime/skaled NUM_NODES=4 /bin/bash ./jobs/skale-node-tests-jenkins/jenkins_sktest_performance.sh'
                     }
                     catch (err) {
                         echo 'FAILED'
@@ -172,7 +172,7 @@ pipeline {
             steps {
                 script {
                     try {
-                        sh 'SKTEST_EXE=./jobs/runtime/skaled DATA_DIR=./jobs/runtime/skaled_logs/sktest_performance7nodes NUM_NODES=7 /bin/bash ./jobs/skale-node-tests-jenkins/jenkins_sktest_performance.sh'
+                        sh 'SKTEST_EXE=./jobs/runtime/skaled NUM_NODES=7 /bin/bash ./jobs/skale-node-tests-jenkins/jenkins_sktest_performance.sh'
                     }
                     catch (err) {
                         echo 'FAILED'
@@ -193,7 +193,7 @@ pipeline {
             steps {
                 script {
                     try {
-                        sh 'SKTEST_EXE=./jobs/runtime/skaled DATA_DIR=./jobs/runtime/skaled_logs/sktest_long1node10accounts NUM_NODES=1 NUM_ACCOUNTS=10 /bin/bash ./jobs/skale-node-tests-jenkins/jenkins_sktest_long.sh'
+                        sh 'SKTEST_EXE=./jobs/runtime/skaled NUM_NODES=1 NUM_ACCOUNTS=10 /bin/bash ./jobs/skale-node-tests-jenkins/jenkins_sktest_long.sh'
                     }
                     catch (err) {
                         echo 'FAILED'
@@ -214,7 +214,7 @@ pipeline {
             steps {
                 script {
                     try {
-                        sh 'SKTEST_EXE=./jobs/runtime/skaled DATA_DIR=./jobs/runtime/skaled_logs/sktest_long2nodes10accounts NUM_NODES=2 NUM_ACCOUNTS=10 /bin/bash ./jobs/skale-node-tests-jenkins/jenkins_sktest_long.sh'
+                        sh 'SKTEST_EXE=./jobs/runtime/skaled NUM_NODES=2 NUM_ACCOUNTS=10 /bin/bash ./jobs/skale-node-tests-jenkins/jenkins_sktest_long.sh'
                     }
                     catch (err) {
                         echo 'FAILED'
@@ -235,7 +235,7 @@ pipeline {
             steps {
                 script {
                     try {
-                        sh 'SKTEST_EXE=./jobs/runtime/skaled DATA_DIR=./jobs/runtime/skaled_logs/sktest_long4nodes10accounts NUM_NODES=4 NUM_ACCOUNTS=10 /bin/bash ./jobs/skale-node-tests-jenkins/jenkins_sktest_long.sh'
+                        sh 'SKTEST_EXE=./jobs/runtime/skaled NUM_NODES=4 NUM_ACCOUNTS=10 /bin/bash ./jobs/skale-node-tests-jenkins/jenkins_sktest_long.sh'
                     }
                     catch (err) {
                         echo 'FAILED'
@@ -256,7 +256,7 @@ pipeline {
             steps {
                 script {
                     try {
-                        sh 'SKTEST_EXE=./jobs/runtime/skaled DATA_DIR=./jobs/runtime/skaled_logs/sktest_long1node1account NUM_NODES=1 NUM_ACCOUNTS=1 /bin/bash ./jobs/skale-node-tests-jenkins/jenkins_sktest_long.sh'
+                        sh 'SKTEST_EXE=./jobs/runtime/skaled NUM_NODES=1 NUM_ACCOUNTS=1 /bin/bash ./jobs/skale-node-tests-jenkins/jenkins_sktest_long.sh'
                     }
                     catch (err) {
                         echo 'FAILED'
@@ -277,7 +277,7 @@ pipeline {
             steps {
                 script {
                     try {
-                        sh 'SKTEST_EXE=./jobs/runtime/skaled DATA_DIR=./jobs/runtime/skaled_logs/sktest_long4nodes1account NUM_NODES=4 NUM_ACCOUNTS=1 /bin/bash ./jobs/skale-node-tests-jenkins/jenkins_sktest_long.sh'
+                        sh 'SKTEST_EXE=./jobs/runtime/skaled NUM_NODES=4 NUM_ACCOUNTS=1 /bin/bash ./jobs/skale-node-tests-jenkins/jenkins_sktest_long.sh'
                     }
                     catch (err) {
                         echo 'FAILED'
@@ -290,7 +290,7 @@ pipeline {
                 }
             }
         }
-
+/*
         stage('sktest_sample 1 node') {
             options {
                 timeout(time: 10, unit: 'MINUTES')
@@ -298,7 +298,7 @@ pipeline {
             steps {
                 script {
                     try {
-                        sh 'SKTEST_EXE=./jobs/runtime/skaled DATA_DIR=./jobs/runtime/skaled_logs/sktest_sample1node NUM_NODES=1 /bin/bash ./jobs/skale-node-tests-jenkins/jenkins_sktest_sample.sh'
+                        sh 'SKTEST_EXE=./jobs/runtime/skaled NUM_NODES=1 /bin/bash ./jobs/skale-node-tests-jenkins/jenkins_sktest_sample.sh'
                     }
                     catch (err) {
                         echo 'FAILED'
@@ -318,7 +318,7 @@ pipeline {
             steps {
                 script {
                     try {
-                        sh 'SKTEST_EXE=./jobs/runtime/skaled DATA_DIR=./jobs/runtime/skaled_logs/sktest_sample2nodes NUM_NODES=2 /bin/bash ./jobs/skale-node-tests-jenkins/jenkins_sktest_sample.sh'
+                        sh 'SKTEST_EXE=./jobs/runtime/skaled NUM_NODES=2 /bin/bash ./jobs/skale-node-tests-jenkins/jenkins_sktest_sample.sh'
                     }
                     catch (err) {
                         echo 'FAILED'
@@ -339,7 +339,7 @@ pipeline {
             steps {
                 script {
                     try {
-                        sh 'SKTEST_EXE=./jobs/runtime/skaled DATA_DIR=./jobs/runtime/skaled_logs/sktest_sample4nodes NUM_NODES=4 /bin/bash ./jobs/skale-node-tests-jenkins/jenkins_sktest_sample.sh'
+                        sh 'SKTEST_EXE=./jobs/runtime/skaled NUM_NODES=4 /bin/bash ./jobs/skale-node-tests-jenkins/jenkins_sktest_sample.sh'
                     }
                     catch (err) {
                         echo 'FAILED'
@@ -359,7 +359,7 @@ pipeline {
             steps {
                 script {
                     try {
-                        sh 'SKTEST_EXE=./jobs/runtime/skaled DATA_DIR=./jobs/runtime/skaled_logs/pytest_test_transaction_test_one_node /bin/bash ./jobs/skale-node-tests-jenkins/jenkins_pytest_test_transaction_test_one_node.sh'
+                        sh 'SKTEST_EXE=./jobs/runtime/skaled /bin/bash ./jobs/skale-node-tests-jenkins/jenkins_pytest_test_transaction_test_one_node.sh'
                     }
                     catch (err) {
                         echo 'FAILED'
@@ -379,7 +379,7 @@ pipeline {
             steps {
                 script {
                     try {
-                        sh 'SKTEST_EXE=./jobs/runtime/skaled DATA_DIR=./jobs/runtime/skaled_logs/pytest_test_transaction_test_two_nodes /bin/bash ./jobs/skale-node-tests-jenkins/jenkins_pytest_test_transaction_test_two_nodes.sh'
+                        sh 'SKTEST_EXE=./jobs/runtime/skaled /bin/bash ./jobs/skale-node-tests-jenkins/jenkins_pytest_test_transaction_test_two_nodes.sh'
                     }
                     catch (err) {
                         echo 'FAILED'
@@ -399,7 +399,7 @@ pipeline {
             steps {
                 script {
                     try {
-                        sh 'SKTEST_EXE=./jobs/runtime/skaled DATA_DIR=./jobs/runtime/skaled_logs/pytest_test_transaction_test_n_nodes2 /bin/bash ./jobs/skale-node-tests-jenkins/jenkins_pytest_test_transaction_test_n_nodes[2].sh'
+                        sh 'SKTEST_EXE=./jobs/runtime/skaled /bin/bash ./jobs/skale-node-tests-jenkins/jenkins_pytest_test_transaction_test_n_nodes[2].sh'
                     }
                     catch (err) {
                         echo 'FAILED'
@@ -419,7 +419,7 @@ pipeline {
             steps {
                 script {
                     try {
-                        sh 'SKTEST_EXE=./jobs/runtime/skaled DATA_DIR=./jobs/runtime/skaled_logs/pytest_test_transaction_test_n_nodes3 /bin/bash ./jobs/skale-node-tests-jenkins/jenkins_pytest_test_transaction_test_n_nodes[3].sh'
+                        sh 'SKTEST_EXE=./jobs/runtime/skaled /bin/bash ./jobs/skale-node-tests-jenkins/jenkins_pytest_test_transaction_test_n_nodes[3].sh'
                     }
                     catch (err) {
                         echo 'FAILED'
@@ -439,7 +439,7 @@ pipeline {
             steps {
                 script {
                     try {
-                        sh 'SKTEST_EXE=./jobs/runtime/skaled DATA_DIR=./jobs/runtime/skaled_logs/pytest_test_two_transactions_test_one_node /bin/bash ./jobs/skale-node-tests-jenkins/jenkins_pytest_test_two_transactions_test_one_node.sh'
+                        sh 'SKTEST_EXE=./jobs/runtime/skaled /bin/bash ./jobs/skale-node-tests-jenkins/jenkins_pytest_test_two_transactions_test_one_node.sh'
                     }
                     catch (err) {
                         echo 'FAILED'
@@ -460,7 +460,7 @@ pipeline {
             steps {
                 script {
                     try {
-                        sh 'SKTEST_EXE=./jobs/runtime/skaled DATA_DIR=./jobs/runtime/skaled_logs/pytest_test_two_transactions_test_n_nodes3 /bin/bash ./jobs/skale-node-tests-jenkins/jenkins_pytest_test_two_transactions_test_n_nodes[3].sh'
+                        sh 'SKTEST_EXE=./jobs/runtime/skaled /bin/bash ./jobs/skale-node-tests-jenkins/jenkins_pytest_test_two_transactions_test_n_nodes[3].sh'
                     }
                     catch (err) {
                         echo 'FAILED'
@@ -473,7 +473,7 @@ pipeline {
                 }
             }
         }
-
+*/
 /*
         stage('pytest test_race.py::test_bcast[fetch_transactions]') {
             options {
