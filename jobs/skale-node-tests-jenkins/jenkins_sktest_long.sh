@@ -3,4 +3,4 @@
 source ./jobs/venv/bin/activate
 "$@"
 
-pytest -v sktest_long.py
+pytest -vs sktest_long.py

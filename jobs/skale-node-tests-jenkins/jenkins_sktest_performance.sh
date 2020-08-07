@@ -4,4 +4,4 @@ pwd
 source ./jobs/venv/bin/activate
 "$@"
 
-pytest -v sktest_performance.py
+pytest -vs sktest_performance.py
