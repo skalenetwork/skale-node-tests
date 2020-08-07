@@ -782,7 +782,6 @@ class LocalStarter:
                 "sChain": _make_config_schain(self.chain)
             }
             f = io.open(cfg_file, "w")
-            #            f = io.open("/home/dimalit/config.js", "w")
             json.dump(cfg, f, indent=1)
             n.config = cfg
             f.close()
@@ -792,10 +791,6 @@ class LocalStarter:
             aleth_err = io.open(node_dir + "/" + "aleth.err", "w")
 
             env = os.environ.copy()
-            env['DATA_DIR'] = node_dir
-            env['LD_PRELOAD'] = "/home/dimalit/.just_works/libleak-linux-x86_64.so"  # noqa
-            env['LEAK_EXPIRE'] = '20'
-            env['LEAK_PID_CHECK'] = '1'
 
             popen_args = [
                 # "/usr/bin/strace", '-o'+node_dir+'/aleth.trace',
@@ -818,13 +813,12 @@ class LocalStarter:
                 popen_args.append("http://" + self.chain.nodes[0].bindIP + ":" + str(self.chain.nodes[0].basePort + 3))  # noqa
                 time.sleep(n.snapshottedStartSeconds)
 
-            if True: #len(self.exe_popens) < 1:
-                popen = Popen(
-                    popen_args,
-                    stdout=aleth_out,
-                    stderr=aleth_err,
-                    env=env
-                )
+            popen = Popen(
+                popen_args,
+                stdout=aleth_out,
+                stderr=aleth_err,
+                env=env
+            )
 
             n.pid = popen.pid
 
@@ -832,7 +826,7 @@ class LocalStarter:
             # HACK +0 +1 +2 are used by consensus
             # url = f"http://{n.bindIP}:{n.basePort + 3}"
 
-            n.ipcPath = ipc_dir + "/geth.ipc"
+            # n.ipcPath = ipc_dir + "/geth.ipc"
             n.running = True
 
         safe_input_with_timeout('Press enter when nodes start', start_timeout)
