@@ -101,6 +101,7 @@ pipeline {
         //     }
         // }
 
+/*
         stage('sktest_performance 2 nodes') {
             options {
                 timeout(time: 40, unit: 'MINUTES')
@@ -144,6 +145,7 @@ pipeline {
                 }
             }
         }
+*/
 /*
         stage('sktest_performance 4 nodes') {
             options {
@@ -185,7 +187,7 @@ pipeline {
                 }
             }
         }
-
+*/
         stage('sktest_long 1 node 10 accounts') {
             options {
                 timeout(time: 10, unit: 'MINUTES')
@@ -206,7 +208,7 @@ pipeline {
                 }
             }
         }
-
+/*
         stage('sktest_long 2 nodes 10 accounts') {
             options {
                 timeout(time: 10, unit: 'MINUTES')
