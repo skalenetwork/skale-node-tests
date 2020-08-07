@@ -7,7 +7,7 @@ if os.geteuid() != 0:
     exit(1)
 
 global sktest_exe
-sktest_exe = os.getenv("SKALED_BINARY")
+sktest_exe = os.getenv("SKTEST_EXE")
 
 emptyBlockIntervalMs = 2000
 snapshotIntervalMs = 6000

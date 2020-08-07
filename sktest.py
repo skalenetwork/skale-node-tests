@@ -20,7 +20,6 @@ from web3.auto import w3
 
 # w3.eth.enable_unaudited_features()
 
-print(os.environ)
 
 def cleanup_dir(directory):
     if isinstance(directory, TemporaryDirectory):
@@ -457,7 +456,7 @@ class SChain:
         if "code" in kwargs:
             transaction["code"] = kwargs["code"]
 
-        signed = w3.eth.account.signTransaction(
+        signed = w3.eth.account.sign_transaction(
             transaction,
             private_key=self.privateKeys[_from]
         )
@@ -797,7 +796,7 @@ class LocalStarter:
 
             env = os.environ.copy()
             env['DATA_DIR'] = node_dir
-            env['LD_PRELOAD'] = "/home/dimalit/.just_works/libleak-linux-x86_64.so"  # noqa
+            # env['LD_PRELOAD'] = "/home/dimalit/.just_works/libleak-linux-x86_64.so"  # noqa
             env['LEAK_EXPIRE'] = '20'
             env['LEAK_PID_CHECK'] = '1'
 

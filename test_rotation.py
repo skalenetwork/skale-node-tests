@@ -28,7 +28,7 @@ def test_rotation(schain):
     deploy_tx = Logger.constructor().buildTransaction()
     deploy_tx['from'] = ch.accounts[nAcc]       # 1 over last
     deploy_tx['nonce'] = eth.getTransactionCount(ch.accounts[nAcc])
-    signed_deploy = w3.eth.account.signTransaction(deploy_tx, private_key=ch.privateKeys[nAcc])
+    signed_deploy = w3.eth.account.sign_transaction(deploy_tx, private_key=ch.privateKeys[nAcc])
     deploy_hash = eth.sendRawTransaction(signed_deploy.rawTransaction)
     receipt = eth.waitForTransactionReceipt(deploy_hash)
 

@@ -19,7 +19,7 @@ PORT_RANGE = 11
 global sktest_exe
 # sktest_exe = os.getenv("SKTEST_EXE",
 #                        "/home/dimalit/skale-ethereum/scripts/aleth")
-sktest_exe = os.getenv("SKALED_BINARY")
+sktest_exe = os.getenv("SKTEST_EXE")
 
 
 class HexJsonEncoder(json.JSONEncoder):
