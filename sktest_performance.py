@@ -11,8 +11,8 @@ from sktest_helpers import create_default_chain, \
 
 
 nNodes = int(os.getenv("NUM_NODES", 4))
-nTxns = 24000  # 24000
-nAcc = 8000
+nTxns = 100  # 24000
+nAcc = 100
 nThreads = 0
 
 MAX_RETRIES = 30
