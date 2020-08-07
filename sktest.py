@@ -18,6 +18,8 @@ import web3
 from docker.types import LogConfig
 from web3.auto import w3
 
+from config import merge as config_merge
+
 # w3.eth.enable_unaudited_features()
 
 
@@ -259,61 +261,6 @@ def _wait_on_filter(eth_filter, dt):
             return e
         time.sleep(dt)
 
-
-def get_config(other=None):
-    """Simple function that returns default config as a python dictionary
-    and optionally appends it from the dictionary passed."""
-
-    config = {
-        "sealEngine": "Ethash",
-        "params": {
-            "accountStartNonce": "0x00",
-            "homesteadForkBlock": "0x0",
-            "daoHardforkBlock": "0x0",
-            "EIP150ForkBlock": "0x0",
-            "EIP155ForkBlock": "0x0",
-            "EIP158ForkBlock": "0x0",
-            "byzantiumForkBlock": "0x0",
-            "constantinopleForkBlock": "0x0",
-            "networkID": "12313219",
-            "chainID": "0x01",
-            "maximumExtraDataSize": "0x20",
-            "tieBreakingGas": False,
-            "minGasLimit": "0x1234567890abc",
-            "maxGasLimit": "0x1234567890abc",
-            "gasLimitBoundDivisor": "0x0400",
-            "minimumDifficulty": "0x0",
-            "difficultyBoundDivisor": "0x0800",
-            "durationLimit": "0x0d",
-            "blockReward": "0x4563918244F40000"
-        },
-        "genesis": {
-            "nonce": "0x0000000000000042",
-            "difficulty": "0x0",
-            "mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000",  # noqa
-            "author": "0x0000000000000000000000000000000000000000",
-            "timestamp": "0x00",
-            "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
-            "extraData": "0x11bbe8db4e347b4e8c937c1c8370e4b5ed33adb3db69cbdb7a38e1e50b1b82fa",
-            "gasLimit": "0x1234567890abc"
-        },
-        "accounts": {}
-    }
-
-    if other is not None:
-        for key, value in other.items():
-            dot_position = key.find(".")  # allow 1-level nesting
-            if dot_position >= 0:
-                part1 = key[:dot_position]
-                part2 = key[dot_position + 1:]
-                if part1 not in config:
-                    config[part1] = {}
-                config[part1][part2] = value
-            else:
-                config[key] = value
-    return config
-
-
 class Node:
     """Holds everything about node, can access it. But cannot run it."""
 
@@ -343,7 +290,7 @@ class SChain:
     _counter = 0
     _pollInterval = 0.2
 
-    def __init__(self, nodes, starter, prefill=None, config=get_config(),
+    def __init__(self, nodes, starter, prefill=None,
                  keys_file="./keys.all", keys_password="1234",
                  **kwargs):
         # TODO throw if len(prefill)>9
@@ -355,14 +302,13 @@ class SChain:
         self.emptyBlockIntervalMs = kwargs.get('emptyBlockIntervalMs', -1)
         self.snapshotIntervalMs = kwargs.get('snapshotIntervalMs', -1)
         self.nodes = list(nodes)
-        self.config = copy.deepcopy(config)
+        self.config_addons = {"accounts": {}}
         self.starter = starter
         self.running = False
         self.eth = None
         for n in self.nodes:
             assert n.sChain is None, n.sChain
             n.sChain = self
-            n.config = self.config
 
         with open(keys_file, "rb") as fd:
             self.privateKeys = pickle.load(fd)
@@ -382,7 +328,7 @@ class SChain:
                     private_key = self.privateKeys[i]
                     balance = prefill[i]
                     address = self.accounts[i]
-                    self.config["accounts"][address] = {
+                    self.config_addons["accounts"][address] = {
                         "balance": str(balance)
                     }
             print("Loaded public keys (addresses)")
@@ -395,7 +341,7 @@ class SChain:
                     address = w3.eth.account.privateKeyToAccount(
                         private_key).address
                     self.accounts.append(address)
-                    self.config["accounts"][address] = {
+                    self.config_addons["accounts"][address] = {
                         "balance": str(balance)
                     }
 
@@ -575,7 +521,7 @@ class LocalDockerStarter:
 
     DEFAULT_IMAGE = 'skalenetwork/schain:1.46-develop.14'
 
-    def __init__(self, image=None):
+    def __init__(self, image=None, config = None):
         self.image = image or LocalDockerStarter.DEFAULT_IMAGE
         self.temp_dir = TemporaryDirectory()
         self.dir = os.getenv('DATA_DIR', self.temp_dir.name)
@@ -583,7 +529,10 @@ class LocalDockerStarter:
         self.client = docker.client.from_env()
         self.containers = []
         self.volumes = []
-
+        if config == None:
+            with open("config0.json", "r") as f:
+                config = json.load(f)
+        self.config = copy.deepcopy(config)
     def create_volume(self, volume_name):
         self.volumes.append(
             self.client.volumes.create(
@@ -661,7 +610,8 @@ class LocalDockerStarter:
         }
 
     def make_config(self, node, chain):
-        cfg = copy.deepcopy(chain.config)
+        cfg = copy.deepcopy(self.config)
+        config_merge(cfg, chain.config_addons)
         cfg["skaleConfig"] = {
             "nodeInfo": _make_config_node(node),
             "sChain": _make_config_schain(self.chain)
@@ -755,10 +705,14 @@ class LocalStarter:
     chain = None
     started = False
 
-    def __init__(self, exe):
+    def __init__(self, exe, config=None):
         self.exe = exe
         self.temp_dir = TemporaryDirectory()
         self.dir = os.getenv('DATA_DIR', self.temp_dir.name)
+        if config == None:
+            with open("config0.json", "r") as f:
+                config = json.load(f)
+        self.config = copy.deepcopy(config)
         self.exe_popens = []
         self.running = False
 
@@ -776,7 +730,8 @@ class LocalStarter:
             os.makedirs(node_dir)
             cfg_file = node_dir + "/config.json"
 
-            cfg = copy.deepcopy(chain.config)
+            cfg = copy.deepcopy(self.config)
+            config_merge(cfg, self.chain.config_addons)
             cfg["skaleConfig"] = {
                 "nodeInfo": _make_config_node(n),
                 "sChain": _make_config_schain(self.chain)
@@ -890,8 +845,12 @@ class RemoteStarter:
     started = False
 
     # condif is array of hashes: {address, dir, exe}
-    def __init__(self, ssh_config):
+    def __init__(self, ssh_config, config = None):
         self.ssh_config = copy.deepcopy(ssh_config)
+        if config == None:
+            with open("config0.json", "r") as f:
+                config = json.load(f)
+        self.config = copy.deepcopy(config)
         self.running = False
 
     def start(self, chain):
@@ -914,7 +873,8 @@ class RemoteStarter:
             command += "mkdir -p "+node_dir
             command += "; cd " + node_dir
 
-            cfg = copy.deepcopy(chain.config)
+            cfg = copy.deepcopy(self.config)
+            config_merge(cfg, self.chain.config_addons)
             cfg["skaleConfig"] = {
                 "nodeInfo": _make_config_node(n),
                 "sChain": _make_config_schain(self.chain)
@@ -952,9 +912,13 @@ class RemoteDockerStarter:
     chain = None
     started = False
 
-    # condif is array of hashes: {address, dir, exe}
-    def __init__(self, ssh_config):
+    # config is array of hashes: {address, dir, exe}
+    def __init__(self, ssh_config, config=None):
         self.ssh_config = copy.deepcopy(ssh_config)
+        if config == None:
+            with open("config0.json", "r") as f:
+                config = json.load(f)
+        self.config = copy.deepcopy(config)
         self.running = False
 
     def start(self, chain):
@@ -977,7 +941,8 @@ class RemoteDockerStarter:
             command += "mkdir -p "+node_dir
             command += "; cd " + node_dir
 
-            cfg = copy.deepcopy(chain.config)
+            cfg = copy.deepcopy(self.config)
+            config_merge(cfg, self.chain.config_addons)
             cfg["skaleConfig"] = {
                 "nodeInfo": _make_config_node(n),
                 "sChain": _make_config_schain(self.chain)
