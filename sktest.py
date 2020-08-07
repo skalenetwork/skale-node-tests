@@ -18,7 +18,7 @@ import web3
 from docker.types import LogConfig
 from web3.auto import w3
 
-from config import merge as config_merge
+from config import merge as config_merge, to_string as config_to_string
 
 # w3.eth.enable_unaudited_features()
 
@@ -540,13 +540,14 @@ class LocalDockerStarter:
                 driver_opts={})
         )
 
-    def run_container(self, name, node_dir, data_dir_volume_name, env,
-                      **kwargs):
+    def run_container(self, name, node_dir, data_dir_volume_name,
+                      env, cmd, **kwargs):
         self.containers.append(
            self.client.containers.run(
                image=self.image, name=name,
                detach=True,
                network='host',
+               command=cmd,
                volumes={
                    data_dir_volume_name: {
                        'bind': '/data_dir', 'mode': 'rw'
@@ -559,19 +560,8 @@ class LocalDockerStarter:
                **kwargs,
            ))
 
-    def compose_env_options(self, node):
-        env = {
-            **os.environ,
-            'HTTP_RPC_PORT': self.chain.nodes[node.nodeID - 1].basePort + 3,
-            'WS_RPC_PORT': self.chain.nodes[node.nodeID - 1].basePort + 2,
-            'HTTPS_RPC_PORT': self.chain.nodes[node.nodeID - 1].basePort + 7,
-            'WSS_RPC_PORT': self.chain.nodes[node.nodeID - 1].basePort + 8,
-            'DATA_DIR': '/data_dir/',
-            'CONFIG_FILE': '/skale_node_data/config.json',
-            'LEAK_EXPIRE': '20',
-            'LEAK_PID_CHECK': '1',
-
-            'OPTIONS': ' '.join([
+    def compose_cmd(self, node):
+        cmd = ' '.join([
                 "--ws-port", str(node.basePort + 2),
                 "--http-port", str(node.basePort + 3),
                 "--aa", "always",
@@ -581,15 +571,27 @@ class LocalDockerStarter:
                 "--web3-trace",
                 "--acceptors", "1"
             ])
-        }
         if node.snapshottedStartSeconds > -1:
             url = 'http://{}:{}'.format(
                 self.chain.nodes[0].bindIP,
                 self.chain.nodes[0].basePort + 3
             )
-            env['OPTIONS'] += f' --download-snapshot {url}'
+            cmd += f' --download-snapshot {url}'
             time.sleep(node.snapshottedStartSeconds)
-        return env
+        return cmd
+
+    def compose_env_options(self, node):
+        return {
+            **os.environ,
+            'HTTP_RPC_PORT': self.chain.nodes[node.nodeID - 1].basePort + 3,
+            'WS_RPC_PORT': self.chain.nodes[node.nodeID - 1].basePort + 2,
+            'HTTPS_RPC_PORT': self.chain.nodes[node.nodeID - 1].basePort + 7,
+            'WSS_RPC_PORT': self.chain.nodes[node.nodeID - 1].basePort + 8,
+            'DATA_DIR': '/data_dir/',
+            'CONFIG_FILE': '/skale_node_data/config.json',
+            'LEAK_EXPIRE': '20',
+            'LEAK_PID_CHECK': '1',
+        }
 
     @classmethod
     def compose_docker_options(cls):
@@ -641,10 +643,11 @@ class LocalDockerStarter:
 
         docker_options = LocalDockerStarter.compose_docker_options()
         env = self.compose_env_options(node)
+        cmd = self.compose_cmd(node)
 
         container_name = f'schain-node{node.nodeID}'
         self.run_container(container_name, node_dir,
-                           data_dir_volume_name, env, **docker_options)
+                           data_dir_volume_name, env, cmd, **docker_options)
         node.running = True
 
     def start(self, chain, start_timeout=100):
@@ -999,6 +1002,33 @@ class NoStarter:
         assert self.chain is None
 
         self.chain = chain
+        for n in self.chain.nodes:
+            assert not n.running
+            n.running = True
+        self.running = True
+
+    def stop(self):
+        assert self.chain is not None
+
+        for n in self.chain.nodes:
+            n.running = False
+        self.running = False
+
+class ManualStarter:
+
+    def __init__(self, config = {}):
+        self.chain = None
+        self.config = copy.deepcopy( config )
+        self.running = False
+
+    def start(self, chain, start_timeout = None):
+        assert self.chain is None
+
+        self.chain = chain
+        config = copy.deepcopy( self.config )
+        config_merge( config, self.chain.config_addons)
+        print(config_to_string(config))
+        
         for n in self.chain.nodes:
             assert not n.running
             n.running = True

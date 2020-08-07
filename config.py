@@ -22,14 +22,17 @@ def _dict_merge(dct, merge_dct):
         else:
             dct[k] = merge_dct[k]
 
-def merge(base, more):
-    _dict_merge(base, more)
-
 class _HexJsonEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, HexBytes):
             return obj.hex()
         return super().default(obj)
+
+def merge(base, more):
+    _dict_merge(base, more)
+
+def to_string(config):
+    return json.dumps(config, indent = 1, cls = _HexJsonEncoder)
 
 def _merge_cmd( arr_files ):
     res = {}
@@ -38,7 +41,7 @@ def _merge_cmd( arr_files ):
             obj = json.load( f )
             _dict_merge( res, obj )
             
-    return json.dumps(res, indent = 1, cls = _HexJsonEncoder)
+    return to_string( res )
 
 def _usage():
     print("USAGE:")
