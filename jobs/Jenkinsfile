@@ -58,48 +58,48 @@ pipeline {
             }
         }
 
-        // stage('pytest test_two_transactions.py::test_n_nodes[2]') {
-        //     options {
-        //         timeout(time: 10, unit: 'MINUTES')
-        //     }
-        //     steps {
-        //         script {
-        //             try {
-        //                 sh 'pwd'
-        //                 sh 'SKTEST_EXE=./jobs/runtime/skaled DATA_DIR=./jobs/runtime/skaled_logs/pytest_test_two_transactions_test_n_nodes2 /bin/bash ./jobs/skale-node-tests-jenkins/jenkins_pytest_test_two_transactions_test_n_nodes[2].sh'
-        //             }
-        //             catch (err) {
-        //                 echo 'FAILED'
-        //                 slackSend (channel: "#jenkins", color: '#FF0000', message: "${env.JOB_NAME} - pytest test_two_transactions.py::test_n_nodes[2] FAILED @D4 ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)")
-        //                 // slackSend (channel: "@D4", color: '#FF0000', message: "${env.JOB_NAME} - pytest test_two_transactions.py::test_n_nodes[2] FAILED ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)")
-        //             }
-        //             finally {
-        //                 sh 'killall -9 skaled || true'
-        //             }
-        //         }
-        //     }
-        // }
+        stage('pytest test_two_transactions.py::test_n_nodes[2]') {
+            options {
+                timeout(time: 10, unit: 'MINUTES')
+            }
+            steps {
+                script {
+                    try {
+                        sh 'pwd'
+                        sh 'SKTEST_EXE=./jobs/runtime/skaled DATA_DIR=./jobs/runtime/skaled_logs/pytest_test_two_transactions_test_n_nodes2 /bin/bash ./jobs/skale-node-tests-jenkins/jenkins_pytest_test_two_transactions_test_n_nodes[2].sh'
+                    }
+                    catch (err) {
+                        echo 'FAILED'
+                        slackSend (channel: "#jenkins", color: '#FF0000', message: "${env.JOB_NAME} - pytest test_two_transactions.py::test_n_nodes[2] FAILED @D4 ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)")
+                        // slackSend (channel: "@D4", color: '#FF0000', message: "${env.JOB_NAME} - pytest test_two_transactions.py::test_n_nodes[2] FAILED ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)")
+                    }
+                    finally {
+                        sh 'killall -9 skaled || true'
+                    }
+                }
+            }
+        }
 
-        // stage('sktest_long 2 nodes 1 account') {
-        //     options {
-        //         timeout(time: 10, unit: 'MINUTES')
-        //     }
-        //     steps {
-        //         script {
-        //             try {
-        //                 sh 'SKTEST_EXE=./jobs/runtime/skaled DATA_DIR=./jobs/runtime/skaled_logs/sktest_long2nodes1account NUM_NODES=2 NUM_ACCOUNTS=1 /bin/bash ./jobs/skale-node-tests-jenkins/jenkins_sktest_long.sh 2>&1'
-        //             }
-        //             catch (err) {
-        //                 echo 'FAILED'
-        //                 slackSend (channel: "#jenkins", color: '#FF0000', message: "${env.JOB_NAME} - sktest_long 2 nodes 1 account FAILED @D4 ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)")
-        //                 // slackSend (channel: "@D4", color: '#FF0000', message: "${env.JOB_NAME} - sktest_long 2 nodes 1 account FAILED ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)")
-        //             }
-        //             finally {
-        //                 sh 'killall -9 skaled || true'
-        //             }
-        //         }
-        //     }
-        // }
+        stage('sktest_long 2 nodes 1 account') {
+            options {
+                timeout(time: 10, unit: 'MINUTES')
+            }
+            steps {
+                script {
+                    try {
+                        sh 'SKTEST_EXE=./jobs/runtime/skaled DATA_DIR=./jobs/runtime/skaled_logs/sktest_long2nodes1account NUM_NODES=2 NUM_ACCOUNTS=1 /bin/bash ./jobs/skale-node-tests-jenkins/jenkins_sktest_long.sh 2>&1'
+                    }
+                    catch (err) {
+                        echo 'FAILED'
+                        slackSend (channel: "#jenkins", color: '#FF0000', message: "${env.JOB_NAME} - sktest_long 2 nodes 1 account FAILED @D4 ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)")
+                        // slackSend (channel: "@D4", color: '#FF0000', message: "${env.JOB_NAME} - sktest_long 2 nodes 1 account FAILED ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)")
+                    }
+                    finally {
+                        sh 'killall -9 skaled || true'
+                    }
+                }
+            }
+        }
 
 
         stage('sktest_performance 2 nodes') {
@@ -208,7 +208,7 @@ pipeline {
                 }
             }
         }
-/*
+
         stage('sktest_long 2 nodes 10 accounts') {
             options {
                 timeout(time: 10, unit: 'MINUTES')
@@ -292,8 +292,8 @@ pipeline {
                 }
             }
         }
-*/
-/*
+
+
         stage('sktest_sample 1 node') {
             options {
                 timeout(time: 10, unit: 'MINUTES')
@@ -476,7 +476,7 @@ pipeline {
                 }
             }
         }
-*/
+
 /*
         stage('pytest test_race.py::test_bcast[fetch_transactions]') {
             options {
