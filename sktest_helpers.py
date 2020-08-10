@@ -6,7 +6,7 @@ import time
 from hexbytes import HexBytes
 
 from web3.auto import w3
-from sktest import get_config, list_differences, \
+from sktest import list_differences, \
     LocalDockerStarter, LocalStarter, Node, \
     SChain, safe_input_with_timeout
 
@@ -38,6 +38,9 @@ def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks=True,
                         rotate_after_block=-1,
                         config_file=None, chainID=None, same_ip=False,
                         run_container=False):
+    if config_file == None:
+        config_file = "config0.json"
+
     nodes = []
     balances = []
 
@@ -70,27 +73,24 @@ def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks=True,
         balances.append(str((i + 1) * 1000000000000000000000))
 
     config = None
-    if config_file:
-        with open(config_file) as f:
-            config = json.load(f)
-            print(f"Loaded ${config_file}")
-    else:
-        config = get_config()
+    with open(config_file, "r") as f:
+        config = json.load(f)
+        print(f"Loaded ${config_file}")
     if chainID:
         config["params"]["chainID"] = chainID
 
     if run_container:
         image = os.getenv('IMAGE')
-        starter = LocalDockerStarter(image)
+        starter = LocalDockerStarter(image, config)
     else:
         global sktest_exe
-        starter = LocalStarter(sktest_exe)
+        starter = LocalStarter(sktest_exe, config)
 
     emptyBlockIntervalMs = -1
     if empty_blocks:
         emptyBlockIntervalMs = 1000
 
-    chain = SChain(nodes, starter, balances, config=config,
+    chain = SChain(nodes, starter, balances,
                    emptyBlockIntervalMs=emptyBlockIntervalMs)
 
     return chain
