@@ -1,5 +1,6 @@
 from sktest_helpers import *
 import pytest
+import web3
 
 nAcc  = 1000
 
