@@ -75,9 +75,10 @@ def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks=True,
     config = None
     with open(config_file, "r") as f:
         config = json.load(f)
-        print(f"Loaded ${config_file}")
-    if chainID:
-        config["params"]["chainID"] = chainID
+        print(f"Loaded {config_file}")
+
+    if chainID is None:
+        chainID = "0x1"
 
     if run_container:
         image = os.getenv('IMAGE')
@@ -91,7 +92,7 @@ def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks=True,
         emptyBlockIntervalMs = 1000
 
     chain = SChain(nodes, starter, balances,
-                   emptyBlockIntervalMs=emptyBlockIntervalMs)
+                   emptyBlockIntervalMs=emptyBlockIntervalMs, chainID=chainID)
 
     return chain
 

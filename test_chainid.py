@@ -15,7 +15,7 @@ def test_transaction_without_id(schain_with_id):
 
 def test_transaction_with_id(schain_with_id):
     ch = schain_with_id
-    chain_id = ch.config['params']['chainID']
+    chain_id = ch.chainID
     ch.transaction(chain_id = chain_id)
 
 def test_bad_transaction(schain_with_id):

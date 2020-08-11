@@ -292,7 +292,8 @@ class SChain:
         self.emptyBlockIntervalMs = kwargs.get('emptyBlockIntervalMs', -1)
         self.snapshotIntervalMs = kwargs.get('snapshotIntervalMs', -1)
         self.nodes = list(nodes)
-        self.config_addons = {"accounts": {}}
+        self.chainID = kwargs.get('chainID', "0x1")
+        self.config_addons = {"params": {"chainID": self.chainID}, "accounts": {}}
         self.starter = starter
         self.running = False
         self.eth = None
