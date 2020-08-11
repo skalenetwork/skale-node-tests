@@ -22,16 +22,6 @@ from config import merge as config_merge, to_string as config_to_string
 
 # w3.eth.enable_unaudited_features()
 
-
-def cleanup_dir(directory):
-    if isinstance(directory, TemporaryDirectory):
-        directory.cleanup()
-    else:
-        files = glob.glob(directory)
-        for f in files:
-            shutil.rmtree(f)
-
-
 def safe_input_with_timeout(s, timeout):
     if timeout == 0:
         print("Zero wait")
@@ -523,8 +513,7 @@ class LocalDockerStarter:
 
     def __init__(self, image=None, config = None):
         self.image = image or LocalDockerStarter.DEFAULT_IMAGE
-        self.temp_dir = TemporaryDirectory()
-        self.dir = os.getenv('DATA_DIR', self.temp_dir.name)
+        self.dir = TemporaryDirectory()
         self.running = False
         self.client = docker.client.from_env()
         self.containers = []
@@ -633,7 +622,7 @@ class LocalDockerStarter:
         data_dir_volume_name = f'data-dir{node.nodeID}'
         self.create_volume(data_dir_volume_name)
 
-        node_dir = os.path.join(self.dir, str(node.nodeID))
+        node_dir = os.path.join(os.getenv('DATA_DIR', self.dir.name), str(node.nodeID))
 
         node.config = self.make_config(node, chain)
         LocalDockerStarter.save_config(node.config, node_dir)
@@ -685,7 +674,7 @@ class LocalDockerStarter:
         self.destroy_containers()
         self.destroy_volumes()
         self.running = False
-        cleanup_dir(self.dir)
+        self.dir.cleanup()
 
     def stop_node(self, pos):
         if not self.chain.nodes[pos].running:
@@ -710,8 +699,7 @@ class LocalStarter:
 
     def __init__(self, exe, config=None):
         self.exe = exe
-        self.temp_dir = TemporaryDirectory()
-        self.dir = os.getenv('DATA_DIR', self.temp_dir.name)
+        self.dir = TemporaryDirectory()
         if config == None:
             with open("config0.json", "r") as f:
                 config = json.load(f)
@@ -728,7 +716,7 @@ class LocalStarter:
         for n in self.chain.nodes:
             assert not n.running
 
-            node_dir = os.path.join(self.dir, str(n.nodeID))
+            node_dir = os.path.join(os.getenv('DATA_DIR', self.dir.name), str(n.nodeID))
             ipc_dir = node_dir
             os.makedirs(node_dir)
             cfg_file = node_dir + "/config.json"
@@ -809,7 +797,7 @@ class LocalStarter:
             self.wait_node_stop(pos)
 
         self.running = False
-        cleanup_dir(self.dir)
+        self.dir.cleanup()
 
     # TODO race conditions?
     def stop_node(self, pos):
