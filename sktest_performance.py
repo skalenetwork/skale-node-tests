@@ -2,6 +2,7 @@ import binascii
 import os
 import time
 import threading
+import sys
 from compare_nodes import compare_nodes
 
 import web3
@@ -119,3 +120,5 @@ else:
     print('\n*** Test failed ***')
 
 # ch.stop()
+
+sys.exit(not ok)

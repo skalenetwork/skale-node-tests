@@ -1,5 +1,6 @@
 from sktest_helpers import *
 import time
+import sys
 
 ch = create_default_chain(num_nodes=2, num_accounts=2)
 ch.start()
@@ -51,3 +52,4 @@ else:
 
 #ch.stop()
 
+sys.exit(difference)

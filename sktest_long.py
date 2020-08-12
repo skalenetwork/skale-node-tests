@@ -1,5 +1,6 @@
 from sktest_helpers import *
 import time
+import sys
 
 nAcc = int(os.getenv("NUM_ACCOUNTS", 10000))
 nTxns = 10000
@@ -89,3 +90,5 @@ else:
 
 #ch.stop()
 print("Txns: "+str(nTxns)+" Time: "+str(t2-t1)+" => "+str(nTxns/(t2-t1))+" tx/sec")
+
+sys.exit(difference)
