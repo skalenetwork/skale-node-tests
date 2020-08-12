@@ -1,6 +1,7 @@
 from sktest_helpers import *
 import pytest
 import web3
+import sys
 
 nAcc  = 1000
 
@@ -50,8 +51,8 @@ def test_rotation(schain):
         })
 
         next_to_find = block_no - 255
-        if next_to_find < 2:
-            next_to_find = 2        # 0 is genesis, 1 is contract creation
+        if next_to_find < 3:
+            next_to_find = 3        # 0 is genesis, 1 is dummy, 2 is contract creation
         for i in range(len(logs)):
             t1 = web3.Web3.toInt(logs[i]['topics'][0])
             print(t1, next_to_find)
@@ -83,7 +84,8 @@ def test_rotation(schain):
 
     prev_block_no = 0
 
-    hash1 = eth.getBlock(1)['hash']
+    hash1 = eth.getBlock(1)['hash']    # initial
+    hash2 = eth.getBlock(2)['hash']    # deployment
 
     i = 0
     while True:
@@ -111,14 +113,20 @@ def test_rotation(schain):
         except Exception as ex:
             assert(str(ex).find('not found') != -1)
             b1 = None
-        assert(b1 is None or b1['hash'] == hash1)
+        assert(b1 is None or b1['hash'] == hash1 or b1['hash'] == hash2)
 
         # end this if block #300 has gone
         if block_no >= 300+256:
             try:
-                eth.getBlock(300)
+                b300 = eth.getBlock(300)
+                if b300 is None:
+                    break
             except Exception as ex:
                 assert(str(ex).find('not found') != -1)
                 break
+                
+        # fail if 1000 blocks already
+        if block_no >= 1000:
+            sys.exit(1)
 
         i += 1
