@@ -39,7 +39,7 @@ def test_rotation(schain):
     block_no = 0
     def on_block():
 
-        print('-------------------')
+        ## print('-------------------')
 
         b1 = 0
         b2 = block_no
@@ -55,13 +55,13 @@ def test_rotation(schain):
             next_to_find = 3        # 0 is genesis, 1 is dummy, 2 is contract creation
         for i in range(len(logs)):
             t1 = web3.Web3.toInt(logs[i]['topics'][0])
-            print(t1, next_to_find)
+            ## print(t1, next_to_find)
             if t1 < next_to_find:
                 continue
             assert(t1  == next_to_find)
             next_to_find += 1
 
-        print('====================')
+        ## print('====================')
 
         b1 = block_no - 400
         b2 = block_no - 100
@@ -76,7 +76,7 @@ def test_rotation(schain):
             next_to_find = block_no - 255
             for i in range(len(logs)):
                 t1 = web3.Web3.toInt(logs[i]['topics'][0])
-                print(t1, next_to_find)
+                ## print(t1, next_to_find)
                 if t1 < next_to_find:
                     continue
                 assert (t1 == next_to_find)
@@ -124,7 +124,7 @@ def test_rotation(schain):
             except Exception as ex:
                 assert(str(ex).find('not found') != -1)
                 break
-                
+
         # fail if 1000 blocks already
         if block_no >= 1000:
             sys.exit(1)
