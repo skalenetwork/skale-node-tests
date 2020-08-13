@@ -3,7 +3,6 @@ import copy
 import os
 import sys
 import collections
-from hexbytes import HexBytes
 
 # (c) https://gist.github.com/angstwad/bf22d1822c38a92ec0a9
 def _dict_merge(dct, merge_dct):
@@ -22,17 +21,11 @@ def _dict_merge(dct, merge_dct):
         else:
             dct[k] = merge_dct[k]
 
-class _HexJsonEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, HexBytes):
-            return obj.hex()
-        return super().default(obj)
-
 def merge(base, more):
     _dict_merge(base, more)
 
 def to_string(config):
-    return json.dumps(config, indent = 1, cls = _HexJsonEncoder)
+    return json.dumps(config, indent = 1)
 
 def _merge_cmd( arr_files ):
     res = {}
@@ -42,6 +35,16 @@ def _merge_cmd( arr_files ):
             _dict_merge( res, obj )
             
     return to_string( res )
+    
+def _extract_cmd( file, key_arr ):
+    obj = {}
+    with open(file, "r") as f:
+        obj = json.load( f )
+
+    for k in key_arr:
+        obj = obj[k]
+
+    return obj
 
 def _usage():
     print("USAGE:")
@@ -52,7 +55,12 @@ if __name__ == "__main__":
         _usage()
         exit()
     if( sys.argv[1] == "merge"):
-        res = _merge(sys.argv[2:])
+        res = _merge_cmd(sys.argv[2:])
+        print( res )
+    elif( sys.argv[1] == "extract"):
+        file = sys.argv[2]
+        args = sys.argv[3].split(".")
+        res = _extract_cmd(file, args)
         print( res )
     else:
         _usage()
