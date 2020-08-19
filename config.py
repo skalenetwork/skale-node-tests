@@ -42,7 +42,10 @@ def _extract_cmd( file, key_arr ):
         obj = json.load( f )
 
     for k in key_arr:
-        obj = obj[k]
+        if k in obj:
+            obj = obj[k]
+        else:
+            return ""
 
     return obj
 
