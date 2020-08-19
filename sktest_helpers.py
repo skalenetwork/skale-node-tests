@@ -85,8 +85,8 @@ def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks=True,
         starter = LocalDockerStarter(image, config)
     else:
         global sktest_exe
-        starter = ManualStarter(config)
-        #starter = LocalStarter(sktest_exe, config)
+        #starter = ManualStarter(config)
+        starter = LocalStarter(sktest_exe, config)
 
     emptyBlockIntervalMs = -1
     if empty_blocks:
