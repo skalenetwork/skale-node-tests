@@ -88,6 +88,11 @@ def _block2json(eth, block, accounts):
     return block
 
 
+def getLatestSnapshotBlockNumber(eth):
+    res = eth._provider.make_request("getLatestSnapshotBlockNumber")
+    return res["result"]
+
+
 def _node2json(eth):
     blocks = []
     accounts = {}
