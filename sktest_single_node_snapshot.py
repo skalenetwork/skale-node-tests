@@ -1,6 +1,7 @@
 import os
 import time
-from sktest import LocalStarter, LocalDockerStarter, Node, SChain
+from time import sleep
+from sktest import LocalStarter, LocalDockerStarter, Node, SChain, getLatestSnapshotBlockNumber
 
 if os.geteuid() != 0:
     print("Please run with sudo")
@@ -11,7 +12,7 @@ sktest_exe = os.getenv("SKTEST_EXE",
                        "/home/dimalit/skaled/build-no-mp/skaled/skaled")
 
 emptyBlockIntervalMs = 2000
-snapshotIntervalMs = 6000
+snapshotIntervalMs = 10
 
 run_container = os.getenv('RUN_CONTAINER')
 
@@ -33,7 +34,7 @@ ch = SChain(
     emptyBlockIntervalMs=emptyBlockIntervalMs,
     snapshotIntervalMs=snapshotIntervalMs
 )
-ch.start(start_timeout=0)
+ch.start()
 
 print("Waiting for snapshots to be done")
 
@@ -46,6 +47,9 @@ while True:
     print(f"blockNumber is: {bn}")
 
     current_latest = getLatestSnapshotBlockNumber(node.eth)
+
+    print(f"Latest snapshot block: {current_latest}")
+
     if latest_snapshot_block != current_latest:
         latest_snapshot_block = current_latest
         snapshots_count += 1
@@ -57,20 +61,32 @@ while True:
 
     time.sleep(0.6)
 
-ch.stop()
+print("Exiting")
+
+ch.stop_without_cleanup()
 
 print("Restarting skaled")
 
-ch.start(start_timeout=0)
+ch.start_after_stop()
 
 print("Waiting for snapshots to be done after restart")
+
+snapshots_done_after_restart = 0
 
 while True:
     bn = node.eth.blockNumber
 
     print(f"blockNumber is: {bn}")
 
-    print(f"Snapshots done after restart: {snapshots_count}")
+    current_latest = getLatestSnapshotBlockNumber(node.eth)
+
+    print(f"Latest snapshot block: {current_latest}")
+
+    if latest_snapshot_block != current_latest:
+        latest_snapshot_block = current_latest
+        snapshots_done_after_restart += 1
+
+    print(f"Snapshots done after restart: {snapshots_done_after_restart}")
 
     if snapshots_count > 11:
         break

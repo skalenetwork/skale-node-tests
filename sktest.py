@@ -89,7 +89,7 @@ def _block2json(eth, block, accounts):
 
 
 def getLatestSnapshotBlockNumber(eth):
-    res = eth._provider.make_request("getLatestSnapshotBlockNumber")
+    res = eth._provider.make_request("skale_getLatestSnapshotBlockNumber", [])
     return res["result"]
 
 
@@ -436,6 +436,21 @@ class SChain:
             patch_eth(n.eth)
         self.eth = self.nodes[0].eth
         self.running = True  # TODO Duplicates functionality in Starter!
+    
+    def start_after_stop(self, **kwargs):
+        self.starter.start_after_stop(self, **kwargs)
+
+        # proxies = {'http': 'http://127.0.0.1:2234'};
+        # , request_kwargs={'proxies': proxies}
+
+        for n in self.nodes:
+            provider = web3.Web3.HTTPProvider(
+                "http://" + n.bindIP + ":" + str(n.basePort + 3))
+            n.eth = web3.Web3(provider).eth
+            n.eth._provider = provider
+            patch_eth(n.eth)
+        self.eth = self.nodes[0].eth
+        self.running = True  # TODO Duplicates functionality in Starter!
 
     def wait_start(self):
         while True:
@@ -447,6 +462,10 @@ class SChain:
 
     def stop(self):
         self.starter.stop()
+        self.running = False
+    
+    def stop_without_cleanup(self):
+        self.starter.stop_without_cleanup()
         self.running = False
 
     def stop_node(self, pos):
@@ -658,6 +677,9 @@ class LocalDockerStarter:
         assert len(self.client.containers.list()) == len(self.chain.nodes)
         safe_input_with_timeout('Press enter when nodes start', start_timeout)
         self.running = True
+    
+    def start_after_stop(self, chain, start_timeout=100):
+        self.start(chain, start_timeout)
 
     def destroy_containers(self):
         for c in self.containers:
@@ -681,6 +703,12 @@ class LocalDockerStarter:
         self.destroy_volumes()
         self.running = False
         self.dir.cleanup()
+    
+    def stop_without_cleanup(self):
+        assert hasattr(self, "chain")
+        self.destroy_containers()
+        self.destroy_volumes()
+        self.running = False
 
     def stop_node(self, pos):
         if not self.chain.nodes[pos].running:
@@ -792,6 +820,85 @@ class LocalStarter:
 #        time.sleep(2)
 
         self.running = True
+    
+    def start_after_stop(self, chain, start_timeout=40):
+        assert not self.started
+        self.started = True
+        self.chain = chain
+
+        # TODO Handle exceptions!
+        for n in self.chain.nodes:
+            assert not n.running
+
+            node_dir = os.path.join(os.getenv('DATA_DIR', self.dir.name), str(n.nodeID))
+            ipc_dir = node_dir
+            cfg_file = node_dir + "/config.json"
+
+            cfg = copy.deepcopy(self.config)
+            config_merge(cfg, self.chain.config_addons)
+            cfg["skaleConfig"] = {
+                "nodeInfo": _make_config_node(n),
+                "sChain": _make_config_schain(self.chain)
+            }
+            f = io.open(cfg_file, "w")
+            json.dump(cfg, f, indent=1)
+            n.config = cfg
+            f.close()
+
+            # TODO Close all of it?
+            aleth_out = io.open(node_dir + "/" + "aleth.out", "w")
+            aleth_err = io.open(node_dir + "/" + "aleth.err", "w")
+
+            env = os.environ.copy()
+
+            popen_args = [
+                # "/usr/bin/strace", '-o'+node_dir+'/aleth.trace',
+                # "stdbuf", "-oL",
+                # "heaptrack",
+                self.exe,
+                "--http-port", str(n.basePort + 3),
+                "--ws-port", str(n.wsPort),
+                "--aa", "always",
+                "--config", cfg_file,
+                "-d", node_dir,
+                # "--ipcpath", ipc_dir,		# ACHTUNG!!! 107 characters max!!
+                "-v", "4",
+                "--web3-trace",
+                "--acceptors", "1"
+            ]
+
+            if n.snapshottedStartSeconds > -1:
+                popen_args.append("--download-snapshot")
+                popen_args.append("http://" + self.chain.nodes[0].bindIP + ":" + str(self.chain.nodes[0].basePort + 3))  # noqa
+                time.sleep(n.snapshottedStartSeconds)
+
+            popen = Popen(
+                popen_args,
+                stdout=aleth_out,
+                stderr=aleth_err,
+                env=env
+            )
+
+            n.pid = popen.pid
+
+            self.exe_popens.append(popen)
+            # HACK +0 +1 +2 are used by consensus
+            # url = f"http://{n.bindIP}:{n.basePort + 3}"
+
+            # n.ipcPath = ipc_dir + "/geth.ipc"
+            n.running = True
+
+        safe_input_with_timeout('Press enter when nodes start', start_timeout)
+
+#        for p in for_delayed_proxies:
+#            self.proxy_popens.append(
+#                Popen(p['args'], stdout = p['stdout'], stderr = p['stderr'])
+#            )
+
+#        print('Wait for json rpc proxies start')
+#        time.sleep(2)
+
+        self.running = True
 
     def stop(self):
         assert hasattr(self, "chain")
@@ -804,6 +911,19 @@ class LocalStarter:
 
         self.running = False
         self.dir.cleanup()
+    
+    def stop_without_cleanup(self):
+        assert hasattr(self, "chain")
+
+        for pos in range(len(self.chain.nodes)):
+            self.stop_node(pos)
+
+        for pos in range(len(self.chain.nodes)):
+            self.wait_node_stop(pos)
+
+        self.running = False
+        self.started = False
+        self.exe_popens.clear()
 
     # TODO race conditions?
     def stop_node(self, pos):
@@ -902,6 +1022,9 @@ class RemoteStarter:
         for n in self.chain.nodes:
             n.running = False
         self.running = False
+    
+    def stop_without_cleanup(self):
+        self.stop()
 
 
 class RemoteDockerStarter:
@@ -984,6 +1107,9 @@ class RemoteDockerStarter:
         for n in self.chain.nodes:
             n.running = False
         self.running = False
+    
+    def stop_without_cleanup(self):
+        self.stop()
 
 
 class NoStarter:
@@ -1007,6 +1133,9 @@ class NoStarter:
         for n in self.chain.nodes:
             n.running = False
         self.running = False
+    
+    def stop_without_cleanup(self):
+        self.stop()
 
 class ManualStarter:
 
@@ -1034,3 +1163,6 @@ class ManualStarter:
         for n in self.chain.nodes:
             n.running = False
         self.running = False
+    
+    def stop_without_cleanup(self):
+        self.stop()
