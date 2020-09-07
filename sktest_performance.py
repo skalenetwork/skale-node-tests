@@ -7,6 +7,8 @@ from compare_nodes import compare_nodes
 
 import web3
 
+import sktest
+
 from sktest_helpers import create_default_chain, \
     generate_or_load_txns, wait_for_txns
 
@@ -30,10 +32,15 @@ def send_func(eth, arr, begin, count):
                 print(e)
                 time.sleep(1)
 
+if os.getenv('ENDPOINT_URL'):
+    import re
+    split = re.split('[/:]+', os.getenv('ENDPOINT_URL'))
+    node = sktest.Node(bindIP=split[1], basePort=int(split[2])-3, rotateAfterBlock=0)
+    ch = sktest.SChain([node], sktest.NoStarter(), [])
+else:
+    ch = create_default_chain(num_nodes=nNodes, num_accounts=nAcc)
 
-ch = create_default_chain(num_nodes=nNodes, num_accounts=nAcc)
-
-ch.start(start_timeout=10)
+ch.start()
 
 eths = []
 for n in ch.nodes:

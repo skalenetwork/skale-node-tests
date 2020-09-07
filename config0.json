@@ -246,7 +246,6 @@
 	      "basePort": 1231,
 	      "logLevel": "trace",
 	      "logLevelProposal": "trace",
-	      "snapshotInterval": 0,
 	      "rotateAfterBlock": 0,
 	      "ecdsaKeyName": "",
 	      "minCacheSize": 1000000,
