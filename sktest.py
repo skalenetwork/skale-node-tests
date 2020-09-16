@@ -58,15 +58,15 @@ def patch_eth(eth):
     def forceBroadcast(eth, h):
         eth._provider.make_request("debug_forceBroadcast", [h])
 
-    def callSkaleHost(eth, arg):
-        res = eth._provider.make_request("debug_callSkaleHost", [arg])
+    def debugInterfaceCall(eth, arg):
+        res = eth._provider.make_request("debug_interfaceCall", [arg])
         return res["result"]
 
     eth.pauseConsensus = types.MethodType(pauseConsensus, eth)
     eth.pauseBroadcast = types.MethodType(pauseBroadcast, eth)
     eth.forceBlock = types.MethodType(forceBlock, eth)
     eth.forceBroadcast = types.MethodType(forceBroadcast, eth)
-    eth.callSkaleHost = types.MethodType(callSkaleHost, eth)
+    eth.debugInterfaceCall = types.MethodType(debugInterfaceCall, eth)
 
 
 def _transaction2json(eth, t, accounts):
@@ -496,8 +496,8 @@ def _make_config_node(node):
         "nodeID": node.nodeID,
         "bindIP": node.bindIP,
         "basePort": node.basePort,
-        "logLevel": "info",
-        "logLevelConfig": "info",
+        "logLevel": "trace",
+        "logLevelConfig": "trace",
         "rotateAfterBlock": node.rotateAfterBlock,
         "enable-debug-behavior-apis": True,
         "ecdsaKeyName": "",

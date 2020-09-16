@@ -1,3 +1,5 @@
+import binascii
+
 from sktest_helpers import *
 import pytest
 
@@ -17,7 +19,7 @@ def final_check(ch):
 
 @pytest.fixture
 def schain2():
-    ch = create_default_chain(num_nodes=2, num_accounts=2)
+    ch = create_default_chain(num_nodes=2, num_accounts=2, empty_blocks=False)
     ch.start()
 
     eth1  = ch.nodes[0].eth
@@ -37,14 +39,14 @@ def schain2():
 def test_bcast(schain2, receive_before):
     (ch, eth1, eth2, tx1, tx2) = schain2
 
-    eth1.callSkaleHost("trace break receive_transaction")
+    eth1.debugInterfaceCall("SkaleHost trace break receive_transaction")
 
     h1 = eth2.sendRawTransaction(tx1)
 
     h1 = "0x" + binascii.hexlify(h1).decode("utf-8")
 
     if receive_before != "never":
-        eth1.callSkaleHost("trace break " + receive_before)
+        eth1.debugInterfaceCall("SkaleHost trace break " + receive_before)
 
     if receive_before != "fetch_transactions":           # force only if 0 txns
         eth1.forceBlock()
@@ -52,11 +54,11 @@ def test_bcast(schain2, receive_before):
 
     ############################ receive txns, continue and check ##############################
 
-    eth1.callSkaleHost("trace continue receive_transaction")
+    eth1.debugInterfaceCall("SkaleHost trace continue receive_transaction")
     time.sleep(2)
 
     if receive_before != "never":
-        eth1.callSkaleHost("trace continue " + receive_before)
+        eth1.debugInterfaceCall("SkaleHost trace continue " + receive_before)
         time.sleep(2)
 
     # one more block
@@ -66,24 +68,24 @@ def test_bcast(schain2, receive_before):
 
     # checks 1
 
-    assert(eth1.blockNumber == 2)
-    assert(eth2.blockNumber == 2)
+    assert(eth1.blockNumber == 3)
+    assert(eth2.blockNumber == 3)
     assert(count_txns(eth1)==1)
     assert(count_txns(eth2)==1)
 
     # checks 2
     counters = []
 
-    cnt = int(eth1.callSkaleHost("trace count import_consensus_born"))
+    cnt = int(eth1.debugInterfaceCall("SkaleHost trace count import_consensus_born"))
     counters.append(cnt)
 
-    cnt = int(eth1.callSkaleHost("trace count import_future"))
+    cnt = int(eth1.debugInterfaceCall("SkaleHost trace count import_future"))
     counters.append(cnt)
 
-    cnt = int(eth1.callSkaleHost("trace count drop_good"))
+    cnt = int(eth1.debugInterfaceCall("SkaleHost trace count drop_good"))
     counters.append(cnt)
 
-    cnt = int(eth1.callSkaleHost("trace count drop_bad"))
+    cnt = int(eth1.debugInterfaceCall("SkaleHost trace count drop_bad"))
     counters.append(cnt)
 
     if receive_before == "fetch_transactions":
