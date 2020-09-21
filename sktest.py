@@ -801,6 +801,10 @@ class LocalStarter:
             )
 
             n.pid = popen.pid
+            n.args = popen_args
+            n.stdout = aleth_out
+            n.stderr = aleth_err
+            n.env = env
 
             self.exe_popens.append(popen)
             # HACK +0 +1 +2 are used by consensus
@@ -820,6 +824,25 @@ class LocalStarter:
 #        time.sleep(2)
 
         self.running = True
+    
+    def restart_node(self, pos):
+        assert self.started
+        n = self.chain.nodes[pos]
+        assert n.running
+
+        self.stop_node(pos)
+        self.wait_node_stop(pos)
+
+        popen = Popen(
+            n.args,
+            stdout=n.stdout,
+            stderr=n.stderr,
+            env=n.env
+        )
+
+        n.pid = popen.pid
+        self.exe_popens[pos] = popen
+        n.running = True
     
     def start_after_stop(self, chain, start_timeout=40):
         assert not self.started

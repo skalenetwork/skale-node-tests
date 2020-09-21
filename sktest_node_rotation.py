@@ -22,7 +22,7 @@ n2 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
 n3 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
           snapshotInterval=snapshotIntervalMs)
 n4 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
-          snapshotInterval=snapshotIntervalMs)
+          snapshotInterval=snapshotIntervalMs, snapshottedStartSeconds = 0)
 starter = LocalStarter(sktest_exe)
 
 
@@ -35,14 +35,21 @@ ch = SChain(
 )
 ch.start(start_timeout=0)
 
-# while True:
-for _ in range(50):
+while True:
+#for _ in range(50):
     try:
         bn1 = n1.eth.blockNumber
         bn2 = n2.eth.blockNumber
         bn3 = n3.eth.blockNumber
         bn4 = n4.eth.blockNumber
         print(f"blockNumber's: {bn1} {bn2} {bn3} {bn4}")
+        
+        if bn1 == 5:
+            starter.restart_node(3)
+
+        if bn1 >= 10 and bn1==bn2 and bn2==bn3 and bn3==bn4:
+            break
+
     except:
         pass
 
