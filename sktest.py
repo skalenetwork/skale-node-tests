@@ -261,6 +261,42 @@ class Node:
 
     _counter = 0
 
+    _dkg_id = 0
+
+    _nodes_bls_key_name = ['BLS_KEY:SCHAIN_ID:1:NODE_ID:0:DKG_ID:'+str(_dkg_id),
+                           'BLS_KEY:SCHAIN_ID:1:NODE_ID:1:DKG_ID:'+str(_dkg_id),
+                           'BLS_KEY:SCHAIN_ID:1:NODE_ID:2:DKG_ID:'+str(_dkg_id),
+                           'BLS_KEY:SCHAIN_ID:1:NODE_ID:3:DKG_ID:'+str(_dkg_id)
+                           ]
+
+    _nodes_bls_public_key = [['10464107885494525519581620200197214454081423744513061107893525107639603306406',
+                              '21863114478776400949858605566548714783346181193496545440390567475652443827860',
+                              '9691275586475923350239965219458214853398053456671458906602512073155412477765',
+                              '21184166360997189515339842524276751085701691914330721286626083200868381851507'],
+                             ['13289581877516010176096865600363954975544318150612132009900978273590840827671',
+                              '3009259274536749924291167728223211541338185496216243046746034399509040584590',
+                              '9623845779864445397658552419482290886596710265287763759908787602461317591522',
+                              '3509060907621479358705196470121888970981082575252325352540589302112883506131'],
+                             ['4256915126029311077517288250609053798571789913766130193692320276924121794604',
+                              '8742968334342026931671975134702795911399825106438585936076894251874910472349',
+                              '20678269015896935775387749530686987901502683463963862941654962217268957250896',
+                              '14455184817129501171111955486792313997711359251214278761532423502769296099702'],
+                             ['5805323932014273847465702979165147225542511837196532508389683490529742871954',
+                              '21167588835499686017105978704419960201196471486209839086008146103138932244571',
+                              '20041358704535665129364549031054869404767444547260082485437106537062214376293',
+                              '21053346572510464338712665283936249079516915662009476660014987681112849530309']
+                            ]
+
+    _nodes_public_key = ['2ac99031b5c438a5c2514a3085d524039ace523d96f77a2ec457d57a169ee55aff43cf65c3ceaa8cd207c6202bc82960d9a131fc5bec9da5abf4cbaa6183c622',
+                             '74f987105ea5a3ef07dbb7fd658fcc691480ff9688c9802b7646949a082372f85f1e791d510114ec9d15e82f102d43afa4a576143099c8707e73b34ea475a9db',
+                             '216821816e5c457656ec2662ffaff1c83037145db04162aee0f36e0e9239f5429b62e0c2905688deb20598af00ab8ade0404d7cc4bea40836f0086e4b9abe60a',
+                             '99396f3d8bcc5964bcf1da0cbf82ed8b56cffe4a1aa83e281eee4b18b00ff16604586c541637e508d9f27752257d34ca4b32b24a10e43195d4b414d8bf9b3c02']
+                             
+    _ecdsa_keys = ['NEK:db4e5d0b510dcc55e8353986f1cb7aa5d3ae29511ca71ec5d4f211228607d2c3',
+                   'NEK:dd5202917d25aa6d9df272f5150be3e6b86729d8e3dfe4289342d6e14c273c28',
+                   'NEK:a5dbdb349b68eeab9baffa336b47f36bc10b0692857aa331b57a79b1adfa3c85',
+                   'NEK:283fb163fa64e9c92d9e6820a4c92fe25ae22cb04f56c3ee233a8b1620c1ded1']
+                               
     def __init__(self, **kwargs):
         Node._counter = Node._counter + 1
         self.nodeName = kwargs.get('nodeName', "Node" + str(Node._counter))
@@ -278,7 +314,13 @@ class Node:
         self.snapshottedStartSeconds = kwargs.get(
             'snapshottedStartSeconds', -1
         )
-
+        self.keyShareName = Node._nodes_bls_key_name[Node._counter - 1]
+        self.insecureBLSPublicKey0 = Node._nodes_bls_public_key[Node._counter - 1][0]
+        self.insecureBLSPublicKey1 = Node._nodes_bls_public_key[Node._counter - 1][1]
+        self.insecureBLSPublicKey2 = Node._nodes_bls_public_key[Node._counter - 1][2]
+        self.insecureBLSPublicKey3 = Node._nodes_bls_public_key[Node._counter - 1][3]
+        self.publicKey = Node._nodes_public_key[Node._counter - 1]
+        self.ecdsaKeyName = Node._ecdsa_keys[Node._counter - 1]
 
 class SChain:
 
@@ -500,7 +542,23 @@ def _make_config_node(node):
         "logLevelConfig": "trace",
         "rotateAfterBlock": node.rotateAfterBlock,
         "enable-debug-behavior-apis": True,
-        "ecdsaKeyName": "",
+        "ecdsaKeyName": node.ecdsaKeyName,
+        "wallets": {
+            "ima": {
+                "url": "https://45.63.65.79:1026",
+                "keyShareName": node.keyShareName,
+                "t": 3,
+                "n": 4,
+                "BLSPublicKey0": node.insecureBLSPublicKey0,
+                "BLSPublicKey1": node.insecureBLSPublicKey1,
+                "BLSPublicKey2": node.insecureBLSPublicKey2,
+                "BLSPublicKey3": node.insecureBLSPublicKey3,
+                "commonBLSPublicKey0": "16212816063676187554897571363811397516383815123546603244301177987699598362330",
+                "commonBLSPublicKey1": "6755929213917339040852441844310046252748896713668544376639154919014308133767",
+                "commonBLSPublicKey2": "19287282379061921102666373161822860515914623644484094304962106762868478741554",
+                "commonBLSPublicKey3": "6361189426596797545844743213974188186637149612868715455753070595839250503891"
+            }
+        }
         # "catchupIntervalMs": 1000000000
     }
 
@@ -511,7 +569,11 @@ def _make_config_schain_node(node, index):
         "ip": node.bindIP,
         "basePort": node.basePort,
         "schainIndex": index + 1,
-        "publicKey": ""
+        "blsPublicKey0": node.insecureBLSPublicKey0,
+        "blsPublicKey1": node.insecureBLSPublicKey1,
+        "blsPublicKey2": node.insecureBLSPublicKey2,
+        "blsPublicKey3": node.insecureBLSPublicKey3,
+        "publicKey": node.publicKey
     }
 
 
@@ -791,6 +853,8 @@ class LocalStarter:
             if n.snapshottedStartSeconds > -1:
                 popen_args.append("--download-snapshot")
                 popen_args.append("http://" + self.chain.nodes[0].bindIP + ":" + str(self.chain.nodes[0].basePort + 3))  # noqa
+                popen_args.append("--public-key")
+                popen_args.append("11087880408379223720179864713155560103154798592635045798293882410743651570446:3564106700478864553326232013660949455083826448005354972026557092863213195493:11447019497857856092493405784790665626780763256081713143842436936251732746449:1772291325702049391502102464643150908631803508034733810722819621406995840280")
                 time.sleep(n.snapshottedStartSeconds)
 
             popen = Popen(
