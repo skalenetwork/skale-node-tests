@@ -314,14 +314,17 @@ class Node:
         self.snapshottedStartSeconds = kwargs.get(
             'snapshottedStartSeconds', -1
         )
-        self.keyShareName = Node._nodes_bls_key_name[Node._counter - 1]
-        self.insecureBLSPublicKey0 = Node._nodes_bls_public_key[Node._counter - 1][0]
-        self.insecureBLSPublicKey1 = Node._nodes_bls_public_key[Node._counter - 1][1]
-        self.insecureBLSPublicKey2 = Node._nodes_bls_public_key[Node._counter - 1][2]
-        self.insecureBLSPublicKey3 = Node._nodes_bls_public_key[Node._counter - 1][3]
-        self.publicKey = Node._nodes_public_key[Node._counter - 1]
-        self.ecdsaKeyName = Node._ecdsa_keys[Node._counter - 1]
-
+        if kwargs.get('bls', False):
+            self.keyShareName = Node._nodes_bls_key_name[Node._counter - 1]
+            self.insecureBLSPublicKey0 = Node._nodes_bls_public_key[Node._counter - 1][0]
+            self.insecureBLSPublicKey1 = Node._nodes_bls_public_key[Node._counter - 1][1]
+            self.insecureBLSPublicKey2 = Node._nodes_bls_public_key[Node._counter - 1][2]
+            self.insecureBLSPublicKey3 = Node._nodes_bls_public_key[Node._counter - 1][3]
+            self.publicKey = Node._nodes_public_key[Node._counter - 1]
+            self.ecdsaKeyName = Node._ecdsa_keys[Node._counter - 1]
+        else:
+            self.ecdsaKeyName = ""
+            self.publicKey = ""
 class SChain:
 
     _counter = 0
@@ -558,23 +561,32 @@ def _make_config_node(node):
                 "commonBLSPublicKey2": "3647833147657958185393020912446135601933571182900304549078758701875919023122",
                 "commonBLSPublicKey3": "2426298721305518429857989502764051546820660937538732738470128444404528302050"
             }
-        }
+        } if node.ecdsaKeyName != "" else {}
         # "catchupIntervalMs": 1000000000
     }
 
 
 def _make_config_schain_node(node, index):
-    return {
-        "nodeID": node.nodeID,
-        "ip": node.bindIP,
-        "basePort": node.basePort,
-        "schainIndex": index + 1,
-        "blsPublicKey0": node.insecureBLSPublicKey0,
-        "blsPublicKey1": node.insecureBLSPublicKey1,
-        "blsPublicKey2": node.insecureBLSPublicKey2,
-        "blsPublicKey3": node.insecureBLSPublicKey3,
-        "publicKey": node.publicKey
-    }
+    if node.publicKey:
+        return {
+            "nodeID": node.nodeID,
+            "ip": node.bindIP,
+            "basePort": node.basePort,
+            "schainIndex": index + 1,
+            "blsPublicKey0": node.insecureBLSPublicKey0,
+            "blsPublicKey1": node.insecureBLSPublicKey1,
+            "blsPublicKey2": node.insecureBLSPublicKey2,
+            "blsPublicKey3": node.insecureBLSPublicKey3,
+            "publicKey": node.publicKey
+        }
+    else:
+        return {
+            "nodeID": node.nodeID,
+            "ip": node.bindIP,
+            "basePort": node.basePort,
+            "schainIndex": index + 1,
+            "publicKey": node.publicKey
+        }
 
 
 def _make_config_schain(chain):

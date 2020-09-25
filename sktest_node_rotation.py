@@ -16,13 +16,13 @@ snapshotIntervalMs = 1
 run_container = os.getenv('RUN_CONTAINER')
 
 n1 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
-          snapshotInterval=snapshotIntervalMs)
+          snapshotInterval=snapshotIntervalMs, bls=True)
 n2 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
-          snapshotInterval=snapshotIntervalMs)
+          snapshotInterval=snapshotIntervalMs, bls=True)
 n3 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
-          snapshotInterval=snapshotIntervalMs)
+          snapshotInterval=snapshotIntervalMs, bls=True)
 n4 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
-          snapshotInterval=snapshotIntervalMs)
+          snapshotInterval=snapshotIntervalMs, bls=True)
 starter = LocalStarter(sktest_exe)
 
 

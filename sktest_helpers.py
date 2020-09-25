@@ -37,7 +37,7 @@ def dump_node_state(obj):
 def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks=True,
                         rotate_after_block=-1,
                         config_file=None, chainID=None, same_ip=False,
-                        run_container=False):
+                        run_container=False, bls=False):
     if config_file == None:
         config_file = "config0.json"
 
@@ -50,19 +50,19 @@ def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks=True,
     for i, port in enumerate(base_ports):
         emptyBlockIntervalMs = -1
         if empty_blocks:
-            emptyBlockIntervalMs = 3000
+            emptyBlockIntervalMs = 1
         if run_container or same_ip:
             node = Node(
                 emptyBlockIntervalMs=emptyBlockIntervalMs,
                 rotateAfterBlock=rotate_after_block,
                 bindIP='0.0.0.0',
-                basePort=port
+                basePort=port, bls=bls
             )
         else:
             base_port = 1231
             node = Node(bindIP=f'127.0.0.{i+1}', basePort=base_port,
                         emptyBlockIntervalMs=emptyBlockIntervalMs,
-                        rotateAfterBlock=rotate_after_block)
+                        rotateAfterBlock=rotate_after_block, bls=bls)
 
         nodes.append(node)
 
@@ -90,7 +90,7 @@ def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks=True,
 
     emptyBlockIntervalMs = -1
     if empty_blocks:
-        emptyBlockIntervalMs = 1000
+        emptyBlockIntervalMs = 1
 
     chain = SChain(nodes, starter, balances,
                    emptyBlockIntervalMs=emptyBlockIntervalMs, chainID=chainID)
