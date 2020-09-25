@@ -11,7 +11,7 @@ sktest_exe = os.getenv("SKTEST_EXE",
                        "/home/dimalit/skaled/build-no-mp/skaled/skaled")
 
 emptyBlockIntervalMs = 2000
-snapshotIntervalMs = 6000
+snapshotIntervalMs = 6
 
 run_container = os.getenv('RUN_CONTAINER')
 

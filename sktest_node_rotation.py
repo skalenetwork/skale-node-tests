@@ -11,7 +11,7 @@ sktest_exe = os.getenv("SKTEST_EXE",
                        "/home/dimalit/skaled/build-no-mp/skaled/skaled")
 
 emptyBlockIntervalMs = 2000
-snapshotIntervalMs = 5
+snapshotIntervalMs = 1
 
 run_container = os.getenv('RUN_CONTAINER')
 
@@ -22,7 +22,7 @@ n2 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
 n3 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
           snapshotInterval=snapshotIntervalMs)
 n4 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
-          snapshotInterval=snapshotIntervalMs, snapshottedStartSeconds = 0)
+          snapshotInterval=snapshotIntervalMs)
 starter = LocalStarter(sktest_exe)
 
 
@@ -45,7 +45,10 @@ while True:
         print(f"blockNumber's: {bn1} {bn2} {bn3} {bn4}")
         
         if bn1 == 5:
-            starter.restart_node(3)
+            args = ['--public-key', '18219295635707015937645445755505569836731605273220943516712644721479866137366:13229549502897098194754835600024217501928881864881229779950780865566962175067:3647833147657958185393020912446135601933571182900304549078758701875919023122:2426298721305518429857989502764051546820660937538732738470128444404528302050']
+            args.append("--download-snapshot")
+            args.append("http://" + ch.nodes[0].bindIP + ":" + str(ch.nodes[0].basePort + 3))  # noqa
+            starter.restart_node(3, args)
 
         if bn1 >= 10 and bn1==bn2 and bn2==bn3 and bn3==bn4:
             break
