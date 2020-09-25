@@ -845,6 +845,7 @@ class LocalStarter:
             aleth_err = io.open(node_dir + "/" + "aleth.err", "w")
 
             env = os.environ.copy()
+            env['DATA_DIR'] = node_dir
 
             popen_args = [
                 # "/usr/bin/strace", '-o'+node_dir+'/aleth.trace',

@@ -18,28 +18,28 @@ run_container = os.getenv('RUN_CONTAINER')
 if run_container is not None:
     n1 = Node(bindIP='127.0.0.1', basePort=10000,
               emptyBlockIntervalMs=emptyBlockIntervalMs,
-              snapshotInterval=snapshotIntervalMs)
+              snapshotInterval=snapshotIntervalMs, bls=True)
     n2 = Node(bindIP='127.0.0.1', basePort=10011,
               emptyBlockIntervalMs=emptyBlockIntervalMs,
-              snapshotInterval=snapshotIntervalMs)
+              snapshotInterval=snapshotIntervalMs, bls=True)
     n3 = Node(bindIP='127.0.0.1', basePort=10022,
               emptyBlockIntervalMs=emptyBlockIntervalMs,
-              snapshotInterval=snapshotIntervalMs)
+              snapshotInterval=snapshotIntervalMs, bls=True)
     n4 = Node(bindIP='127.0.0.1', basePort=10033,
               emptyBlockIntervalMs=emptyBlockIntervalMs,
               snapshotInterval=snapshotIntervalMs,
-              snapshottedStartSeconds=120)  # 90 # 18
+              snapshottedStartSeconds=120, bls=True)  # 90 # 18
     starter = LocalDockerStarter()
 else:
     n1 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
-              snapshotInterval=snapshotIntervalMs)
+              snapshotInterval=snapshotIntervalMs, bls=True)
     n2 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
-              snapshotInterval=snapshotIntervalMs)
+              snapshotInterval=snapshotIntervalMs, bls=True)
     n3 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
-              snapshotInterval=snapshotIntervalMs)
+              snapshotInterval=snapshotIntervalMs, bls=True)
     n4 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
               snapshotInterval=snapshotIntervalMs,
-              snapshottedStartSeconds=120)  # 90 # 18
+              snapshottedStartSeconds=120, bls=True)  # 90 # 18
     starter = LocalStarter(sktest_exe)
 
 

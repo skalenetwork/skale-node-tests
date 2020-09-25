@@ -50,7 +50,7 @@ def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks=True,
     for i, port in enumerate(base_ports):
         emptyBlockIntervalMs = -1
         if empty_blocks:
-            emptyBlockIntervalMs = 1
+            emptyBlockIntervalMs = 1000
         if run_container or same_ip:
             node = Node(
                 emptyBlockIntervalMs=emptyBlockIntervalMs,
@@ -90,7 +90,7 @@ def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks=True,
 
     emptyBlockIntervalMs = -1
     if empty_blocks:
-        emptyBlockIntervalMs = 1
+        emptyBlockIntervalMs = 1000
 
     chain = SChain(nodes, starter, balances,
                    emptyBlockIntervalMs=emptyBlockIntervalMs, chainID=chainID)
