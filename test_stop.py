@@ -33,7 +33,7 @@ def test_stop_in_block(schain2):
     (ch, eth1, eth2) = schain2
 
     # 1 stop consensus in node2
-    eth2.callSkaleHost("trace break drop_bad_transactions")
+    eth2.debugInterfaceCall("SkaleHost trace break drop_bad_transactions")
 
     time.sleep(2) # allow it to start new block
 
@@ -45,7 +45,7 @@ def test_stop_in_block(schain2):
     delayed1 = ch.node_exited(0) == False
 
     # continue node2
-    eth2.callSkaleHost("trace continue drop_bad_transactions")
+    eth2.debugInterfaceCall("SkaleHost trace continue drop_bad_transactions")
 
     assert(delayed1)
 
