@@ -10,7 +10,7 @@ global sktest_exe
 sktest_exe = os.getenv("SKTEST_EXE",
                        "/home/dimalit/skaled/build-no-mp/skaled/skaled")
 
-emptyBlockIntervalMs = 2000
+emptyBlockIntervalMs = 1000
 snapshotIntervalMs = 1
 
 run_container = os.getenv('RUN_CONTAINER')
@@ -35,6 +35,15 @@ ch = SChain(
 )
 ch.start(start_timeout=0)
 
+def wait_answer(eth):
+    while True:
+        try:
+            bn = eth.blockNumber
+            break
+        except:
+            time.sleep(0.1)
+        
+
 while True:
 #for _ in range(50):
     try:
@@ -44,11 +53,18 @@ while True:
         bn4 = n4.eth.blockNumber
         print(f"blockNumber's: {bn1} {bn2} {bn3} {bn4}")
         
-        if bn1 == 5:
+        if bn1 == 4:
+            n1.eth.debugInterfaceCall("Client trace break computeSnapshotHash_start")
+
             args = ['--public-key', '18219295635707015937645445755505569836731605273220943516712644721479866137366:13229549502897098194754835600024217501928881864881229779950780865566962175067:3647833147657958185393020912446135601933571182900304549078758701875919023122:2426298721305518429857989502764051546820660937538732738470128444404528302050']
             args.append("--download-snapshot")
             args.append("http://" + ch.nodes[0].bindIP + ":" + str(ch.nodes[0].basePort + 3))  # noqa
             starter.restart_node(3, args)
+            
+            n1.eth.debugInterfaceCall("Client trace wait computeSnapshotHash_start")
+            n1.eth.debugInterfaceCall("Client trace continue computeSnapshotHash_start")
+            
+            wait_answer(n4.eth)
 
         if bn1 >= 10 and bn1==bn2 and bn2==bn3 and bn3==bn4:
             break
