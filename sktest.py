@@ -61,12 +61,17 @@ def patch_eth(eth):
     def debugInterfaceCall(eth, arg):
         res = eth._provider.make_request("debug_interfaceCall", [arg])
         return res["result"]
+        
+    def getLatestSnapshotBlockNumber(eth):
+        res = eth._provider.make_request("skale_getLatestSnapshotBlockNumber", [])
+        return res["result"]
 
     eth.pauseConsensus = types.MethodType(pauseConsensus, eth)
     eth.pauseBroadcast = types.MethodType(pauseBroadcast, eth)
     eth.forceBlock = types.MethodType(forceBlock, eth)
     eth.forceBroadcast = types.MethodType(forceBroadcast, eth)
     eth.debugInterfaceCall = types.MethodType(debugInterfaceCall, eth)
+    eth.getLatestSnapshotBlockNumber = types.MethodType(getLatestSnapshotBlockNumber, eth)
 
 
 def _transaction2json(eth, t, accounts):
@@ -86,12 +91,6 @@ def _block2json(eth, block, accounts):
         transactions[t.hex()] = _transaction2json(eth, t.hex(), accounts)
     block["transactions"] = transactions
     return block
-
-
-def getLatestSnapshotBlockNumber(eth):
-    res = eth._provider.make_request("skale_getLatestSnapshotBlockNumber", [])
-    return res["result"]
-
 
 def _node2json(eth):
     blocks = []
