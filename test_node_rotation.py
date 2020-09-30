@@ -78,7 +78,7 @@ def test_download_snapshot(schain, have_others, have_4):
             s1 = n1.eth.getLatestSnapshotBlockNumber()
             print(f"s1 = {s1}")        
             
-            if bn1 == 3 and s1 == str(bn1-1):
+            if bn1 == 3 and s1 == bn1-1:
                 
                 need_sleep = False
                 
@@ -90,17 +90,24 @@ def test_download_snapshot(schain, have_others, have_4):
                 if have_others != have_4:
                     # stop n4:it will have queried block if not have_others
                     # and not have if have_others
-                    while n4.eth.blockNumber != bn1 or n4.eth.getLatestSnapshotBlockNumber() != str(bn1-1):
+                    while n4.eth.blockNumber != bn1 or n4.eth.getLatestSnapshotBlockNumber() != bn1-1:
                         time.sleep(0.1)
                     n4.eth.debugInterfaceCall("SkaleHost trace break create_block")
                     need_sleep = True
                 
                 if need_sleep:
+                    print("Sleep 15")
                     time.sleep(15)   # for 3 blocks
             
                 # possibly it will generate one more block
                 if have_others != have_4:
                     n4.eth.debugInterfaceCall("SkaleHost trace continue create_block")
+                
+                # use this case to test retry
+                if not have_4 and have_others:
+                    n1.eth.getSnapshot(n1.eth.blockNumber-2)
+                
+                print("Restarting")
                 
                 # restart n4    
                 args = ['--public-key', '18219295635707015937645445755505569836731605273220943516712644721479866137366:13229549502897098194754835600024217501928881864881229779950780865566962175067:3647833147657958185393020912446135601933571182900304549078758701875919023122:2426298721305518429857989502764051546820660937538732738470128444404528302050']
