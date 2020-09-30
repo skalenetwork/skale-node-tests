@@ -44,7 +44,6 @@ def safe_input_with_timeout(s, timeout):
             time.sleep(timeout)
         # Exception("Timed out!")
 
-
 def patch_eth(eth):
     def pauseConsensus(eth, pause):
         eth._provider.make_request("debug_pauseConsensus", [pause])
@@ -64,6 +63,30 @@ def patch_eth(eth):
         
     def getLatestSnapshotBlockNumber(eth):
         res = eth._provider.make_request("skale_getLatestSnapshotBlockNumber", [])
+        res = res["result"]
+        if res == "earliest":
+            res = 0
+        else:
+            res = int(res)
+        return res
+    
+    def getSnapshotSignature(eth, bn):
+        res = eth._provider.make_request("skale_getSnapshotSignature", [bn])
+        if res.get("error", ""):
+            return res["error"]
+        return res["result"]
+
+    def getSnapshot(eth, block_number):
+        res = eth._provider.make_request("skale_getSnapshot", {"blockNumber":block_number})
+        if res.get("error", ""):
+            return res["error"]
+        res = res['result']
+        if res.get("error", ""):
+            return res["error"]
+        return res
+
+    def downloadSnapshotFragment(eth, _from, size, is_binary=False):
+        res = eth._provider.make_request("skale_downloadSnapshotFragment", {"from":_from,"isBinary":is_binary,"size":size})
         return res["result"]
 
     eth.pauseConsensus = types.MethodType(pauseConsensus, eth)
@@ -72,7 +95,9 @@ def patch_eth(eth):
     eth.forceBroadcast = types.MethodType(forceBroadcast, eth)
     eth.debugInterfaceCall = types.MethodType(debugInterfaceCall, eth)
     eth.getLatestSnapshotBlockNumber = types.MethodType(getLatestSnapshotBlockNumber, eth)
-
+    eth.getSnapshotSignature = types.MethodType(getSnapshotSignature, eth)
+    eth.getSnapshot = types.MethodType(getSnapshot, eth)
+    eth.downloadSnapshotFragment = types.MethodType(downloadSnapshotFragment, eth)
 
 def _transaction2json(eth, t, accounts):
     # print("_transaction2json", t)
@@ -474,7 +499,8 @@ class SChain:
 
         for n in self.nodes:
             provider = web3.Web3.HTTPProvider(
-                "http://" + n.bindIP + ":" + str(n.basePort + 3))
+                "http://" + n.bindIP + ":" + str(n.basePort + 3),
+                request_kwargs = {'timeout': 20})
             n.eth = web3.Web3(provider).eth
             n.eth._provider = provider
             patch_eth(n.eth)
