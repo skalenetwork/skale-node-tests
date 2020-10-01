@@ -104,8 +104,8 @@ def test_download_snapshot(schain, have_others, have_4):
                     n4.eth.debugInterfaceCall("SkaleHost trace continue create_block")
                 
                 # use this case to test retry
-                if not have_4 and have_others:
-                    n1.eth.getSnapshot(n1.eth.blockNumber-2)
+                # if not have_4 and have_others:
+                #     n1.eth.getSnapshot(n1.eth.blockNumber-2)
                 
                 print("Restarting")
                 
