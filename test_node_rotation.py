@@ -126,6 +126,9 @@ def test_download_snapshot(schain, have_others, have_4):
                     n1.eth.debugInterfaceCall("SkaleHost trace continue create_block")
     
                 assert avail == have_others
+                
+                if not avail:
+                    break
     
             if bn1 >= 10 and bn1==bn2 and bn2==bn3 and bn3==bn4:
                 assert have_others
