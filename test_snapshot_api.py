@@ -110,6 +110,7 @@ def test_corner_cases(schain):
     assert type( n1.eth.getSnapshot(1) ) is str # error
     assert type( n1.eth.getSnapshot(100) ) is str # error
     
+    counter = 0
     while True:
         bn = n1.eth.blockNumber
         assert n1.eth.getLatestSnapshotBlockNumber() >= bn-2
@@ -118,6 +119,9 @@ def test_corner_cases(schain):
             break
         print(f"Waiting at block {bn}")
         time.sleep(1)
+        
+        counter += 1
+        assert counter < 120    # approx
 
     data_size = snap['dataSize']
     assert data_size > 0
