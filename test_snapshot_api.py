@@ -1,6 +1,7 @@
 import os
 import time
 from base64 import b64decode
+import binascii
 import pytest
 from sktest import LocalStarter, LocalDockerStarter, Node, SChain
 
@@ -73,10 +74,56 @@ def assert_b_s(eth, b, s):
     assert eth.blockNumber == b
     assert eth.getLatestSnapshotBlockNumber() == s
 
+def test_stateRoot_conflict(schain):
+    ch = schain
+    n1 = ch.nodes[0]
+    n2 = ch.nodes[1]
+    n3 = ch.nodes[2]
+    n4 = ch.nodes[3]
+    
+    wait_answer(n1.eth)
+    wait_answer(n2.eth)
+    wait_answer(n3.eth)
+    wait_answer(n4.eth)
+
+    wait_block(n1.eth, 2)
+    print("starting from block 2")
+
+    block = 2
+
+    for _ in range(20):
+
+        # delay hash computation on 2 nodes
+        print("pausing hash")
+        while n1.eth.getLatestSnapshotBlockNumber()  != block-1 or n2.eth.getLatestSnapshotBlockNumber() != block-1:
+            pass
+
+        n1.eth.debugInterfaceCall("Client trace break computeSnapshotHash_start")
+        n2.eth.debugInterfaceCall("Client trace break computeSnapshotHash_start")
+        n1.eth.debugInterfaceCall("Client trace wait computeSnapshotHash_start")
+        # warning: cannot wait on n2 because its probably already there!
+        
+        block = n1.eth.blockNumber
+        print(f"block={block} stateRoot={binascii.hexlify(n1.eth.getBlock(block)['stateRoot'])}")
+        try:
+            ch.transaction_async()
+        except:
+            pass    # already exists
+      
+        # wait for proposals
+        print(f"(proposals are being created..consenses goes for block {block+1})")
+        time.sleep(3)
+
+        # continue
+        print("continue")
+        n1.eth.debugInterfaceCall("Client trace continue computeSnapshotHash_start")
+        n2.eth.debugInterfaceCall("Client trace continue computeSnapshotHash_start")
+
+        
 def test_corner_cases(schain):
     ch = schain
     n1 = ch.nodes[0]
-    
+        
     wait_answer(n1.eth)
     wait_block(n1.eth, 1)
     assert_b_s(n1.eth, 1, 0)
