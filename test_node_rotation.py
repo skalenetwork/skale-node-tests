@@ -8,12 +8,16 @@ if os.geteuid() != 0:
     exit(1)
 
 @pytest.fixture
-def schain():
+def schain(request):
     sktest_exe = os.getenv("SKTEST_EXE",
                            "/home/dimalit/skaled/build-no-mp/skaled/skaled")
     
     emptyBlockIntervalMs = 1000
     snapshotIntervalMs = 1
+    
+    marker = request.node.get_closest_marker("snapshotIntervalMs") 
+    if marker is not None:
+        snapshotIntervalMs = marker.args[0] 
     
     run_container = os.getenv('RUN_CONTAINER')
     
@@ -142,3 +146,52 @@ def test_download_snapshot(schain, have_others, have_4):
     else:
         # we exit by counter if n4 breaks
         assert not have_others
+
+@pytest.mark.snapshotIntervalMs(40)
+def test_restart(schain):
+    ch = schain
+    n1 = ch.nodes[0]
+    n2 = ch.nodes[1]
+    n3 = ch.nodes[2]
+    n4 = ch.nodes[3]
+    starter = ch.starter
+    for _ in range(100):
+    #while True:
+        try:
+            bn1 = n1.eth.blockNumber
+            bn2 = n2.eth.blockNumber
+            bn3 = n3.eth.blockNumber
+            bn4 = n4.eth.blockNumber
+            print(f"blockNumber's: {bn1} {bn2} {bn3} {bn4}")
+            
+            s1 = n1.eth.getLatestSnapshotBlockNumber()
+            s4 = n4.eth.getLatestSnapshotBlockNumber()
+            print(f"s1 = {s1} s4 = {s4}")        
+            
+            if bn1 == bn4:
+                assert s1 == s4
+            
+            if s1 != 0 and s1 == bn1-1:
+                                
+                print("Restarting")
+                
+                # restart n4    
+                starter.restart_node(3, [])
+                
+                # to be sure it really restarted
+                time.sleep(5)
+                assert not eth_available(n4.eth)
+                
+                avail = wait_answer(n4.eth)
+                assert avail
+        
+            if bn1 >= 30 and bn1==bn2 and bn2==bn3 and bn3==bn4:
+                break
+    
+        except Exception as e:
+            print(str(e))
+            pass
+    
+        time.sleep(1)
+    else:
+        assert False
