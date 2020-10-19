@@ -1,5 +1,17 @@
 {
-        "sealEngine": "Ethash",
+    "unddos": {
+        "origins": [
+            {
+                "origin": [ "*" ],
+                "ban_lengthy": 0,
+                "ban_peak": 0,
+                "max_calls_per_minute": 1000000000,
+                "max_calls_per_second": 1000000000,
+                "max_ws_conn": 65535
+            }
+        ]
+    },
+  "sealEngine": "Ethash",
   "params": {
     "accountStartNonce": "0x00",
     "homesteadForkBlock": "0x0",
