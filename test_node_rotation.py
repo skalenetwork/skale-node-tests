@@ -1,6 +1,7 @@
 import os
 import time
 import pytest
+import binascii
 from sktest import LocalStarter, LocalDockerStarter, Node, SChain
 
 if os.geteuid() != 0:
@@ -155,7 +156,7 @@ def test_restart(schain):
     n3 = ch.nodes[2]
     n4 = ch.nodes[3]
     starter = ch.starter
-    for _ in range(100):
+    for _ in range(200):
     #while True:
         try:
             bn1 = n1.eth.blockNumber
@@ -163,6 +164,13 @@ def test_restart(schain):
             bn3 = n3.eth.blockNumber
             bn4 = n4.eth.blockNumber
             print(f"blockNumber's: {bn1} {bn2} {bn3} {bn4}")
+            
+            block = n1.eth.blockNumber
+            print(f"block={block} stateRoot={binascii.hexlify(n1.eth.getBlock(block)['stateRoot'])}")
+            try:
+                ch.transaction_async()
+            except:
+                pass    # already exists
             
             s1 = n1.eth.getLatestSnapshotBlockNumber()
             s4 = n4.eth.getLatestSnapshotBlockNumber()
@@ -185,7 +193,7 @@ def test_restart(schain):
                 avail = wait_answer(n4.eth)
                 assert avail
         
-            if bn1 >= 30 and bn1==bn2 and bn2==bn3 and bn3==bn4:
+            if bn1 >= 60 and bn1==bn2 and bn2==bn3 and bn3==bn4:
                 break
     
         except Exception as e:
