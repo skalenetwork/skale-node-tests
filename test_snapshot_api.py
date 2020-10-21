@@ -14,7 +14,7 @@ def schain():
     sktest_exe = os.getenv("SKTEST_EXE",
                            "/home/dimalit/skaled/build-no-mp/skaled/skaled")
     
-    emptyBlockIntervalMs = 1000
+    emptyBlockIntervalMs = 2000
     snapshotIntervalMs = 1
     
     run_container = os.getenv('RUN_CONTAINER')
@@ -199,7 +199,7 @@ def test_main(schain):
     assert_b_s(n1.eth, 3, 1)
     assert type( n1.eth.getSnapshotSignature(1) ) is str    # error
     assert type( n1.eth.getSnapshotSignature(2) ) is str    # error
-    n1.eth.debugInterfaceCall("Client trace continue computeSnapshotHash_start")    
+    n1.eth.debugInterfaceCall("Client trace continue computeSnapshotHash_start")
     time.sleep(0.5)
     assert_b_s(n1.eth, 3, 2)
     assert type( n1.eth.getSnapshotSignature(1) ) is dict   # ok
