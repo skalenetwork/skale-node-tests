@@ -60,6 +60,7 @@ def wait_answer(eth):
     return False
 
 def wait_block(eth, bn):
+    print(f"wait_block {eth.blockNumber}/{bn}")
     for _ in range(600):
         if eth.blockNumber == bn:
             break
