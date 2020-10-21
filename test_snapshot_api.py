@@ -60,8 +60,12 @@ def wait_answer(eth):
     return False
 
 def wait_block(eth, bn):
-    while eth.blockNumber != bn:
+    for _ in range(600):
+        if eth.blockNumber == bn:
+            break
         time.sleep(0.1)
+    else:
+        assert -1 == bn
 
 def query_3(eth):
     bn = eth.blockNumber
@@ -181,24 +185,25 @@ def test_main(schain):
     
     wait_answer(n1.eth)
     assert type( n1.eth.getSnapshotSignature(0) ) is str    # error
-    wait_block(n1.eth, 1)
-    assert_b_s(n1.eth, 1, 0)
-    assert type( n1.eth.getSnapshotSignature(0) ) is str    # error
-    assert type( n1.eth.getSnapshotSignature(1) ) is str    # error
-
-    # extend hash computation
-    n1.eth.debugInterfaceCall("Client trace break computeSnapshotHash_start")
-    
     wait_block(n1.eth, 2)
-    assert_b_s(n1.eth, 2, 0)
-    assert type( n1.eth.getSnapshotSignature(0) ) is str    # error
-    assert type( n1.eth.getSnapshotSignature(1) ) is str    # error
-    n1.eth.debugInterfaceCall("Client trace continue computeSnapshotHash_start")    
-    time.sleep(0.5)
     assert_b_s(n1.eth, 2, 1)
     assert type( n1.eth.getSnapshotSignature(0) ) is str    # error
     assert type( n1.eth.getSnapshotSignature(1) ) is dict   # ok
     assert type( n1.eth.getSnapshotSignature(2) ) is str    # error
+
+    # extend hash computation
+    n1.eth.debugInterfaceCall("Client trace break computeSnapshotHash_start")
+    
+    wait_block(n1.eth, 3)
+    assert_b_s(n1.eth, 3, 1)
+    assert type( n1.eth.getSnapshotSignature(1) ) is str    # error
+    assert type( n1.eth.getSnapshotSignature(2) ) is str    # error
+    n1.eth.debugInterfaceCall("Client trace continue computeSnapshotHash_start")    
+    time.sleep(0.5)
+    assert_b_s(n1.eth, 3, 2)
+    assert type( n1.eth.getSnapshotSignature(1) ) is dict   # ok
+    assert type( n1.eth.getSnapshotSignature(2) ) is dict   # ok
+    assert type( n1.eth.getSnapshotSignature(3) ) is str    # error
     
     snap = n1.eth.getSnapshot(1)
     assert type(snap) is dict         # no error
