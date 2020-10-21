@@ -130,26 +130,27 @@ def test_corner_cases(schain):
     n1 = ch.nodes[0]
         
     wait_answer(n1.eth)
-    wait_block(n1.eth, 1)
-    assert_b_s(n1.eth, 1, 0)
+    wait_block(n1.eth, 3)
+    time.sleep(1)
+    assert_b_s(n1.eth, 3, 2)
 
     # work with snapshot of block 0:
     ch = n1.eth.downloadSnapshotFragment(0, 10)
     assert type(ch) is str  # error
 
-    assert type( n1.eth.getSnapshot(1) ) is str # error
+    assert type( n1.eth.getSnapshot(3) ) is str # error
     assert type( n1.eth.getSnapshot(-1) ) is str # error
-    assert type( n1.eth.getSnapshotSignature(1) ) is str # error
+    assert type( n1.eth.getSnapshotSignature(3) ) is str # error
     assert type( n1.eth.getSnapshotSignature(-1) ) is str # error
 
     snap = n1.eth.getSnapshot(0)
     assert type(snap) is str         # error
     
-    wait_block(n1.eth, 2)
-    time.sleep(0.5)                  # compute hash
+    wait_block(n1.eth, 4)
+    time.sleep(1)                  # compute hash
 
-    assert_b_s(n1.eth, 2, 1)
-    snap = n1.eth.getSnapshot(1)
+    assert_b_s(n1.eth, 4, 3)
+    snap = n1.eth.getSnapshot(3)
     assert type(snap) is dict        # no error    
     
     data_size = snap['dataSize']
@@ -159,7 +160,7 @@ def test_corner_cases(schain):
     
     # now we are in timeout
     assert type( n1.eth.getSnapshot(0) ) is str # error
-    assert type( n1.eth.getSnapshot(1) ) is str # error
+    assert type( n1.eth.getSnapshot(3) ) is str # error
     assert type( n1.eth.getSnapshot(100) ) is str # error
     
     counter = 0
