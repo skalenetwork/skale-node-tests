@@ -186,27 +186,31 @@ def test_main(schain):
     
     wait_answer(n1.eth)
     assert type( n1.eth.getSnapshotSignature(0) ) is str    # error
-    wait_block(n1.eth, 2)
-    assert_b_s(n1.eth, 2, 1)
+    wait_block(n1.eth, 3)
+    time.sleep(1)           # wait for hash
+    assert_b_s(n1.eth, 3, 2)
     assert type( n1.eth.getSnapshotSignature(0) ) is str    # error
     assert type( n1.eth.getSnapshotSignature(1) ) is dict   # ok
-    assert type( n1.eth.getSnapshotSignature(2) ) is str    # error
+    assert type( n1.eth.getSnapshotSignature(2) ) is dict   # ok
+    assert type( n1.eth.getSnapshotSignature(3) ) is str    # error
 
     # extend hash computation
     n1.eth.debugInterfaceCall("Client trace break computeSnapshotHash_start")
     
-    wait_block(n1.eth, 3)
-    assert_b_s(n1.eth, 3, 1)
-    assert type( n1.eth.getSnapshotSignature(1) ) is str    # error
-    assert type( n1.eth.getSnapshotSignature(2) ) is str    # error
-    n1.eth.debugInterfaceCall("Client trace continue computeSnapshotHash_start")
-    time.sleep(0.5)
-    assert_b_s(n1.eth, 3, 2)
+    wait_block(n1.eth, 4)
+    assert_b_s(n1.eth, 4, 2)
     assert type( n1.eth.getSnapshotSignature(1) ) is dict   # ok
     assert type( n1.eth.getSnapshotSignature(2) ) is dict   # ok
     assert type( n1.eth.getSnapshotSignature(3) ) is str    # error
+    n1.eth.debugInterfaceCall("Client trace continue computeSnapshotHash_start")
+    time.sleep(0.5)
+    assert_b_s(n1.eth, 4, 3)
+    assert type( n1.eth.getSnapshotSignature(4) ) is str    # error
+    assert type( n1.eth.getSnapshotSignature(1) ) is str   # rotated    
+    assert type( n1.eth.getSnapshotSignature(2) ) is dict   # ok
+    assert type( n1.eth.getSnapshotSignature(3) ) is dict   # ok
     
-    snap = n1.eth.getSnapshot(1)
+    snap = n1.eth.getSnapshot(3)
     assert type(snap) is dict         # no error
     data_size = snap['dataSize']
     
