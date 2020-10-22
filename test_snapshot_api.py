@@ -66,7 +66,8 @@ def wait_block(eth, bn):
             break
         time.sleep(0.1)
     else:
-        assert -1 == bn
+        # fail with message:
+        assert eth.blockNumber == bn
 
 def query_3(eth):
     bn = eth.blockNumber
@@ -91,17 +92,17 @@ def test_stateRoot_conflict(schain):
     wait_answer(n3.eth)
     wait_answer(n4.eth)
 
-    wait_block(n1.eth, 2)
-    print("starting from block 2")
+    wait_block(n1.eth, 3)
+    print("starting from block 3")
 
-    block = 2
+    block = 3
 
     for _ in range(20):
 
         # delay hash computation on 2 nodes
         print("pausing hash")
         while n1.eth.getLatestSnapshotBlockNumber()  != block-1 or n2.eth.getLatestSnapshotBlockNumber() != block-1:
-            pass
+            time.sleep(0.1)
 
         n1.eth.debugInterfaceCall("Client trace break computeSnapshotHash_start")
         n2.eth.debugInterfaceCall("Client trace break computeSnapshotHash_start")
@@ -110,15 +111,15 @@ def test_stateRoot_conflict(schain):
         
         block = n1.eth.blockNumber
         print(f"block={block} stateRoot={binascii.hexlify(n1.eth.getBlock(block)['stateRoot'])}")
-        try:
-            ch.transaction_async()
-        except:
-            pass    # already exists
-      
         # wait for proposals
         print(f"(proposals are being created..consenses goes for block {block+1})")
-        time.sleep(3)
-
+        try:
+            ch.transaction_async()
+            time.sleep(0+1)         # no interval!
+        except:
+            time.sleep(2+1)
+            pass    # already exists
+      
         # continue
         print("continue")
         n1.eth.debugInterfaceCall("Client trace continue computeSnapshotHash_start")
