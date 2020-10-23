@@ -15,10 +15,15 @@ def schain(request):
     
     emptyBlockIntervalMs = 1000
     snapshotIntervalMs = 1
+    snapshottedStartSeconds = -1
     
     marker = request.node.get_closest_marker("snapshotIntervalMs") 
     if marker is not None:
         snapshotIntervalMs = marker.args[0] 
+    
+    marker = request.node.get_closest_marker("snapshottedStartSeconds") 
+    if marker is not None:
+        snapshottedStartSeconds = marker.args[0]
     
     run_container = os.getenv('RUN_CONTAINER')
     
@@ -29,7 +34,8 @@ def schain(request):
     n3 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
               snapshotInterval=snapshotIntervalMs, bls=True)
     n4 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
-              snapshotInterval=snapshotIntervalMs, bls=True)
+              snapshotInterval=snapshotIntervalMs, bls=True,
+              snapshottedStartSeconds=snapshottedStartSeconds)
     starter = LocalStarter(sktest_exe)
     
     
@@ -203,3 +209,35 @@ def test_restart(schain):
         time.sleep(1)
     else:
         assert False
+
+@pytest.mark.snapshotIntervalMs(1000000000)
+@pytest.mark.snapshottedStartSeconds(20)
+def test_download_early(schain):
+    ch = schain
+    n1 = ch.nodes[0]
+    n2 = ch.nodes[1]
+    n3 = ch.nodes[2]
+    n4 = ch.nodes[3]
+    starter = ch.starter
+
+    avail = wait_answer(n4.eth)
+    print(f"n1's block number = {n1.eth.blockNumber}")
+    assert avail
+    print(f"n4's block number = {n4.eth.blockNumber}")
+    
+#    print("Restarting n4")
+    
+    # restart n4    
+    # args = ['--public-key', '18219295635707015937645445755505569836731605273220943516712644721479866137366:13229549502897098194754835600024217501928881864881229779950780865566962175067:3647833147657958185393020912446135601933571182900304549078758701875919023122:2426298721305518429857989502764051546820660937538732738470128444404528302050']
+    # args.append("--download-snapshot")
+    # args.append("http://" + ch.nodes[0].bindIP + ":" + str(ch.nodes[0].basePort + 3))  # noqa
+ #   starter.restart_node(3, [])
+    
+    # to be sure it really restarted
+#    time.sleep(5)
+#    assert not eth_available(n4.eth)
+
+#    avail = wait_answer(n4.eth)
+#    print(f"n1's block number = {n1.eth.blockNumber}")
+#    print(f"n4's block number = {n4.eth.blockNumber}")
+#    assert avail
