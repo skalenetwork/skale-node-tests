@@ -70,6 +70,11 @@ for _ in range(50):
     if bn1 == bn2 and bn2 == bn3 and bn3 == bn4:
         break
 
+    try:
+        ch.transaction_async()
+    except:
+        pass    # already exists
+
     time.sleep(0.6)
 
 print("Exiting")
