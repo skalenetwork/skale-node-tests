@@ -66,7 +66,8 @@ def wait_block(eth, bn):
             break
         time.sleep(0.1)
     else:
-        assert -1 == bn
+        # fail with message:
+        assert eth.blockNumber == bn
 
 def query_3(eth):
     bn = eth.blockNumber
@@ -91,17 +92,17 @@ def test_stateRoot_conflict(schain):
     wait_answer(n3.eth)
     wait_answer(n4.eth)
 
-    wait_block(n1.eth, 2)
-    print("starting from block 2")
+    wait_block(n1.eth, 3)
+    print("starting from block 3")
 
-    block = 2
+    block = 3
 
     for _ in range(20):
 
         # delay hash computation on 2 nodes
         print("pausing hash")
         while n1.eth.getLatestSnapshotBlockNumber()  != block-1 or n2.eth.getLatestSnapshotBlockNumber() != block-1:
-            pass
+            time.sleep(0.1)
 
         n1.eth.debugInterfaceCall("Client trace break computeSnapshotHash_start")
         n2.eth.debugInterfaceCall("Client trace break computeSnapshotHash_start")
@@ -110,15 +111,15 @@ def test_stateRoot_conflict(schain):
         
         block = n1.eth.blockNumber
         print(f"block={block} stateRoot={binascii.hexlify(n1.eth.getBlock(block)['stateRoot'])}")
-        try:
-            ch.transaction_async()
-        except:
-            pass    # already exists
-      
         # wait for proposals
         print(f"(proposals are being created..consenses goes for block {block+1})")
-        time.sleep(3)
-
+        try:
+            ch.transaction_async()
+            time.sleep(0+1)         # no interval!
+        except:
+            time.sleep(2+1)
+            pass    # already exists
+      
         # continue
         print("continue")
         n1.eth.debugInterfaceCall("Client trace continue computeSnapshotHash_start")
@@ -130,26 +131,27 @@ def test_corner_cases(schain):
     n1 = ch.nodes[0]
         
     wait_answer(n1.eth)
-    wait_block(n1.eth, 1)
-    assert_b_s(n1.eth, 1, 0)
+    wait_block(n1.eth, 3)
+    time.sleep(1)
+    assert_b_s(n1.eth, 3, 2)
 
     # work with snapshot of block 0:
     ch = n1.eth.downloadSnapshotFragment(0, 10)
     assert type(ch) is str  # error
 
-    assert type( n1.eth.getSnapshot(1) ) is str # error
+    assert type( n1.eth.getSnapshot(3) ) is str # error
     assert type( n1.eth.getSnapshot(-1) ) is str # error
-    assert type( n1.eth.getSnapshotSignature(1) ) is str # error
+    assert type( n1.eth.getSnapshotSignature(3) ) is str # error
     assert type( n1.eth.getSnapshotSignature(-1) ) is str # error
 
     snap = n1.eth.getSnapshot(0)
     assert type(snap) is str         # error
     
-    wait_block(n1.eth, 2)
-    time.sleep(0.5)                  # compute hash
+    wait_block(n1.eth, 4)
+    time.sleep(1)                  # compute hash
 
-    assert_b_s(n1.eth, 2, 1)
-    snap = n1.eth.getSnapshot(1)
+    assert_b_s(n1.eth, 4, 3)
+    snap = n1.eth.getSnapshot(3)
     assert type(snap) is dict        # no error    
     
     data_size = snap['dataSize']
@@ -159,7 +161,7 @@ def test_corner_cases(schain):
     
     # now we are in timeout
     assert type( n1.eth.getSnapshot(0) ) is str # error
-    assert type( n1.eth.getSnapshot(1) ) is str # error
+    assert type( n1.eth.getSnapshot(3) ) is str # error
     assert type( n1.eth.getSnapshot(100) ) is str # error
     
     counter = 0
@@ -186,27 +188,31 @@ def test_main(schain):
     
     wait_answer(n1.eth)
     assert type( n1.eth.getSnapshotSignature(0) ) is str    # error
-    wait_block(n1.eth, 2)
-    assert_b_s(n1.eth, 2, 1)
+    wait_block(n1.eth, 3)
+    time.sleep(1)           # wait for hash
+    assert_b_s(n1.eth, 3, 2)
     assert type( n1.eth.getSnapshotSignature(0) ) is str    # error
     assert type( n1.eth.getSnapshotSignature(1) ) is dict   # ok
-    assert type( n1.eth.getSnapshotSignature(2) ) is str    # error
+    assert type( n1.eth.getSnapshotSignature(2) ) is dict   # ok
+    assert type( n1.eth.getSnapshotSignature(3) ) is str    # error
 
     # extend hash computation
     n1.eth.debugInterfaceCall("Client trace break computeSnapshotHash_start")
     
-    wait_block(n1.eth, 3)
-    assert_b_s(n1.eth, 3, 1)
-    assert type( n1.eth.getSnapshotSignature(1) ) is str    # error
-    assert type( n1.eth.getSnapshotSignature(2) ) is str    # error
-    n1.eth.debugInterfaceCall("Client trace continue computeSnapshotHash_start")
-    time.sleep(0.5)
-    assert_b_s(n1.eth, 3, 2)
+    wait_block(n1.eth, 4)
+    assert_b_s(n1.eth, 4, 2)
     assert type( n1.eth.getSnapshotSignature(1) ) is dict   # ok
     assert type( n1.eth.getSnapshotSignature(2) ) is dict   # ok
     assert type( n1.eth.getSnapshotSignature(3) ) is str    # error
+    n1.eth.debugInterfaceCall("Client trace continue computeSnapshotHash_start")
+    time.sleep(0.5)
+    assert_b_s(n1.eth, 4, 3)
+    assert type( n1.eth.getSnapshotSignature(4) ) is str    # error
+    assert type( n1.eth.getSnapshotSignature(1) ) is str   # rotated    
+    assert type( n1.eth.getSnapshotSignature(2) ) is dict   # ok
+    assert type( n1.eth.getSnapshotSignature(3) ) is dict   # ok
     
-    snap = n1.eth.getSnapshot(1)
+    snap = n1.eth.getSnapshot(3)
     assert type(snap) is dict         # no error
     data_size = snap['dataSize']
     
