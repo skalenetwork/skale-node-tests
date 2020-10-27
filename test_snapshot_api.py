@@ -127,7 +127,7 @@ def test_corner_cases(schain):
     wait_answer(n1.eth)
     wait_block(n1.eth, 3)
     time.sleep(1)
-    assert_b_s(n1.eth, 3, 2)
+    assert_b_s(n1.eth, 3, 1)
 
     # work with snapshot of block 0:
     ch = n1.eth.downloadSnapshotFragment(0, 10)
@@ -142,10 +142,10 @@ def test_corner_cases(schain):
     assert type(snap) is str         # error
     
     wait_block(n1.eth, 4)
-    time.sleep(1)                  # compute hash
+    time.sleep(1)                  # time for hash
+    assert_b_s(n1.eth, 4, 2)
 
-    assert_b_s(n1.eth, 4, 3)
-    snap = n1.eth.getSnapshot(3)
+    snap = n1.eth.getSnapshot(2)
     assert type(snap) is dict        # no error    
     
     data_size = snap['dataSize']
@@ -155,18 +155,21 @@ def test_corner_cases(schain):
     
     # now we are in timeout
     assert type( n1.eth.getSnapshot(0) ) is str # error
-    assert type( n1.eth.getSnapshot(3) ) is str # error
+    assert type( n1.eth.getSnapshot(1) ) is str # error
+    assert type( n1.eth.getSnapshot(2) ) is str # error
     assert type( n1.eth.getSnapshot(100) ) is str # error
     
     counter = 0
     while True:
         bn = n1.eth.blockNumber
-        assert n1.eth.getLatestSnapshotBlockNumber() >= bn-2
+        time.sleep(0.5)
+        s = n1.eth.getLatestSnapshotBlockNumber()
+        assert s == bn-2 or s == bn-1           # can be if bn incremented
         snap = n1.eth.getSnapshot( bn-2 )
         if type(snap) is dict:
             break
         print(f"Waiting at block {bn}")
-        time.sleep(1)
+        time.sleep(0.5)
         
         counter += 1
         assert counter < 120    # approx
