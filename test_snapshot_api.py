@@ -68,13 +68,6 @@ def wait_block(eth, bn):
     else:
         # fail with message:
         assert eth.blockNumber == bn
-
-def query_3(eth):
-    bn = eth.blockNumber
-    s  = eth.getLatestSnapshotBlockNumber()
-    snap = eth.getSnapshot(s)
-    print(f"{bn} {s} {snap}")
-    return (bn, s, snap)
     
 def assert_b_s(eth, b, s):
     assert eth.blockNumber == b
@@ -101,6 +94,7 @@ def test_stateRoot_conflict(schain):
 
         # delay hash computation on 2 nodes
         print("pausing hash")
+        # block number here must be block+1 (difference=2)
         while n1.eth.getLatestSnapshotBlockNumber()  != block-1 or n2.eth.getLatestSnapshotBlockNumber() != block-1:
             time.sleep(0.1)
 
@@ -112,7 +106,7 @@ def test_stateRoot_conflict(schain):
         block = n1.eth.blockNumber
         print(f"block={block} stateRoot={binascii.hexlify(n1.eth.getBlock(block)['stateRoot'])}")
         # wait for proposals
-        print(f"(proposals are being created..consenses goes for block {block+1})")
+        print(f"(proposals are being created..consensus goes for block {block+1})")
         try:
             ch.transaction_async()
             time.sleep(0+1)         # no interval!
@@ -189,26 +183,29 @@ def test_main(schain):
     wait_answer(n1.eth)
     assert type( n1.eth.getSnapshotSignature(0) ) is str    # error
     wait_block(n1.eth, 3)
-    time.sleep(1)           # wait for hash
-    assert_b_s(n1.eth, 3, 2)
+    assert_b_s(n1.eth, 3, 1)
+    time.sleep(1)
+    assert_b_s(n1.eth, 3, 1)    # wait for hash ready but not exposed
     assert type( n1.eth.getSnapshotSignature(0) ) is str    # error
     assert type( n1.eth.getSnapshotSignature(1) ) is dict   # ok
-    assert type( n1.eth.getSnapshotSignature(2) ) is dict   # ok
+    assert type( n1.eth.getSnapshotSignature(2) ) is str   # error
     assert type( n1.eth.getSnapshotSignature(3) ) is str    # error
 
+    wait_block(n1.eth, 4)
+    time.sleep(1)
     # extend hash computation
     n1.eth.debugInterfaceCall("Client trace break computeSnapshotHash_start")
     
-    wait_block(n1.eth, 4)
-    assert_b_s(n1.eth, 4, 2)
-    assert type( n1.eth.getSnapshotSignature(1) ) is dict   # ok
+    wait_block(n1.eth, 5)
+    assert_b_s(n1.eth, 5, 3)
+    assert type( n1.eth.getSnapshotSignature(1) ) is str   # rotated    
     assert type( n1.eth.getSnapshotSignature(2) ) is dict   # ok
-    assert type( n1.eth.getSnapshotSignature(3) ) is str    # error
+    assert type( n1.eth.getSnapshotSignature(3) ) is dict   # ok
+    assert type( n1.eth.getSnapshotSignature(4) ) is str    # error
     n1.eth.debugInterfaceCall("Client trace continue computeSnapshotHash_start")
     time.sleep(0.5)
-    assert_b_s(n1.eth, 4, 3)
-    assert type( n1.eth.getSnapshotSignature(4) ) is str    # error
-    assert type( n1.eth.getSnapshotSignature(1) ) is str   # rotated    
+    assert_b_s(n1.eth, 5, 3)    # still not exposed
+    assert type( n1.eth.getSnapshotSignature(4) ) is str    # error        
     assert type( n1.eth.getSnapshotSignature(2) ) is dict   # ok
     assert type( n1.eth.getSnapshotSignature(3) ) is dict   # ok
     
