@@ -10,8 +10,8 @@ global sktest_exe
 sktest_exe = os.getenv("SKTEST_EXE",
                        "/home/dimalit/skaled/build-no-mp/skaled/skaled")
 
-emptyBlockIntervalMs = 2000
-snapshotIntervalMs = 6
+emptyBlockIntervalMs = 1
+snapshotIntervalMs = 10
 
 run_container = os.getenv('RUN_CONTAINER')
 
@@ -28,7 +28,7 @@ if run_container is not None:
     n4 = Node(bindIP='127.0.0.1', basePort=10033,
               emptyBlockIntervalMs=emptyBlockIntervalMs,
               snapshotInterval=snapshotIntervalMs,
-              snapshottedStartSeconds=120, bls=True)  # 90 # 18
+              snapshottedStartSeconds=60, bls=True)  # 90 # 18
     starter = LocalDockerStarter()
 else:
     n1 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
@@ -39,7 +39,7 @@ else:
               snapshotInterval=snapshotIntervalMs, bls=True)
     n4 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
               snapshotInterval=snapshotIntervalMs,
-              snapshottedStartSeconds=120, bls=True)  # 90 # 18
+              snapshottedStartSeconds=60, bls=True)  # 90 # 18
     starter = LocalStarter(sktest_exe)
 
 

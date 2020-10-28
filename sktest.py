@@ -876,6 +876,7 @@ class LocalStarter:
                 # "/usr/bin/strace", '-o'+node_dir+'/aleth.trace',
                 # "stdbuf", "-oL",
                 # "heaptrack",
+                # "valgrind", "--tool=callgrind", #"--separate-threads=yes",
                 self.exe,
                 "--http-port", str(n.basePort + 3),
                 "--ws-port", str(n.wsPort),
@@ -893,7 +894,22 @@ class LocalStarter:
                 popen_args.append("http://" + self.chain.nodes[0].bindIP + ":" + str(self.chain.nodes[0].basePort + 3))  # noqa
                 popen_args.append('--public-key')
                 popen_args.append('18219295635707015937645445755505569836731605273220943516712644721479866137366:13229549502897098194754835600024217501928881864881229779950780865566962175067:3647833147657958185393020912446135601933571182900304549078758701875919023122:2426298721305518429857989502764051546820660937538732738470128444404528302050')
-                time.sleep(n.snapshottedStartSeconds)
+                
+                # HACK send transactions to have different snapshot hashes!
+                n1 = self.chain.nodes[0]
+                provider = web3.Web3.HTTPProvider(
+                "http://" + n1.bindIP + ":" + str(n1.basePort + 3),
+                request_kwargs = {'timeout': 20})
+                chain.eth = web3.Web3(provider).eth
+                for i in range(n.snapshottedStartSeconds):
+                    try:
+                        print("transaction")
+                        chain.transaction_async()
+                        print("ok")
+                    except Exception as ex:
+                        print(str(ex))
+                        pass    # already exists
+                    time.sleep(1)
 
             popen = Popen(
                 popen_args,
