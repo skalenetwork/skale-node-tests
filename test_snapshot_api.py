@@ -72,53 +72,6 @@ def wait_block(eth, bn):
 def assert_b_s(eth, b, s):
     assert eth.blockNumber == b
     assert eth.getLatestSnapshotBlockNumber() == s
-
-def test_stateRoot_conflict(schain):
-    ch = schain
-    n1 = ch.nodes[0]
-    n2 = ch.nodes[1]
-    n3 = ch.nodes[2]
-    n4 = ch.nodes[3]
-    
-    wait_answer(n1.eth)
-    wait_answer(n2.eth)
-    wait_answer(n3.eth)
-    wait_answer(n4.eth)
-
-    wait_block(n1.eth, 3)
-    print("starting from block 3")
-
-    block = 3
-
-    for _ in range(20):
-
-        # delay hash computation on 2 nodes
-        print("pausing hash")
-        # block number here must be block+1 (difference=2)
-        while n1.eth.getLatestSnapshotBlockNumber()  != block-1 or n2.eth.getLatestSnapshotBlockNumber() != block-1:
-            time.sleep(0.1)
-
-        n1.eth.debugInterfaceCall("Client trace break computeSnapshotHash_start")
-        n2.eth.debugInterfaceCall("Client trace break computeSnapshotHash_start")
-        n1.eth.debugInterfaceCall("Client trace wait computeSnapshotHash_start")
-        # warning: cannot wait on n2 because its probably already there!
-        
-        block = n1.eth.blockNumber
-        print(f"block={block} stateRoot={binascii.hexlify(n1.eth.getBlock(block)['stateRoot'])}")
-        # wait for proposals
-        print(f"(proposals are being created..consensus goes for block {block+1})")
-        try:
-            ch.transaction_async()
-            time.sleep(0+1)         # no interval!
-        except:
-            time.sleep(2+1)
-            pass    # already exists
-      
-        # continue
-        print("continue")
-        n1.eth.debugInterfaceCall("Client trace continue computeSnapshotHash_start")
-        n2.eth.debugInterfaceCall("Client trace continue computeSnapshotHash_start")
-
         
 def test_corner_cases(schain):
     ch = schain
@@ -127,15 +80,17 @@ def test_corner_cases(schain):
     wait_answer(n1.eth)
     wait_block(n1.eth, 3)
     time.sleep(1)
-    assert_b_s(n1.eth, 3, 1)
+    assert_b_s(n1.eth, 3, 2)
 
     # work with snapshot of block 0:
     ch = n1.eth.downloadSnapshotFragment(0, 10)
     assert type(ch) is str  # error
 
     assert type( n1.eth.getSnapshot(3) ) is str # error
+    assert type( n1.eth.getSnapshot(4) ) is str # error
     assert type( n1.eth.getSnapshot(-1) ) is str # error
     assert type( n1.eth.getSnapshotSignature(3) ) is str # error
+    assert type( n1.eth.getSnapshotSignature(4) ) is str # error
     assert type( n1.eth.getSnapshotSignature(-1) ) is str # error
 
     snap = n1.eth.getSnapshot(0)
@@ -143,9 +98,9 @@ def test_corner_cases(schain):
     
     wait_block(n1.eth, 4)
     time.sleep(1)                  # time for hash
-    assert_b_s(n1.eth, 4, 2)
+    assert_b_s(n1.eth, 4, 3)
 
-    snap = n1.eth.getSnapshot(2)
+    snap = n1.eth.getSnapshot(3)
     assert type(snap) is dict        # no error    
     
     data_size = snap['dataSize']
@@ -157,6 +112,8 @@ def test_corner_cases(schain):
     assert type( n1.eth.getSnapshot(0) ) is str # error
     assert type( n1.eth.getSnapshot(1) ) is str # error
     assert type( n1.eth.getSnapshot(2) ) is str # error
+    assert type( n1.eth.getSnapshot(3) ) is str # error
+    assert type( n1.eth.getSnapshot(4) ) is str # error
     assert type( n1.eth.getSnapshot(100) ) is str # error
     
     counter = 0
@@ -164,8 +121,8 @@ def test_corner_cases(schain):
         bn = n1.eth.blockNumber
         time.sleep(0.5)
         s = n1.eth.getLatestSnapshotBlockNumber()
-        assert s == bn-2 or s == bn-1           # can be if bn incremented
-        snap = n1.eth.getSnapshot( bn-2 )
+        assert s == bn-1 or s == bn           # can be if bn incremented
+        snap = n1.eth.getSnapshot( bn-1 )
         if type(snap) is dict:
             break
         print(f"Waiting at block {bn}")
@@ -186,32 +143,40 @@ def test_main(schain):
     wait_answer(n1.eth)
     assert type( n1.eth.getSnapshotSignature(0) ) is str    # error
     wait_block(n1.eth, 3)
-    assert_b_s(n1.eth, 3, 1)
+    assert_b_s(n1.eth, 3, 2)
     time.sleep(1)
-    assert_b_s(n1.eth, 3, 1)    # wait for hash ready but not exposed
+    assert_b_s(n1.eth, 3, 2)    # wait for hash ready but not exposed
     assert type( n1.eth.getSnapshotSignature(0) ) is str    # error
-    assert type( n1.eth.getSnapshotSignature(1) ) is dict   # ok
-    assert type( n1.eth.getSnapshotSignature(2) ) is str   # error
+    assert type( n1.eth.getSnapshotSignature(1) ) is str    # error because 1 is never snapshotted
+    assert type( n1.eth.getSnapshotSignature(2) ) is dict   # ok
     assert type( n1.eth.getSnapshotSignature(3) ) is str    # error
 
-    wait_block(n1.eth, 4)
-    time.sleep(1)
+    #wait_block(n1.eth, 4)
+    #time.sleep(1)
     # extend hash computation
     n1.eth.debugInterfaceCall("Client trace break computeSnapshotHash_start")
     
-    wait_block(n1.eth, 5)
-    assert_b_s(n1.eth, 5, 3)
-    assert type( n1.eth.getSnapshotSignature(1) ) is str   # rotated    
+    wait_block(n1.eth, 4)
+    assert_b_s(n1.eth, 4, 3)
+    assert type( n1.eth.getSnapshotSignature(1) ) is str    # 1 is not snapshotted    
     assert type( n1.eth.getSnapshotSignature(2) ) is dict   # ok
     assert type( n1.eth.getSnapshotSignature(3) ) is dict   # ok
     assert type( n1.eth.getSnapshotSignature(4) ) is str    # error
     n1.eth.debugInterfaceCall("Client trace continue computeSnapshotHash_start")
     time.sleep(0.5)
-    assert_b_s(n1.eth, 5, 3)    # still not exposed
+    assert_b_s(n1.eth, 4, 3)    # still not exposed
     assert type( n1.eth.getSnapshotSignature(4) ) is str    # error        
     assert type( n1.eth.getSnapshotSignature(2) ) is dict   # ok
     assert type( n1.eth.getSnapshotSignature(3) ) is dict   # ok
     
+    # check rotation
+    wait_block(n1.eth, 5)
+    time.sleep(1)
+    assert type( n1.eth.getSnapshotSignature(2) ) is str    # rotated    
+    assert type( n1.eth.getSnapshotSignature(3) ) is dict   # ok
+    assert type( n1.eth.getSnapshotSignature(4) ) is dict   # ok
+    assert type( n1.eth.getSnapshotSignature(5) ) is str    # error
+
     snap = n1.eth.getSnapshot(3)
     assert type(snap) is dict         # no error
     data_size = snap['dataSize']
@@ -248,6 +213,53 @@ def test_main(schain):
 
     ch = n1.eth.downloadSnapshotFragment(-1, 10)
     assert len(b64decode(ch['data']))==ch['size'] and ch['size'] == 0
+
+
+def test_stateRoot_conflict(schain):
+    ch = schain
+    n1 = ch.nodes[0]
+    n2 = ch.nodes[1]
+    n3 = ch.nodes[2]
+    n4 = ch.nodes[3]
+    
+    wait_answer(n1.eth)
+    wait_answer(n2.eth)
+    wait_answer(n3.eth)
+    wait_answer(n4.eth)
+
+    wait_block(n1.eth, 3)
+    print("starting from block 3")
+
+    block = 3
+
+    for _ in range(20):
+
+        # delay hash computation on 2 nodes
+        print("pausing hash")
+        # block number here must be block+1 (difference=2)
+        while n1.eth.getLatestSnapshotBlockNumber()  != block-1 or n2.eth.getLatestSnapshotBlockNumber() != block-1:
+            time.sleep(0.1)
+
+        n1.eth.debugInterfaceCall("Client trace break computeSnapshotHash_start")
+        n2.eth.debugInterfaceCall("Client trace break computeSnapshotHash_start")
+        n1.eth.debugInterfaceCall("Client trace wait computeSnapshotHash_start")
+        # warning: cannot wait on n2 because its probably already there!
+
+        block = n1.eth.blockNumber
+        print(f"block={block} stateRoot={binascii.hexlify(n1.eth.getBlock(block)['stateRoot'])}")
+        # wait for proposals
+        print(f"(proposals are being created..consensus goes for block {block+1})")
+        try:
+            ch.transaction_async()
+            time.sleep(0+1)         # no interval!
+        except:
+            time.sleep(2+1)
+            pass    # already exists
+      
+        # continue
+        print("continue")
+        n1.eth.debugInterfaceCall("Client trace continue computeSnapshotHash_start")
+        n2.eth.debugInterfaceCall("Client trace continue computeSnapshotHash_start")
 
 def test_wait(schain):
     ch = schain

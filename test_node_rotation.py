@@ -185,7 +185,7 @@ def test_restart(schain):
             if bn1 == bn4:
                 assert s1 == s4
             
-            if s1 != 0 and s1 == bn1-1:
+            if s1 != 0 and bn4 == bn1:
                                 
                 print("Restarting")
                 
@@ -210,7 +210,7 @@ def test_restart(schain):
     else:
         assert False
 
-@pytest.mark.snapshotIntervalMs(1000000000)
+@pytest.mark.snapshotIntervalMs(50)
 @pytest.mark.snapshottedStartSeconds(20)
 def test_download_early(schain):
     ch = schain
@@ -225,6 +225,15 @@ def test_download_early(schain):
     assert avail
     print(f"n4's block number = {n4.eth.blockNumber}")
     
+    for _ in range(50):
+        bn1 = n1.eth.blockNumber
+        bn4 = n4.eth.blockNumber
+        print(f"{bn1} {bn4}")
+        time.sleep(1)
+
+    assert abs(bn1-bn4)<=1
+    assert n1.eth.getLatestSnapshotBlockNumber() != "earliest"
+
 #    print("Restarting n4")
     
     # restart n4    
