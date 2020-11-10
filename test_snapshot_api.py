@@ -15,18 +15,18 @@ def schain():
                            "/home/dimalit/skaled/build-no-mp/skaled/skaled")
     
     emptyBlockIntervalMs = 2000
-    snapshotIntervalMs = 1
+    snapshotIntervalSec = 1
     
     run_container = os.getenv('RUN_CONTAINER')
     
     n1 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
-              snapshotInterval=snapshotIntervalMs, bls=True)
+              snapshotInterval=snapshotIntervalSec, bls=True)
     n2 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
-              snapshotInterval=snapshotIntervalMs, bls=True)
+              snapshotInterval=snapshotIntervalSec, bls=True)
     n3 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
-              snapshotInterval=snapshotIntervalMs, bls=True)
+              snapshotInterval=snapshotIntervalSec, bls=True)
     n4 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
-              snapshotInterval=snapshotIntervalMs, bls=True)
+              snapshotInterval=snapshotIntervalSec, bls=True)
     starter = LocalStarter(sktest_exe)
         
     ch = SChain(
@@ -34,7 +34,7 @@ def schain():
         starter,
         prefill=[1000000000000000000, 2000000000000000000],
         emptyBlockIntervalMs=emptyBlockIntervalMs,
-        snapshotIntervalMs=snapshotIntervalMs
+        snapshotIntervalSec=snapshotIntervalSec
     )
     ch.start(start_timeout=0)
 

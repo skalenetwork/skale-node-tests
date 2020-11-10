@@ -9,7 +9,7 @@ import web3
 
 import sktest
 
-from sktest_helpers import create_default_chain, \
+from sktest_helpers import create_custom_chain, \
     generate_or_load_txns, wait_for_txns
 
 
@@ -38,7 +38,7 @@ if os.getenv('ENDPOINT_URL'):
     node = sktest.Node(bindIP=split[1], basePort=int(split[2])-3, rotateAfterBlock=0)
     ch = sktest.SChain([node], sktest.NoStarter(), [])
 else:
-    ch = create_default_chain(num_nodes=nNodes, num_accounts=nAcc)
+    ch = create_custom_chain(num_nodes=nNodes, num_accounts=nAcc, bls=True)
 
 ch.start()
 

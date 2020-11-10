@@ -364,7 +364,7 @@ class SChain:
                                      "Chain" + str(SChain._counter))
         self.sChainID = kwargs.get('schainID', SChain._counter)
         self.emptyBlockIntervalMs = kwargs.get('emptyBlockIntervalMs', -1)
-        self.snapshotIntervalMs = kwargs.get('snapshotIntervalMs', -1)
+        self.snapshotIntervalSec = kwargs.get('snapshotIntervalSec', -1)
         self.nodes = list(nodes)
         self.chainID = kwargs.get('chainID', "0x1")
         self.config_addons = {"params": {"chainID": self.chainID}, "accounts": {}}
@@ -620,7 +620,7 @@ def _make_config_schain(chain):
         "schainID": chain.sChainID,
         "nodes": [],
         "emptyBlockIntervalMs": chain.emptyBlockIntervalMs,
-        "snapshotIntervalMs": chain.snapshotIntervalMs,
+        "snapshotIntervalSec": chain.snapshotIntervalSec,
         # "schainOwner": chain.accounts[0],
         "storageLimit": 1000*1000*1000*1000
     }

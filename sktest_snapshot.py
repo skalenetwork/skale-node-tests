@@ -11,34 +11,34 @@ sktest_exe = os.getenv("SKTEST_EXE",
                        "/home/dimalit/skaled/build-no-mp/skaled/skaled")
 
 emptyBlockIntervalMs = 1
-snapshotIntervalMs = 10
+snapshotIntervalSec = 10
 
 run_container = os.getenv('RUN_CONTAINER')
 
 if run_container is not None:
     n1 = Node(bindIP='127.0.0.1', basePort=10000,
               emptyBlockIntervalMs=emptyBlockIntervalMs,
-              snapshotInterval=snapshotIntervalMs, bls=True)
+              snapshotInterval=snapshotIntervalSec, bls=True)
     n2 = Node(bindIP='127.0.0.1', basePort=10011,
               emptyBlockIntervalMs=emptyBlockIntervalMs,
-              snapshotInterval=snapshotIntervalMs, bls=True)
+              snapshotInterval=snapshotIntervalSec, bls=True)
     n3 = Node(bindIP='127.0.0.1', basePort=10022,
               emptyBlockIntervalMs=emptyBlockIntervalMs,
-              snapshotInterval=snapshotIntervalMs, bls=True)
+              snapshotInterval=snapshotIntervalSec, bls=True)
     n4 = Node(bindIP='127.0.0.1', basePort=10033,
               emptyBlockIntervalMs=emptyBlockIntervalMs,
-              snapshotInterval=snapshotIntervalMs,
+              snapshotInterval=snapshotIntervalSec,
               snapshottedStartSeconds=60, bls=True)  # 90 # 18
     starter = LocalDockerStarter()
 else:
     n1 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
-              snapshotInterval=snapshotIntervalMs, bls=True)
+              snapshotInterval=snapshotIntervalSec, bls=True)
     n2 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
-              snapshotInterval=snapshotIntervalMs, bls=True)
+              snapshotInterval=snapshotIntervalSec, bls=True)
     n3 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
-              snapshotInterval=snapshotIntervalMs, bls=True)
+              snapshotInterval=snapshotIntervalSec, bls=True)
     n4 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
-              snapshotInterval=snapshotIntervalMs,
+              snapshotInterval=snapshotIntervalSec,
               snapshottedStartSeconds=60, bls=True)  # 90 # 18
     starter = LocalStarter(sktest_exe)
 
@@ -48,7 +48,7 @@ ch = SChain(
     starter,
     prefill=[1000000000000000000, 2000000000000000000],
     emptyBlockIntervalMs=emptyBlockIntervalMs,
-    snapshotIntervalMs=snapshotIntervalMs
+    snapshotIntervalSec=snapshotIntervalSec
 )
 ch.start(start_timeout=0)  # 300
 

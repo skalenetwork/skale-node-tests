@@ -14,12 +14,12 @@ def schain(request):
                            "/home/dimalit/skaled/build-no-mp/skaled/skaled")
     
     emptyBlockIntervalMs = 1000
-    snapshotIntervalMs = 1
+    snapshotIntervalSec = 1
     snapshottedStartSeconds = -1
     
-    marker = request.node.get_closest_marker("snapshotIntervalMs") 
+    marker = request.node.get_closest_marker("snapshotIntervalSec") 
     if marker is not None:
-        snapshotIntervalMs = marker.args[0] 
+        snapshotIntervalSec = marker.args[0] 
     
     marker = request.node.get_closest_marker("snapshottedStartSeconds") 
     if marker is not None:
@@ -28,13 +28,13 @@ def schain(request):
     run_container = os.getenv('RUN_CONTAINER')
     
     n1 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
-              snapshotInterval=snapshotIntervalMs, bls=True)
+              snapshotInterval=snapshotIntervalSec, bls=True)
     n2 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
-              snapshotInterval=snapshotIntervalMs, bls=True)
+              snapshotInterval=snapshotIntervalSec, bls=True)
     n3 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
-              snapshotInterval=snapshotIntervalMs, bls=True)
+              snapshotInterval=snapshotIntervalSec, bls=True)
     n4 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
-              snapshotInterval=snapshotIntervalMs, bls=True,
+              snapshotInterval=snapshotIntervalSec, bls=True,
               snapshottedStartSeconds=snapshottedStartSeconds)
     starter = LocalStarter(sktest_exe)
     
@@ -44,7 +44,7 @@ def schain(request):
         starter,
         prefill=[1000000000000000000, 2000000000000000000],
         emptyBlockIntervalMs=emptyBlockIntervalMs,
-        snapshotIntervalMs=snapshotIntervalMs
+        snapshotIntervalSec=snapshotIntervalSec
     )
     ch.start(start_timeout=0)
 
@@ -154,7 +154,7 @@ def test_download_snapshot(schain, have_others, have_4):
         # we exit by counter if n4 breaks
         assert not have_others
 
-@pytest.mark.snapshotIntervalMs(40)
+@pytest.mark.snapshotIntervalSec(40)
 def test_restart(schain):
     ch = schain
     n1 = ch.nodes[0]
@@ -210,7 +210,7 @@ def test_restart(schain):
     else:
         assert False
 
-@pytest.mark.snapshotIntervalMs(50)
+@pytest.mark.snapshotIntervalSec(50)
 @pytest.mark.snapshottedStartSeconds(20)
 def test_download_early(schain):
     ch = schain
