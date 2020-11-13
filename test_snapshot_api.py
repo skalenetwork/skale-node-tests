@@ -146,6 +146,8 @@ def test_main(schain):
     assert_b_s(n1.eth, 3, 2)
     time.sleep(1)
     assert_b_s(n1.eth, 3, 2)    # wait for hash ready but not exposed
+    # disallow it to switch to next block
+    n1.eth.debugInterfaceCall("SkaleHost trace break create_block")
     assert type( n1.eth.getSnapshotSignature(0) ) is str    # error
     assert type( n1.eth.getSnapshotSignature(1) ) is str    # error because 1 is never snapshotted
     assert type( n1.eth.getSnapshotSignature(2) ) is dict   # ok
@@ -155,9 +157,14 @@ def test_main(schain):
     #time.sleep(1)
     # extend hash computation
     n1.eth.debugInterfaceCall("Client trace break computeSnapshotHash_start")
-    
+
+    time.sleep(5)           # this is waiting for tracepoint
+    n1.eth.debugInterfaceCall("SkaleHost trace continue create_block")
+
     wait_block(n1.eth, 4)
     assert_b_s(n1.eth, 4, 3)
+    # disallow it to switch to next block
+    n1.eth.debugInterfaceCall("SkaleHost trace break create_block")
     assert type( n1.eth.getSnapshotSignature(1) ) is str    # 1 is not snapshotted    
     assert type( n1.eth.getSnapshotSignature(2) ) is dict   # ok
     assert type( n1.eth.getSnapshotSignature(3) ) is dict   # ok
@@ -168,16 +175,24 @@ def test_main(schain):
     assert type( n1.eth.getSnapshotSignature(4) ) is str    # error        
     assert type( n1.eth.getSnapshotSignature(2) ) is dict   # ok
     assert type( n1.eth.getSnapshotSignature(3) ) is dict   # ok
-    
+
+    time.sleep(5)           # this is waiting for tracepoint
+    n1.eth.debugInterfaceCall("SkaleHost trace continue create_block")
+
     # check rotation
     wait_block(n1.eth, 5)
     time.sleep(1)
+    # disallow it to switch to next block
+    n1.eth.debugInterfaceCall("SkaleHost trace break create_block")
     assert type( n1.eth.getSnapshotSignature(2) ) is str    # rotated    
     assert type( n1.eth.getSnapshotSignature(3) ) is dict   # ok
     assert type( n1.eth.getSnapshotSignature(4) ) is dict   # ok
     assert type( n1.eth.getSnapshotSignature(5) ) is str    # error
 
-    snap = n1.eth.getSnapshot(3)
+    time.sleep(5)           # this is waiting for tracepoint
+    n1.eth.debugInterfaceCall("SkaleHost trace continue create_block")
+
+    snap = n1.eth.getSnapshot(4)
     assert type(snap) is dict         # no error
     data_size = snap['dataSize']
     
@@ -250,10 +265,9 @@ def test_stateRoot_conflict(schain):
         # wait for proposals
         print(f"(proposals are being created..consensus goes for block {block+1})")
         try:
-            ch.transaction_async()
-            time.sleep(0+1)         # no interval!
+            tx = ch.transaction_obj()
+            n2.eth.sendRawTransaction(tx)
         except:
-            time.sleep(2+1)
             pass    # already exists
       
         # continue
