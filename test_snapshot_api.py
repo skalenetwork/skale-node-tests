@@ -10,12 +10,21 @@ if os.geteuid() != 0:
     exit(1)
 
 @pytest.fixture
-def schain():
+def schain(request):
     sktest_exe = os.getenv("SKTEST_EXE",
                            "/home/dimalit/skaled/build-no-mp/skaled/skaled")
     
     emptyBlockIntervalMs = 2000
     snapshotIntervalSec = 1
+    snapshottedStartSeconds = -1
+    
+    marker = request.node.get_closest_marker("snapshotIntervalSec") 
+    if marker is not None:
+        snapshotIntervalSec = marker.args[0] 
+    
+    marker = request.node.get_closest_marker("snapshottedStartSeconds") 
+    if marker is not None:
+        snapshottedStartSeconds = marker.args[0]
     
     run_container = os.getenv('RUN_CONTAINER')
     
@@ -26,7 +35,8 @@ def schain():
     n3 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
               snapshotInterval=snapshotIntervalSec, bls=True)
     n4 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
-              snapshotInterval=snapshotIntervalSec, bls=True)
+              snapshotInterval=snapshotIntervalSec, bls=True,
+              snapshottedStartSeconds=snapshottedStartSeconds)
     starter = LocalStarter(sktest_exe)
         
     ch = SChain(
@@ -72,7 +82,41 @@ def wait_block(eth, bn):
 def assert_b_s(eth, b, s):
     assert eth.blockNumber == b
     assert eth.getLatestSnapshotBlockNumber() == s
+
+@pytest.mark.snapshottedStartSeconds(60)
+@pytest.mark.snapshotIntervalSec(20)
+def test_download_download(schain):
+    ch = schain
+    n1 = ch.nodes[0]    
+    n4 = ch.nodes[3]
         
+    wait_answer(n4.eth)
+    
+    s4 = n4.eth.getLatestSnapshotBlockNumber()
+    assert s4 == 0  # should start with zero
+
+    counter = 0
+    while s4 == 0:
+        time.sleep(1)        
+        s4 = n4.eth.getLatestSnapshotBlockNumber()
+        print(f"Waiting for next snapshot: {s4}")
+        counter += 1
+        if counter == 20:
+            break
+    
+    assert counter < 20
+
+    assert type( n4.eth.getSnapshotSignature(s4) ) is dict
+
+    snap = n4.eth.getSnapshot(s4)
+    assert type(snap) is dict
+    
+    data_size = snap['dataSize']
+    assert data_size > 0
+    ch = n4.eth.downloadSnapshotFragment(0, 10)
+    assert len(b64decode(ch['data']))==ch['size'] and ch['size'] == 10
+
+
 def test_corner_cases(schain):
     ch = schain
     n1 = ch.nodes[0]

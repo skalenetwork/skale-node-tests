@@ -943,13 +943,15 @@ class LocalStarter:
 
         self.running = True
     
-    def restart_node(self, pos, args):
+    def restart_node(self, pos, args, delay_sec = 0):
         assert self.started
         n = self.chain.nodes[pos]
         assert n.running
 
         self.stop_node(pos)
         self.wait_node_stop(pos)
+
+        time.sleep(delay_sec)
 
         popen = Popen(
             n.args + args,
