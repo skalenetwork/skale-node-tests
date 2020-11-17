@@ -234,19 +234,72 @@ def test_download_early(schain):
     assert abs(bn1-bn4)<=1
     assert n1.eth.getLatestSnapshotBlockNumber() != "earliest"
 
-#    print("Restarting n4")
+@pytest.mark.parametrize("who, from_who", [(1, 2), (0, 1), (1, 3), (0, 3), (1, 0), (3, 0)])
+@pytest.mark.snapshottedStartSeconds(50)
+@pytest.mark.snapshotIntervalSec(1)
+def test_download_download(schain, who, from_who):
+    ch = schain
+    n1 = ch.nodes[0]
+    n2 = ch.nodes[1]
+    n3 = ch.nodes[2]
+    n4 = ch.nodes[3]
+    starter = ch.starter
+
+    avail = wait_answer(n4.eth)
+    print("Started n4")
+    print(f"n1's block number = {n1.eth.blockNumber}")
+    assert avail
+    print(f"n4's block number = {n4.eth.blockNumber}")
+
+    for _ in range(50):
+        bn1 = n1.eth.blockNumber
+        bn2 = n2.eth.blockNumber
+        bn3 = n3.eth.blockNumber
+        bn4 = n4.eth.blockNumber
+
+        print(f"{bn1} {bn2} {bn3} {bn4}")
+
+        if bn1==bn2 and bn2==bn3 and bn3==bn4:
+            break
+
+        time.sleep(1)
+    else:
+        assert False
+
+    # restart who!
+    print(f"Restarting n{who+1}")
+
+    args=[]
+    if who!=3:
+        args = ['--public-key', '18219295635707015937645445755505569836731605273220943516712644721479866137366:13229549502897098194754835600024217501928881864881229779950780865566962175067:3647833147657958185393020912446135601933571182900304549078758701875919023122:2426298721305518429857989502764051546820660937538732738470128444404528302050']
+        args.append("--download-snapshot")
+        args.append("http://" + ch.nodes[from_who].bindIP + ":" + str(ch.nodes[from_who].basePort + 13))
+    starter.restart_node(who, args, 10)
     
-    # restart n4    
-    # args = ['--public-key', '18219295635707015937645445755505569836731605273220943516712644721479866137366:13229549502897098194754835600024217501928881864881229779950780865566962175067:3647833147657958185393020912446135601933571182900304549078758701875919023122:2426298721305518429857989502764051546820660937538732738470128444404528302050']
-    # args.append("--download-snapshot")
-    # args.append("http://" + ch.nodes[0].bindIP + ":" + str(ch.nodes[0].basePort + 3))  # noqa
- #   starter.restart_node(3, [])
     
     # to be sure it really restarted
-#    time.sleep(5)
-#    assert not eth_available(n4.eth)
+    time.sleep(5)
+    assert not eth_available(ch.nodes[who].eth)
 
-#    avail = wait_answer(n4.eth)
-#    print(f"n1's block number = {n1.eth.blockNumber}")
-#    print(f"n4's block number = {n4.eth.blockNumber}")
-#    assert avail
+    avail = wait_answer(ch.nodes[who].eth)
+    assert avail
+    print(f"Started n{who+1}")
+
+    for _ in range(50):
+        bn1 = n1.eth.blockNumber
+        bn2 = n2.eth.blockNumber
+        bn3 = n3.eth.blockNumber
+        bn4 = n4.eth.blockNumber
+
+        print(f"{bn1} {bn2} {bn3} {bn4}")
+
+        if bn1 >= 10 and bn1==bn2 and bn2==bn3 and bn3==bn4:
+            break
+
+        time.sleep(1)
+
+    assert abs(bn1-bn4)<=1
+    assert abs(bn2-bn4)<=1
+    assert n1.eth.getLatestSnapshotBlockNumber() != "earliest"
+    assert n2.eth.getLatestSnapshotBlockNumber() != "earliest"
+    assert n4.eth.getLatestSnapshotBlockNumber() != "earliest"
