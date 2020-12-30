@@ -303,3 +303,37 @@ def test_download_download(schain, who, from_who):
     assert n1.eth.getLatestSnapshotBlockNumber() != "earliest"
     assert n2.eth.getLatestSnapshotBlockNumber() != "earliest"
     assert n4.eth.getLatestSnapshotBlockNumber() != "earliest"
+    
+@pytest.mark.snapshotIntervalSec(40)
+def test_late_join(schain):
+    ch = schain
+    n1 = ch.nodes[0]
+    n2 = ch.nodes[1]
+    n3 = ch.nodes[2]
+    n4 = ch.nodes[3]
+    starter = ch.starter
+    
+    ch.transaction()
+    
+    print("Restarting")
+    starter.restart_node(3, [], 200)
+
+    for _ in range(200):
+    #while True:
+        try:
+            bn1 = n1.eth.blockNumber
+            bn2 = n2.eth.blockNumber
+            bn3 = n3.eth.blockNumber
+            bn4 = n4.eth.blockNumber
+            print(f"blockNumber's: {bn1} {bn2} {bn3} {bn4}")
+                    
+            if bn1 >= 60 and bn1==bn2 and bn2==bn3 and bn3==bn4:
+                break
+    
+        except Exception as e:
+            print(str(e))
+            pass
+    
+        time.sleep(1)
+    else:
+        assert False
