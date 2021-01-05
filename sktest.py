@@ -13,9 +13,9 @@ import types
 from tempfile import TemporaryDirectory
 from subprocess import Popen, PIPE, STDOUT, TimeoutExpired
 
-import docker
+#import docker
 import web3
-from docker.types import LogConfig
+#from docker.types import LogConfig
 from web3.auto import w3
 
 from config import merge as config_merge, to_string as config_to_string
@@ -442,7 +442,7 @@ class SChain:
 
         _from = kwargs.get("_from", 0)
         to = kwargs.get("to", 1)
-        value = kwargs.get("value", self.balance(_from) // 2)
+        value = kwargs.get("value", 1000 * 1000 * 1000 * 1000 * 1000)
         nonce = kwargs.get("nonce", self.nonce(_from))
         data = kwargs.get("data", "0x")
         gas = int(kwargs.get("gas", 21000))
@@ -573,6 +573,7 @@ def _make_config_node(node):
         "ecdsaKeyName": node.ecdsaKeyName,
         "wallets": {
             "ima": {
+                #"url": "https://127.0.0.1:1026",
                 "url": "https://45.76.3.64:1026",
                 "keyShareName": node.keyShareName,
                 "t": 3,
@@ -587,7 +588,7 @@ def _make_config_node(node):
                 "commonBLSPublicKey3": "2426298721305518429857989502764051546820660937538732738470128444404528302050"
             }
         } if node.ecdsaKeyName != "" else {}
-        # "catchupIntervalMs": 1000000000
+        #"catchupIntervalMs": 1000000000
     }
 
 
@@ -846,7 +847,7 @@ class LocalStarter:
         self.chain = chain
 
         # TODO Handle exceptions!
-        for n in self.chain.nodes:
+        for n in self.chain.nodes[:5]:
             assert not n.running
 
             node_dir = os.path.join(os.getenv('DATA_DIR', self.dir.name), str(n.nodeID))
@@ -953,7 +954,12 @@ class LocalStarter:
         self.stop_node(pos)
         self.wait_node_stop(pos)
 
-        time.sleep(delay_sec)
+        for _ in range(delay_sec):
+            try:
+                self.chain.transaction_async()
+            except Exception as ex:
+                print(str(ex))
+            time.sleep(1)
 
         popen = Popen(
             n.args + args,
