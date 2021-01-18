@@ -847,7 +847,7 @@ class LocalStarter:
         self.chain = chain
 
         # TODO Handle exceptions!
-        for n in self.chain.nodes[:5]:
+        for n in self.chain.nodes:
             assert not n.running
 
             node_dir = os.path.join(os.getenv('DATA_DIR', self.dir.name), str(n.nodeID))

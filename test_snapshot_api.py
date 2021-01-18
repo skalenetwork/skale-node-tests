@@ -17,7 +17,8 @@ def schain(request):
     emptyBlockIntervalMs = 2000
     snapshotIntervalSec = 1
     snapshottedStartSeconds = -1
-    
+    num_nodes = 4
+
     marker = request.node.get_closest_marker("snapshotIntervalSec") 
     if marker is not None:
         snapshotIntervalSec = marker.args[0] 
@@ -25,22 +26,25 @@ def schain(request):
     marker = request.node.get_closest_marker("snapshottedStartSeconds") 
     if marker is not None:
         snapshottedStartSeconds = marker.args[0]
-    
+
+    marker = request.node.get_closest_marker("num_nodes") 
+    if marker is not None:
+        num_nodes = marker.args[0]
+
+
     run_container = os.getenv('RUN_CONTAINER')
     
-    n1 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
+    nodes = [Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
               snapshotInterval=snapshotIntervalSec, bls=True)
-    n2 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
-              snapshotInterval=snapshotIntervalSec, bls=True)
-    n3 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
-              snapshotInterval=snapshotIntervalSec, bls=True)
-    n4 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
+             for i in range(num_nodes-1)]
+    nodes.append( Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
               snapshotInterval=snapshotIntervalSec, bls=True,
-              snapshottedStartSeconds=snapshottedStartSeconds)
+              snapshottedStartSeconds=snapshottedStartSeconds) )
+   
     starter = LocalStarter(sktest_exe)
         
     ch = SChain(
-        [n1, n2, n3, n4],
+        nodes,
         starter,
         prefill=[1000000000000000000, 2000000000000000000],
         emptyBlockIntervalMs=emptyBlockIntervalMs,
@@ -319,6 +323,8 @@ def test_stateRoot_conflict(schain):
         n1.eth.debugInterfaceCall("Client trace continue computeSnapshotHash_start")
         n2.eth.debugInterfaceCall("Client trace continue computeSnapshotHash_start")
 
+@pytest.mark.num_nodes(4) # only 4! (no more keys in config!)
+@pytest.mark.snapshotIntervalSec(30)
 def test_wait(schain):
     ch = schain
     n1 = ch.nodes[0]
