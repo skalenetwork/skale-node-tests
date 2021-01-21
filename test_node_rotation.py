@@ -313,7 +313,7 @@ def test_late_join(schain):
     n4 = ch.nodes[3]
     starter = ch.starter
     
-    ch.transaction()
+    #ch.transaction()
     
     print("Restarting")
     starter.restart_node(3, [], 200)
