@@ -1,7 +1,7 @@
 import os
 import time
 from time import sleep
-from sktest import LocalStarter, LocalDockerStarter, Node, SChain, getLatestSnapshotBlockNumber
+from sktest import LocalStarter, LocalDockerStarter, Node, SChain
 
 if os.geteuid() != 0:
     print("Please run with sudo")
@@ -34,7 +34,7 @@ ch = SChain(
     emptyBlockIntervalMs=emptyBlockIntervalMs,
     snapshotIntervalSec=snapshotIntervalSec
 )
-ch.start()
+ch.start(start_timeout=60)
 
 print("Waiting for snapshots to be done")
 
@@ -46,7 +46,7 @@ while True:
 
     print(f"blockNumber is: {bn}")
 
-    current_latest = getLatestSnapshotBlockNumber(node.eth)
+    current_latest = node.eth.getLatestSnapshotBlockNumber()
 
     print(f"Latest snapshot block: {current_latest}")
 
@@ -67,7 +67,7 @@ ch.stop_without_cleanup()
 
 print("Restarting skaled")
 
-ch.start_after_stop()
+ch.start_after_stop(start_timeout=90)
 
 print("Waiting for snapshots to be done after restart")
 
@@ -78,7 +78,7 @@ while True:
 
     print(f"blockNumber is: {bn}")
 
-    current_latest = getLatestSnapshotBlockNumber(node.eth)
+    current_latest = node.eth.getLatestSnapshotBlockNumber()
 
     print(f"Latest snapshot block: {current_latest}")
 

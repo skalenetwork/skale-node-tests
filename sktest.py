@@ -11,7 +11,7 @@ import time
 import types
 
 from tempfile import TemporaryDirectory
-from subprocess import Popen, PIPE, STDOUT, TimeoutExpired
+from subprocess import Popen, PIPE, STDOUT, TimeoutExpired, run
 
 #import docker
 import web3
@@ -555,6 +555,9 @@ class SChain:
 
     def compare_all_states(self):
         return _compare_states(self.nodes)
+    
+    def prepare_to_restore(self, latest_snapshot):
+        self.starter.prepare_to_restore(latest_snapshot)
 
     def __del__(self):
         self.stop()
@@ -1001,6 +1004,7 @@ class LocalStarter:
             aleth_err = io.open(node_dir + "/" + "aleth.err", "w")
 
             env = os.environ.copy()
+            env['DATA_DIR'] = node_dir
 
             popen_args = [
                 # "/usr/bin/strace", '-o'+node_dir+'/aleth.trace',
@@ -1094,6 +1098,30 @@ class LocalStarter:
 
     def node_exited(self, pos):
         return self.exe_popens[pos].poll() is not None
+
+    def prepare_to_restore(self, latest_snapshot):
+        for n in self.chain.nodes:
+            d = os.path.join(os.getenv('DATA_DIR', self.dir.name), str(n.nodeID), "snapshots")
+            snapshots_to_remove = [os.path.join(d, o) for o in os.listdir(d)
+                        if os.path.isdir(os.path.join(d,o)) and o != str(latest_snapshot)]
+            for snapshot in snapshots_to_remove:
+                clean_data_dir = run(["btrfs", "subvolume", "delete", snapshot + "/a5cf2af8"])
+                clean_data_dir = run(["btrfs", "subvolume", "delete", snapshot + "/filestorage"])
+                clean_data_dir = run(["btrfs", "subvolume", "delete", snapshot + "/blocks_" + str(n.nodeID) + ".db"])
+                clean_data_dir = run(["btrfs", "subvolume", "delete", snapshot + "/prices_" + str(n.nodeID) + ".db"])
+                shutil.rmtree(snapshot)
+            clean_data_dir = run(["btrfs", "subvolume", "delete", d + "/../" + "a5cf2af8"])
+            clean_data_dir = run(["btrfs", "subvolume", "delete", d + "/../" + "filestorage"])
+            clean_data_dir = run(["btrfs", "subvolume", "delete", d + "/../" + "blocks_" + str(n.nodeID) + ".db"])
+            clean_data_dir = run(["btrfs", "subvolume", "delete", d + "/../" + "prices_" + str(n.nodeID) + ".db"])
+            fileList = glob.glob(d + "/../" + "*.db")
+            for file in fileList:
+                shutil.rmtree(file)
+            latest_snapshot_dir = os.path.join(d, str(latest_snapshot))
+            new_snapshot_voulems = run(["btrfs", "subvolume", "snapshot", latest_snapshot_dir + "/a5cf2af8", d + "/.."])
+            new_snapshot_voulems = run(["btrfs", "subvolume", "snapshot", latest_snapshot_dir + "/filestorage", d + "/.."])
+            new_snapshot_voulems = run(["btrfs", "subvolume", "snapshot", latest_snapshot_dir + "/blocks_" + str(n.nodeID) + ".db", d + "/.."])
+            new_snapshot_voulems = run(["btrfs", "subvolume", "snapshot", latest_snapshot_dir + "/prices_" + str(n.nodeID) + ".db", d + "/.."])
 
 
 def ssh_exec(address, command):
