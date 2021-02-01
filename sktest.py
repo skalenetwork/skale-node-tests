@@ -932,6 +932,7 @@ class LocalStarter:
             n.stdout = aleth_out
             n.stderr = aleth_err
             n.env = env
+            n.data_dir = node_dir
 
             self.exe_popens.append(popen)
             # HACK +0 +1 +2 are used by consensus
