@@ -478,10 +478,10 @@ class SChain:
         return self.eth.sendRawTransaction(tx)
 
     def transaction(self, **kwargs):
-        pending_filter = self.all_filter('pending')
+        # pending_filter = self.all_filter('pending')
         latest_filter = self.all_filter('latest')
         self.transaction_async(**kwargs)
-        self.wait_all_filter(pending_filter)
+        # self.wait_all_filter(pending_filter)
         return self.wait_all_filter(latest_filter)
 
     def block(self):
@@ -855,7 +855,10 @@ class LocalStarter:
 
             node_dir = os.path.join(os.getenv('DATA_DIR', self.dir.name), str(n.nodeID))
             ipc_dir = node_dir
-            os.makedirs(node_dir)
+            try:
+                os.makedirs(node_dir)
+            except:
+                pass
             cfg_file = node_dir + "/config.json"
 
             cfg = copy.deepcopy(self.config)
@@ -929,6 +932,7 @@ class LocalStarter:
             n.stdout = aleth_out
             n.stderr = aleth_err
             n.env = env
+            n.data_dir = node_dir
 
             self.exe_popens.append(popen)
             # HACK +0 +1 +2 are used by consensus
