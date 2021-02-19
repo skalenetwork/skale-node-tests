@@ -85,6 +85,7 @@ while True:
     if latest_snapshot_block != current_latest:
         latest_snapshot_block = current_latest
         snapshots_done_after_restart += 1
+        snapshots_count += 1
 
     print(f"Snapshots done after restart: {snapshots_done_after_restart}")
 
