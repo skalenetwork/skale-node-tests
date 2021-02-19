@@ -19,11 +19,11 @@ def schain(request):
     snapshottedStartSeconds = -1
     num_nodes = 4
 
-    marker = request.node.get_closest_marker("snapshotIntervalSec") 
+    marker = request.node.get_closest_marker("snapshotIntervalSec")
     if marker is not None:
         snapshotIntervalSec = marker.args[0] 
     
-    marker = request.node.get_closest_marker("snapshottedStartSeconds") 
+    marker = request.node.get_closest_marker("snapshottedStartSeconds")
     if marker is not None:
         snapshottedStartSeconds = marker.args[0]
 
@@ -87,8 +87,8 @@ def assert_b_s(eth, b, s):
     assert eth.blockNumber == b
     assert eth.getLatestSnapshotBlockNumber() == s
 
-@pytest.mark.snapshottedStartSeconds(60)
-@pytest.mark.snapshotIntervalSec(20)
+@pytest.mark.snapshottedStartSeconds(90)
+@pytest.mark.snapshotIntervalSec(30)
 def test_download_download(schain):
     ch = schain
     n1 = ch.nodes[0]    
@@ -105,10 +105,13 @@ def test_download_download(schain):
         s4 = n4.eth.getLatestSnapshotBlockNumber()
         print(f"Waiting for next snapshot: {s4}")
         counter += 1
-        if counter == 20:
+        
+        # disable catchup and wait twice time!
+        if counter == 30*2:
             break
     
-    assert counter < 20
+    # edit here synchronously!
+    assert counter < 30*2
 
     assert type( n4.eth.getSnapshotSignature(s4) ) is dict
 
@@ -324,10 +327,11 @@ def test_stateRoot_conflict(schain):
         n2.eth.debugInterfaceCall("Client trace continue computeSnapshotHash_start")
 
 @pytest.mark.num_nodes(4) # only 4! (no more keys in config!)
-@pytest.mark.snapshotIntervalSec(30)
+@pytest.mark.snapshotIntervalSec(1)
 def test_wait(schain):
     ch = schain
     n1 = ch.nodes[0]
+    n2 = ch.nodes[1]
     #for _ in range(50):
     while True:
         try:
@@ -337,6 +341,11 @@ def test_wait(schain):
     
         except Exception as e:
             print(str(e))
-            pass
-    
+
+        try:
+            tx = ch.transaction_obj()
+            n2.eth.sendRawTransaction(tx)
+        except:
+            pass    # already exists
+
         time.sleep(1)
