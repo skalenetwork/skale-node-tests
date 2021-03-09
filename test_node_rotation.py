@@ -338,7 +338,8 @@ def test_late_join(schain):
         time.sleep(1)
     else:
         assert False
-        
+
+@pytest.mark.snapshotIntervalSec(10)
 def test_wrong_stateRoot_in_proposal(schain):
     ch = schain
     n1 = ch.nodes[0]
@@ -348,20 +349,27 @@ def test_wrong_stateRoot_in_proposal(schain):
     starter = ch.starter
     
     dummy_hash = "11bbe8db4e347b4e8c937c1c8370e4b5ed33adb3db69cbdb7a38e1e50b1b82fa"
+    # dec: 8021325944645810444600318958160784541777644290714340452591235899924003128058
     
     print("Starting 4 nodes")
-    avail = wait_answer(n4.eth)
-    print("Stopping n4")
-    starter.stop_node(3)
-    starter.wait_node_stop(3)
+    #wait_answer(n4.eth)
+    #print("Stopping n4")
+    #starter.stop_node(3)
+    #starter.wait_node_stop(3)    
+    
     
     assert( wait_answer(n3.eth) )
     
-    old_s3 = 0
+    path = n3.data_dir + "/filestorage"
+    with open(path+"/dummy_file.txt", "w") as f:
+        f.write("dummy data\n")
+    print("Breaking filestorage hash in "  +path)
+    
+    old_bn3 = 0
     hang_counter = 0
     
+    path = ""
     while True:
-        path = ""
         try:
             bn3 = n3.eth.blockNumber
             print(f"bn3={bn3}")
@@ -369,29 +377,30 @@ def test_wrong_stateRoot_in_proposal(schain):
             if bn3 >= 50:
                 break
             
-            s3 = n3.eth.getLatestSnapshotBlockNumber()
-            if s3 != old_s3:
-                path = n3.data_dir + "/snapshots/" + str(s3)
-                print("Breaking hash in "  +path)
-                with open(path+"/snapshot_hash.txt", "w") as f:
-                    f.write(dummy_hash+"\n")
-                old_s3 = s3
+            # s3 = n3.eth.getLatestSnapshotBlockNumber()
+            if bn3 != old_bn3:
+                old_bn3 = bn3
                 hang_counter = 0
         except:
             # check n1 if n3 crashed
             time.sleep(3)
             assert(eth_available(n1.eth))
             print("Restarting n3 (crashed)")
-            shutil.rmtree(path)
-            starter.restart_node(2, ["--download-snapshot", "http://127.0.0.1:9999"])
+            starter.restart_node(2, ["--download-snapshot", "http://127.0.0.1:9999", '--public-key', '18219295635707015937645445755505569836731605273220943516712644721479866137366:13229549502897098194754835600024217501928881864881229779950780865566962175067:3647833147657958185393020912446135601933571182900304549078758701875919023122:2426298721305518429857989502764051546820660937538732738470128444404528302050'])
             assert( wait_answer(n3.eth) )
+            print("n3 should be fixed now")
+            
+            # avail = wait_answer(n4.eth)
+            print("Stopping n4")
+            starter.stop_node(3)
+            starter.wait_node_stop(3)            
 
         try:
             ch.transaction_async()
         except:
             pass    # already exists
             
-        assert(hang_counter < 20)
+        assert(hang_counter < 45)
             
         time.sleep(1)
         hang_counter += 1
