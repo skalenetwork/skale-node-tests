@@ -1,0 +1,3 @@
+[submodule "config_tools"]
+	path = config_tools
+	url = git@github.com:skalenetwork/config_tools.git
