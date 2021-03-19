@@ -106,12 +106,14 @@ else:
 print("Waiting for blocks")
 
 wait_for_txns(ch, nTxns-1, t1)
-os.system("pkill -9 -f kill4")
 
 t2 = time.time()
 dt = t2 - t1
 
 print("Txns: "+str(nTxns)+" Time: "+str(dt)+" => "+str(nTxns/(dt))+" tx/sec")
+
+os.system("pkill -9 -f kill4")
+time.sleep(20)    # let possibly killed skaled to restore
 
 print("Comparing blocks:")
 ok = compare_nodes(eths)
