@@ -195,6 +195,7 @@ def wait_for_txns(ch, nTxns, t1=0):
             print("%d txns %d blocks" % (count, ch.eth.blockNumber), end=' ')
             if t1 > 0:
                 print("perf = %f tx/sec" % (count / (t2 - t1)), end='')
+            print()
 
         time.sleep(1)
 

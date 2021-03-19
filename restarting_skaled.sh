@@ -1,6 +1,6 @@
 #!/bin/bash
-EXE=~/skaled/build-no-mp/skaled/skaled
-trap -- '' SIGINT SIGTERM SIGHUP EXIT
+EXE=${ORIGINAL_SKALED:-~/skaled/build-debug-release/skaled/skaled}
+#trap -- '' SIGINT SIGTERM SIGHUP EXIT
 #until $EXE $@; do
 while true; do
 	$EXE $@

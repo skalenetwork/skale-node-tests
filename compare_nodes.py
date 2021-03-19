@@ -38,10 +38,14 @@ def compare_nodes(*eth):
                 arr_tx.append(val)
                 arr_hash.append(block.hash)
             except Exception as ex:
-                b -= 1
-                time.sleep(1)
+                print(f"Endpoint {e.web3.provider.endpoint_uri} is unavailable")
+                b = bn # exit
+                ok = False
                 break
-    
+                #b -= 1
+                #time.sleep(1)
+                #break
+
         equal_tx = True
         equal_hash = True
         if len(arr_tx)==len(eth):
@@ -58,6 +62,7 @@ def compare_nodes(*eth):
             ok = False
         else:
             print('.', end='')
+
         b += 1
         
     return ok

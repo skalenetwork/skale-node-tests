@@ -15,8 +15,8 @@ from sktest_helpers import create_custom_chain, \
 
 nNodes = int(os.getenv("NUM_NODES", 4))
 nTxns = 24000  # 24000
-nAcc = 8000
-nThreads = 0
+nAcc = 24000
+nThreads = 1
 
 MAX_RETRIES = 30
 
@@ -26,10 +26,12 @@ def send_func(eth, arr, begin, count):
         while(True):
             try:
                 t = arr[i]
-                eth.sendRawTransaction(t)
+                res=eth.sendRawTransaction(t)
                 break
             except Exception as e:
                 print(e)
+                if str(e).find("Same transaction already")>=0:
+                    break
                 time.sleep(1)
 
 if os.getenv('ENDPOINT_URL'):
@@ -38,7 +40,7 @@ if os.getenv('ENDPOINT_URL'):
     node = sktest.Node(bindIP=split[1], basePort=int(split[2])-3, rotateAfterBlock=0)
     ch = sktest.SChain([node], sktest.NoStarter(), [])
 else:
-    ch = create_custom_chain(num_nodes=nNodes, num_accounts=nAcc, bls=True)
+    ch = create_custom_chain(num_nodes=nNodes, num_accounts=nAcc, bls=False)
 
 ch.start()
 
@@ -102,9 +104,9 @@ else:
         thread.start()
 
 print("Waiting for blocks")
-os.system("pkill -9 -f kill4")
 
 wait_for_txns(ch, nTxns-1, t1)
+os.system("pkill -9 -f kill4")
 
 t2 = time.time()
 dt = t2 - t1
