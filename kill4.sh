@@ -9,7 +9,7 @@ do
 sleep $INTERVAL
 
 echo Killing $((i+1))
-kill -9 `pgrep -f "skaled/skaled.*/$((i+1))"`
+pkill -9 -f "/skaled .*/$((i+1))"
 
 #if [[ $j == '0' && ( ($i != '1' || $k != '2') && ($i != '2' || $k != '1') ) ]]
 #then
