@@ -4,6 +4,8 @@ function cleanup()
     pkill -9 -f restarting_skaled
     pkill -9 -f kill4
     pkill -f skaled
+    wait
+    echo Exiting $RET
     exit $RET
 }
 trap cleanup SIGINT SIGTERM SIGHUP EXIT
