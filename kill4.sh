@@ -1,5 +1,5 @@
 #!/bin/bash
-INTERVAL=30
+INTERVAL=45
 let i=1			# iterates through all
 #let j=1			# iterates 4 times slower
 #let k=2			# whom to kill
