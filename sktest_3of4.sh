@@ -1,6 +1,5 @@
 RET=0
-function cleanup()
-{
+cleanup () {
     pkill -9 -f restarting_skaled
     pkill -9 -f kill4
     pkill -f skaled
@@ -8,7 +7,7 @@ function cleanup()
     echo Exiting $RET
     exit $RET
 }
-trap cleanup SIGINT SIGTERM SIGHUP EXIT
+trap cleanup INT TERM HUP EXIT
 
 ./kill4.sh&
 export ORIGINAL_SKALED=$SKTEST_EXE
