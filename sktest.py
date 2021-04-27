@@ -18,7 +18,7 @@ import web3
 #from docker.types import LogConfig
 from web3.auto import w3
 
-from config import merge as config_merge, to_string as config_to_string
+from config_tools.config import merge as config_merge, to_string as config_to_string
 
 # w3.eth.enable_unaudited_features()
 
@@ -459,7 +459,7 @@ class SChain:
             "to": to_addr,
             "value": value,
             "gas": gas,
-            "gasPrice": 1000,
+            "gasPrice": 100000,
             "nonce": nonce,
             "data": data,
             "chainId": chainId
