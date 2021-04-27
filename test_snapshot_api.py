@@ -302,7 +302,6 @@ def test_stateRoot_conflict(schain):
 
         # delay hash computation on 2 nodes
         print("pausing hash")
-        # block number here must be block+1 (difference=2)
         while n1.eth.getLatestSnapshotBlockNumber()  != block-1 or n2.eth.getLatestSnapshotBlockNumber() != block-1:
             time.sleep(0.1)
 
