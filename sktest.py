@@ -626,7 +626,7 @@ def _make_config_schain(chain):
         "emptyBlockIntervalMs": chain.emptyBlockIntervalMs,
         "snapshotIntervalSec": chain.snapshotIntervalSec,
         # "schainOwner": chain.accounts[0],
-        "storageLimit": 1000*1000*1000*1000
+        "contractStorageLimit": 1000*1000*1000*1000
     }
     for i in range(len(chain.nodes)):
         ret["nodes"].append(_make_config_schain_node(chain.nodes[i], i))
