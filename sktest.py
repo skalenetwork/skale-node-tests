@@ -626,7 +626,7 @@ def _make_config_schain(chain):
         "emptyBlockIntervalMs": chain.emptyBlockIntervalMs,
         "snapshotIntervalSec": chain.snapshotIntervalSec,
         # "schainOwner": chain.accounts[0],
-        "storageLimit": 1000*1000*1000*1000
+        "contractStorageLimit": 1000*1000*1000*1000
     }
     for i in range(len(chain.nodes)):
         ret["nodes"].append(_make_config_schain_node(chain.nodes[i], i))
@@ -844,7 +844,7 @@ class LocalStarter:
         self.exe_popens = []
         self.running = False
 
-    def start(self, chain, start_timeout=40, restart_option=False):
+    def start(self, chain, start_timeout=40, restart_option=False, shared_space_path=""):
         assert not self.started
         self.started = True
         self.chain = chain
@@ -919,6 +919,10 @@ class LocalStarter:
                         print(str(ex))
                         pass    # already exists
                     time.sleep(1)
+
+            if shared_space_path != "":
+                popen_args.append('--shared-space-path')
+                popen_args.append(shared_space_path)
 
             popen = Popen(
                 popen_args,

@@ -3,6 +3,7 @@ import time
 from base64 import b64decode
 import binascii
 import pytest
+import fcntl
 from sktest import LocalStarter, LocalDockerStarter, Node, SChain
 
 if os.geteuid() != 0:
@@ -18,6 +19,7 @@ def schain(request):
     snapshotIntervalSec = 1
     snapshottedStartSeconds = -1
     num_nodes = 4
+    shared_space_path = ''
 
     marker = request.node.get_closest_marker("snapshotIntervalSec")
     if marker is not None:
@@ -30,7 +32,10 @@ def schain(request):
     marker = request.node.get_closest_marker("num_nodes") 
     if marker is not None:
         num_nodes = marker.args[0]
-
+        
+    marker = request.node.get_closest_marker("shared_space_path") 
+    if marker is not None:
+        shared_space_path = marker.args[0]
 
     run_container = os.getenv('RUN_CONTAINER')
     
@@ -50,7 +55,7 @@ def schain(request):
         emptyBlockIntervalMs=emptyBlockIntervalMs,
         snapshotIntervalSec=snapshotIntervalSec
     )
-    ch.start(start_timeout=0)
+    ch.start(start_timeout=0, shared_space_path=shared_space_path)
 
     yield(ch)
 
@@ -348,3 +353,36 @@ def test_wait(schain):
             pass    # already exists
 
         time.sleep(1)
+        
+@pytest.mark.num_nodes(1)
+@pytest.mark.shared_space_path("shared_space")
+def test_shared_space(schain):
+    try:
+        os.mkdir("shared_space")
+    except:
+        pass
+    ch = schain
+    n = ch.nodes[0]
+    eth = n.eth
+    assert(wait_answer(eth))
+    wait_block(eth, 3)
+    with open("shared_space/.lock", "w") as f:
+        fcntl.flock(f, fcntl.LOCK_EX)
+        snap = eth.getSnapshot(2)
+        assert(type(snap) is str and snap.find("occupied") >= 0)
+    snap = eth.getSnapshot(2)
+    assert(type(snap) is dict)
+    for t in (0, 2, 100):
+        print(f"sleeping {t}")
+        time.sleep(t)
+        with open("shared_space/.lock", "w") as f:
+            try:            
+                fcntl.flock(f, fcntl.LOCK_EX|fcntl.LOCK_NB)
+                assert(t > 2) # if success
+                snap = eth.getSnapshot(2)
+                assert(type(snap) is dict) # available again!
+            except BlockingIOError as ex:
+                # busy
+                assert(t <= 2)
+                snap = eth.getSnapshot(2)
+                assert(type(snap) is str)
