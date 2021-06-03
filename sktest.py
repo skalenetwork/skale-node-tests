@@ -896,6 +896,10 @@ class LocalStarter:
                 "--acceptors", "1"
             ]
 
+            if cfg["skaleConfig"]["nodeInfo"]["wallets"]["ima"]["url"]:
+                popen_args.append("--sgx-url")
+                popen_args.append(cfg["skaleConfig"]["nodeInfo"]["wallets"]["ima"]["url"])
+
             if n.snapshottedStartSeconds > -1:
                 popen_args.append("--download-snapshot")
                 popen_args.append("http://" + self.chain.nodes[0].bindIP + ":" + str(self.chain.nodes[0].basePort + 3))  # noqa
