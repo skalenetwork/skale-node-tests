@@ -896,9 +896,12 @@ class LocalStarter:
                 "--acceptors", "1"
             ]
 
-            if cfg["skaleConfig"]["nodeInfo"]["wallets"]["ima"]["url"]:
-                popen_args.append("--sgx-url")
-                popen_args.append(cfg["skaleConfig"]["nodeInfo"]["wallets"]["ima"]["url"])
+            try:
+              if cfg["skaleConfig"]["nodeInfo"]["wallets"]["ima"]["url"]:
+                  popen_args.append("--sgx-url")
+                  popen_args.append(cfg["skaleConfig"]["nodeInfo"]["wallets"]["ima"]["url"])
+            except:
+              pass
 
             if n.snapshottedStartSeconds > -1:
                 popen_args.append("--download-snapshot")
