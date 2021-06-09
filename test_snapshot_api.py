@@ -70,7 +70,7 @@ def eth_available(eth):
             return False
 
 def wait_answer(eth):
-    for i in range(20):
+    for i in range(30):
         avail = eth_available(eth)
         print(f"available: {avail}")
         if avail:
