@@ -379,7 +379,8 @@ def test_shared_space(schain):
             try:            
                 fcntl.flock(f, fcntl.LOCK_EX|fcntl.LOCK_NB)
                 assert(t > 2) # if success
-                snap = eth.getSnapshot(2)
+                fcntl.flock(f, fcntl.LOCK_UN)
+                snap = eth.getSnapshot(eth.getLatestSnapshotBlockNumber())
                 assert(type(snap) is dict) # available again!
             except BlockingIOError as ex:
                 # busy
