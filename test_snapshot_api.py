@@ -172,25 +172,12 @@ def test_corner_cases(schain):
     assert type( n1.eth.getSnapshot(4) ) is str # error
     assert type( n1.eth.getSnapshot(100) ) is str # error
     
-    counter = 0
-    while True:
-        bn = n1.eth.blockNumber
-        time.sleep(0.5)
-        s = n1.eth.getLatestSnapshotBlockNumber()
-        assert s == bn-1 or s == bn           # can be if bn incremented
-        snap = n1.eth.getSnapshot( bn-1 )
-        if type(snap) is dict:
-            break
-        print(f"Waiting at block {bn}")
-        time.sleep(0.5)
-        
-        counter += 1
-        assert counter < 120    # approx
-
-    data_size = snap['dataSize']
-    assert data_size > 0
-    ch = n1.eth.downloadSnapshotFragment(0, 10)
-    assert len(b64decode(ch['data']))==ch['size'] and ch['size'] == 10
+    bn = n1.eth.blockNumber
+    time.sleep(0.5)
+    s = n1.eth.getLatestSnapshotBlockNumber()
+    assert s == bn-1 or s == bn           # can be if bn incremented
+    snap = n1.eth.getSnapshot( bn-1 )
+    assert(type(snap) is str)             # not yet ready
 
 def test_main(schain):
     ch = schain
@@ -331,7 +318,7 @@ def test_stateRoot_conflict(schain):
         n2.eth.debugInterfaceCall("Client trace continue computeSnapshotHash_start")
 
 @pytest.mark.num_nodes(4) # only 4! (no more keys in config!)
-@pytest.mark.snapshotIntervalSec(1)
+@pytest.mark.snapshotIntervalSec(60)
 def test_wait(schain):
     ch = schain
     n1 = ch.nodes[0]
@@ -341,8 +328,8 @@ def test_wait(schain):
         try:
             bn1 = n1.eth.blockNumber
             s1 = n1.eth.getLatestSnapshotBlockNumber()
-            print(f"block/snapshot: {bn1} {s1}")            
-    
+            print(f"block/snapshot: {bn1} {s1}")
+
         except Exception as e:
             print(str(e))
 
@@ -353,7 +340,7 @@ def test_wait(schain):
             pass    # already exists
 
         time.sleep(1)
-        
+
 @pytest.mark.num_nodes(1)
 @pytest.mark.shared_space_path("shared_space")
 def test_shared_space(schain):
