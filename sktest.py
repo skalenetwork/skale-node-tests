@@ -577,7 +577,8 @@ def _make_config_node(node):
         "wallets": {
             "ima": {
                 #"url": "https://127.0.0.1:1026",
-                "url": "https://45.76.3.64:1026",
+                #"url": "https://45.76.3.64:1026",
+                "url": "https://3.140.42.73:1026",
                 "keyShareName": node.keyShareName,
                 "t": 3,
                 "n": 4,
