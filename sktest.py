@@ -459,7 +459,7 @@ class SChain:
             "to": to_addr,
             "value": value,
             "gas": gas,
-            "gasPrice": 100000,
+            "gasPrice": 1000000,
             "nonce": nonce,
             "data": data,
             "chainId": chainId
@@ -578,7 +578,7 @@ def _make_config_node(node):
             "ima": {
                 #"url": "https://127.0.0.1:1026",
                 #"url": "https://45.76.3.64:1026",
-                "url": "https://44.234.110.29:1026",
+                "url": "https://34.223.63.227:1026",
                 "keyShareName": node.keyShareName,
                 "t": 3,
                 "n": 4,
