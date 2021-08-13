@@ -110,8 +110,10 @@ def test_rotation(schain):
         # just ask for some old block
         try:
             b1 = eth.getBlock(1)
+            print(f"On block {eth.blockNumber} block 1 still found")
         except Exception as ex:
             assert(str(ex).find('not found') != -1)
+            print(f"On block {eth.blockNumber} block 1 NOT found!")
             b1 = None
         assert(b1 is None or b1['hash'] == hash1 or b1['hash'] == hash2)
 

@@ -359,18 +359,45 @@ def test_shared_space(schain):
         assert(type(snap) is str and snap.find("occupied") >= 0)
     snap = eth.getSnapshot(2)
     assert(type(snap) is dict)
-    for t in (0, 2, 100):
+    for t in (0, 2):
         print(f"sleeping {t}")
         time.sleep(t)
         with open("shared_space/.lock", "w") as f:
             try:            
                 fcntl.flock(f, fcntl.LOCK_EX|fcntl.LOCK_NB)
-                assert(t > 2) # if success
-                fcntl.flock(f, fcntl.LOCK_UN)
-                snap = eth.getSnapshot(eth.getLatestSnapshotBlockNumber())
-                assert(type(snap) is dict) # available again!
+                assert(false)
             except BlockingIOError as ex:
                 # busy
-                assert(t <= 2)
                 snap = eth.getSnapshot(2)
                 assert(type(snap) is str)
+                
+@pytest.mark.shared_space_path("shared_space")
+def test_download_lock(schain):
+    ch = schain
+    n1 = ch.nodes[0]
+    n2 = ch.nodes[1]
+    n3 = ch.nodes[2]
+    n4 = ch.nodes[3]
+    starter = ch.starter
+    eth = n1.eth
+    assert(wait_answer(eth))
+    wait_block(eth, 5)
+    bn1 = n1.eth.blockNumber
+    s1 = n1.eth.getLatestSnapshotBlockNumber()
+    print(f"block/snapshot: {bn1} {s1}")
+    
+    try:
+        os.mkdir("shared_space")
+    except:
+        pass
+    
+    with open("shared_space/.lock", "w") as f:
+        fcntl.flock(f, fcntl.LOCK_EX)
+        
+        print("Restarting n4")
+    
+        args = ['--public-key', '18219295635707015937645445755505569836731605273220943516712644721479866137366:13229549502897098194754835600024217501928881864881229779950780865566962175067:3647833147657958185393020912446135601933571182900304549078758701875919023122:2426298721305518429857989502764051546820660937538732738470128444404528302050']
+        args.append("--download-snapshot")
+        args.append("http://" + ch.nodes[0].bindIP + ":" + str(ch.nodes[0].basePort + 3))  # noqa
+        starter.restart_node(3, args)
+        wait_answer(n4.eth)

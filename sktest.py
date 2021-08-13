@@ -333,7 +333,6 @@ class Node:
         self.running = False
         self.eth = None
         self.ipcPath = None
-        self.rotateAfterBlock = kwargs.get('rotateAfterBlock', -1)
         # self.snapshotInterval = kwargs.get('snapshotInterval', -1)
         self.snapshottedStartSeconds = kwargs.get(
             'snapshottedStartSeconds', -1
@@ -367,6 +366,7 @@ class SChain:
         self.snapshotIntervalSec = kwargs.get('snapshotIntervalSec', -1)
         self.nodes = list(nodes)
         self.chainID = kwargs.get('chainID', "0x1")
+        self.dbStorageLimit = kwargs.get('dbStorageLimit', 120*1024*1024)
         self.config_addons = {"params": {"chainID": self.chainID}, "accounts": {}}
         self.starter = starter
         self.running = False
@@ -467,7 +467,7 @@ class SChain:
         if "code" in kwargs:
             transaction["code"] = kwargs["code"]
 
-        signed = w3.eth.account.signTransaction(
+        signed = w3.eth.account.sign_transaction(
             transaction,
             private_key=self.privateKeys[_from]
         )
@@ -571,7 +571,6 @@ def _make_config_node(node):
         "basePort": node.basePort,
         "logLevel": "trace",
         "logLevelConfig": "trace",
-        "rotateAfterBlock": node.rotateAfterBlock,
         "enable-debug-behavior-apis": True,
         "ecdsaKeyName": node.ecdsaKeyName,
         "wallets": {
@@ -627,7 +626,8 @@ def _make_config_schain(chain):
         "emptyBlockIntervalMs": chain.emptyBlockIntervalMs,
         "snapshotIntervalSec": chain.snapshotIntervalSec,
         # "schainOwner": chain.accounts[0],
-        "contractStorageLimit": 1000*1000*1000*1000
+        "contractStorageLimit": 1000*1000*1000*1000,
+        "dbStorageLimit": chain.dbStorageLimit,
     }
     for i in range(len(chain.nodes)):
         ret["nodes"].append(_make_config_schain_node(chain.nodes[i], i))

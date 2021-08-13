@@ -41,10 +41,15 @@ def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks=True,
     if config_file == None:
         config_file = "config0.json"
 
+    dbStorageLimit = -1
+    # VERY empiric formula %)
+    # (specially for test_rotation.py test)
+    if rotate_after_block > 0:
+        dbStorageLimit = (612+1322)*rotate_after_block*5+2000 # 2k is empirical %)
+        dbStorageLimit = int(dbStorageLimit)
+
     nodes = []
     balances = []
-
-    print(f"custom {rotate_after_block}")
 
     base_ports = [BASE_PORT + PORT_RANGE * i for i in range(num_nodes)]
     for i, port in enumerate(base_ports):
@@ -54,7 +59,6 @@ def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks=True,
         if run_container or same_ip:
             node = Node(
                 emptyBlockIntervalMs=emptyBlockIntervalMs,
-                rotateAfterBlock=rotate_after_block,
                 bindIP='0.0.0.0',
                 basePort=port, bls=bls
             )
@@ -62,7 +66,7 @@ def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks=True,
             base_port = 1231
             node = Node(bindIP=f'127.0.0.{i+1}', basePort=base_port,
                         emptyBlockIntervalMs=emptyBlockIntervalMs,
-                        rotateAfterBlock=rotate_after_block, bls=bls)
+                        bls=bls)
 
         nodes.append(node)
 
@@ -93,7 +97,8 @@ def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks=True,
         emptyBlockIntervalMs = 1000
 
     chain = SChain(nodes, starter, balances,
-                   emptyBlockIntervalMs=emptyBlockIntervalMs, chainID=chainID)
+                   emptyBlockIntervalMs=emptyBlockIntervalMs, chainID=chainID,
+                   dbStorageLimit=dbStorageLimit)
 
     return chain
 
