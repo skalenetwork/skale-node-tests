@@ -53,7 +53,8 @@ def schain(request):
         starter,
         prefill=[1000000000000000000, 2000000000000000000],
         emptyBlockIntervalMs=emptyBlockIntervalMs,
-        snapshotIntervalSec=snapshotIntervalSec
+        snapshotIntervalSec=snapshotIntervalSec,
+        dbStorageLimit = 100000
     )
     ch.start(start_timeout=0, shared_space_path=shared_space_path)
 
@@ -70,7 +71,7 @@ def eth_available(eth):
             return False
 
 def wait_answer(eth):
-    for i in range(30):
+    for i in range(40):
         avail = eth_available(eth)
         print(f"available: {avail}")
         if avail:
