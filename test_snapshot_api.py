@@ -102,17 +102,17 @@ def test_download_download(schain):
         
     wait_answer(n4.eth)
     
-    s4 = n4.eth.getLatestSnapshotBlockNumber()
-    assert s4 == 0  # should start with zero
+    s4_initial = n4.eth.getLatestSnapshotBlockNumber()
 
     counter = 0
-    while s4 == 0:
+    s4 = s4_initial
+    while s4 == s4_initial:
         time.sleep(1)        
         s4 = n4.eth.getLatestSnapshotBlockNumber()
         print(f"Waiting for next snapshot: {s4}")
         counter += 1
         
-        # disable catchup and wait twice time!
+        # wait twice time!
         if counter == 30*2:
             break
     
