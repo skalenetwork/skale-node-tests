@@ -93,36 +93,12 @@ def assert_b_s(eth, b, s):
     assert eth.blockNumber == b
     assert eth.getLatestSnapshotBlockNumber() == s
 
-# For details about crash/commit points in skaled, see
-# https://skalelabs.atlassian.net/wiki/spaces/SKALE/pages/2349826055/skaled+disk+activity+crash+resistance
-
-@pytest.mark.parametrize("id", ['OverlayDB_commit_2',
-                                'insertBlockAndExtras',
-                                'after_remove_oldest',
-                                'with_two_keys',
-                                'with_two_keys_2',      # HACK
-                                'genesis_after_rotate',
-                                'after_genesis_after_rotate'
-                                ])
-def test_basic(schain, id):
-    ch = schain
+def helper_restart_and_crash(ch, id):
     n1 = ch.nodes[0]
     n2 = ch.nodes[1]
     n3 = ch.nodes[2]
     n4 = ch.nodes[3]
     starter = ch.starter
-    assert(wait_answer(n4.eth))
-
-    # HACK wait for additional prior block rotation (to have really two keys!)
-    if id == 'with_two_keys_2':
-        id = 'with_two_keys'
-        print("Waiting for rotation (25 blocks)")
-        bn_start = n4.eth.blockNumber
-        bn = bn_start
-        while bn - bn_start < 25:
-            bn = n4.eth.blockNumber
-            print(bn_start, bn)
-            time.sleep(1)
 
     print("Restarting n4 with crash flag =", id)
 
@@ -140,7 +116,8 @@ def test_basic(schain, id):
             print("Sending 2 transactons")
             n1.eth.sendRawTransaction(t1)
             n1.eth.sendRawTransaction(t2)
-            time.sleep(5)
+            print("Waiting 10 seconds to crash")
+            time.sleep(10)
         # rotation-related cases
         elif id not in ['OverlayDB_commit_2', 'insertBlockAndExtras']:
             # wait for rotation
@@ -154,6 +131,13 @@ def test_basic(schain, id):
         assert(not eth_available(n4.eth))
 
     print("OK, it's fallen")
+
+def helper_restart_normal_and_check(ch):
+    n1 = ch.nodes[0]
+    n2 = ch.nodes[1]
+    n3 = ch.nodes[2]
+    n4 = ch.nodes[3]
+    starter = ch.starter
 
     print("Now starting normally")
     starter.restart_node(3, ['--test-enable-crash-at', 'dont_crash'])
@@ -186,3 +170,64 @@ def test_basic(schain, id):
     hash4 = n4.eth.getSnapshotSignature(s_now)['hash']
     assert( hash1 != '' and len(hash1) == 64 and hash1 == hash4)
     print("hashes are equal")
+
+# For details about crash/commit points in skaled, see
+# https://skalelabs.atlassian.net/wiki/spaces/SKALE/pages/2349826055/skaled+disk+activity+crash+resistance
+
+@pytest.mark.parametrize("id", ['OverlayDB_commit_2',
+                                'insertBlockAndExtras',
+                                'after_remove_oldest',
+                                'with_two_keys',
+                                'with_two_keys_2',      # HACK
+                                'genesis_after_rotate',
+                                'after_genesis_after_rotate'
+                                ])
+def test_basic(schain, id):
+    ch = schain
+    n1 = ch.nodes[0]
+    n2 = ch.nodes[1]
+    n3 = ch.nodes[2]
+    n4 = ch.nodes[3]
+    starter = ch.starter
+    assert(wait_answer(n4.eth))
+
+    # HACK wait for additional rotation prior block rotation (to have really two keys!)
+    if id == 'with_two_keys_2':
+        id = 'with_two_keys'
+        print("Waiting for rotation (25 blocks)")
+        bn_start = n4.eth.blockNumber
+        bn = bn_start
+        while bn - bn_start < 25:
+            bn = n4.eth.blockNumber
+            print(bn_start, bn)
+            time.sleep(1)
+
+    helper_restart_and_crash(ch, id)
+    helper_restart_normal_and_check(ch)
+
+@pytest.mark.parametrize("repair_crash_id", ['after_pieces_kill',
+                                'after_recover',
+                                'fix_bad_rotation',
+                                'insertBlockAndExtras',
+                                ])
+def test_repair(schain, repair_crash_id):
+    ch = schain
+    n1 = ch.nodes[0]
+    n2 = ch.nodes[1]
+    n3 = ch.nodes[2]
+    n4 = ch.nodes[3]
+    starter = ch.starter
+    assert(wait_answer(n4.eth))
+
+    # HACK wait for additional rotation prior block rotation (to have really two keys!)
+    print("Waiting for rotation (25 blocks)")
+    bn_start = n4.eth.blockNumber
+    bn = bn_start
+    while bn - bn_start < 25:
+        bn = n4.eth.blockNumber
+        print(bn_start, bn)
+        time.sleep(1)
+
+    helper_restart_and_crash(ch, 'with_two_keys')
+    helper_restart_and_crash(ch, repair_crash_id)
+    helper_restart_normal_and_check(ch)
