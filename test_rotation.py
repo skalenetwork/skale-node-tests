@@ -8,7 +8,7 @@ nAcc  = 1000
 @pytest.fixture
 def schain():
     ch = create_custom_chain(num_nodes=1, num_accounts=nAcc+1, empty_blocks = False, rotate_after_block = 64)
-    ch.start(start_timeout = 10)
+    ch.start(start_timeout = 15)
 
     yield (ch)
 

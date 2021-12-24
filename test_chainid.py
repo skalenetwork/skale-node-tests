@@ -5,7 +5,7 @@ import pytest
 def schain_with_id(request):
     chain_id = request.param
     ch = create_chain_with_id(num_nodes=1, num_accounts=2, chain_id = chain_id)
-    ch.start(start_timeout = 10)
+    ch.start(start_timeout = 15)
     yield ch
     ch.stop()
 
