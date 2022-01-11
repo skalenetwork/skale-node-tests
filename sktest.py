@@ -41,7 +41,7 @@ def safe_input_with_timeout(s, timeout):
         else:
             print("nowhere to input from: " + repr(ex))
             signal.alarm(0)
-            time.ssleep(timeout)
+            time.sleep(timeout)
         # Exception("Timed out!")
 
 def patch_eth(eth):
