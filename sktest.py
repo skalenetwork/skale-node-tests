@@ -41,7 +41,7 @@ def safe_input_with_timeout(s, timeout):
         else:
             print("nowhere to input from: " + repr(ex))
             signal.alarm(0)
-            time.sleep(timeout)
+            time.ssleep(timeout)
         # Exception("Timed out!")
 
 def patch_eth(eth):
@@ -531,6 +531,9 @@ class SChain:
                 time.sleep(1)
 
     def stop(self):
+
+        time.sleep(10)	# HACK for Serge!
+
         self.starter.stop()
         self.running = False
     

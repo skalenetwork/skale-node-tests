@@ -56,7 +56,7 @@ def schain(request):
         snapshotIntervalSec=snapshotIntervalSec,
         dbStorageLimit = 100000
     )
-    ch.start(start_timeout=0, shared_space_path=shared_space_path)
+    ch.start(start_timeout=10, shared_space_path=shared_space_path)
 
     yield(ch)
 
