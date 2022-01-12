@@ -186,7 +186,7 @@ def test_restart(schain):
             if bn1 == bn4:
                 assert s1 == s4
             
-            if s1 != 0 and bn4 == bn1:
+            if s1 != 0 and bn4 == bn1 and bn1 >= 10:
                                 
                 print("Restarting")
                 
@@ -199,6 +199,7 @@ def test_restart(schain):
                 
                 avail = wait_answer(n4.eth)
                 assert avail
+                time.sleep(10)
         
             if bn1 >= 60 and bn1==bn2 and bn2==bn3 and bn3==bn4:
                 break
