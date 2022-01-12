@@ -90,7 +90,7 @@ def test_download_snapshot(schain, have_others, have_4):
             s1 = n1.eth.getLatestSnapshotBlockNumber()
             print(f"s1 = {s1}")        
             
-            if bn1 == 3 and s1 == bn1-1:
+            if bn1 == 10 and s1 == bn1-1:
                 
                 need_sleep = False
                 
