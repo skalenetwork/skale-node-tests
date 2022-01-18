@@ -104,22 +104,22 @@ def helper_restart_and_crash(ch, id):
 
     args = ['--test-enable-crash-at', id]
     starter.restart_node(3, args)
-    time.sleep(10)
+    time.sleep(30)
     if wait_answer(n4.eth) == True:
         bn = n1.eth.blockNumber
         print(f"Waiting n4 to catch up block {bn}")
         wait_block(n4.eth, bn)
-        if id == 'OverlayDB_commit_2':
+        if id.startswith('OverlayDB_commit_'):
             # need to help it die ;)
-            t1 = ch.transaction_obj(_from=0, nonce=0)
-            t2 = ch.transaction_obj(_from=1, nonce=0)
+            t1 = ch.transaction_obj(_from=0)
+            t2 = ch.transaction_obj(_from=1)
             print("Sending 2 transactons")
             n1.eth.sendRawTransaction(t1)
             n1.eth.sendRawTransaction(t2)
             print("Waiting 10 seconds to crash")
             time.sleep(10)
         # rotation-related cases
-        elif id not in ['OverlayDB_commit_2', 'insertBlockAndExtras']:
+        elif id != 'insertBlockAndExtras':
             # wait for rotation
             print("Waiting for rotation")
             b_start = n1.eth.blockNumber
@@ -174,7 +174,8 @@ def helper_restart_normal_and_check(ch):
 # For details about crash/commit points in skaled, see
 # https://skalelabs.atlassian.net/wiki/spaces/SKALE/pages/2349826055/skaled+disk+activity+crash+resistance
 
-@pytest.mark.parametrize("id", ['OverlayDB_commit_2',
+@pytest.mark.parametrize("id", ['OverlayDB_commit_1',
+                                'OverlayDB_commit_2',
                                 'insertBlockAndExtras',
                                 'after_remove_oldest',
                                 'with_two_keys',
@@ -230,4 +231,19 @@ def test_repair(schain, repair_crash_id):
 
     helper_restart_and_crash(ch, 'with_two_keys')
     helper_restart_and_crash(ch, repair_crash_id)
+    helper_restart_normal_and_check(ch)
+
+# do partial catchup second time
+def test_two_times( schain ):
+    ch = schain
+    n1 = ch.nodes[0]
+    n2 = ch.nodes[1]
+    n3 = ch.nodes[2]
+    n4 = ch.nodes[3]
+    starter = ch.starter
+    assert(wait_answer(n4.eth))
+
+    helper_restart_and_crash(ch, "OverlayDB_commit_2")
+    helper_restart_normal_and_check(ch)
+    helper_restart_and_crash(ch, "OverlayDB_commit_2")
     helper_restart_normal_and_check(ch)
