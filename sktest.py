@@ -853,9 +853,24 @@ class LocalStarter:
         self.started = True
         self.chain = chain
 
+        cfg = copy.deepcopy(self.config)
+        config_merge(cfg, self.chain.config_addons)
+            
+        with open(os.path.join(self.dir.name, "config0.json"), "w") as f:
+            json.dump(cfg, f, indent = 1)
+            
+        ip_ports = [str(node.bindIP)+":"+str(node.basePort) for node in self.chain.nodes]
+            
+        os.system("./config_tools/make_configs.sh "
+                  +str(len(self.chain.nodes))+" "+",".join(ip_ports)+" "
+                  +os.path.join(self.dir.name, "config0.json")
+                 )
+
         # TODO Handle exceptions!
+        idx = 0
         for n in self.chain.nodes:
             assert not n.running
+            idx+=1
 
             node_dir = os.path.join(os.getenv('DATA_DIR', self.dir.name), str(n.nodeID))
             ipc_dir = node_dir
@@ -865,16 +880,8 @@ class LocalStarter:
                 pass
             cfg_file = node_dir + "/config.json"
 
-            cfg = copy.deepcopy(self.config)
-            config_merge(cfg, self.chain.config_addons)
-            cfg["skaleConfig"] = {
-                "nodeInfo": _make_config_node(n),
-                "sChain": _make_config_schain(self.chain)
-            }
-            f = io.open(cfg_file, "w")
-            json.dump(cfg, f, indent=1)
-            n.config = cfg
-            f.close()
+            ##!n.config = cfg
+            os.rename("./config"+str(idx)+".json", cfg_file)
 
             # TODO Close all of it?
             aleth_out = io.open(node_dir + "/" + "aleth.out", "w")
@@ -886,7 +893,7 @@ class LocalStarter:
             popen_args = [
                 # "/usr/bin/strace", '-o'+node_dir+'/aleth.trace',
                 # "stdbuf", "-oL",
-                # "heaptrack",
+                # "/home/dimalit/heaptrack/build/bin/heaptrack",
                 # "valgrind", "--tool=callgrind", #"--separate-threads=yes",
                 self.exe,
                 "--http-port", str(n.basePort + 3),
@@ -897,7 +904,8 @@ class LocalStarter:
                 # "--ipcpath", ipc_dir,		# ACHTUNG!!! 107 characters max!!
                 "-v", "4",
                 "--web3-trace",
-                "--acceptors", "1"
+                "--acceptors", "1",
+                "--enable-debug-behavior-apis"
             ]
 
             try:
