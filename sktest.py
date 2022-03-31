@@ -81,6 +81,8 @@ def patch_eth(eth):
         if res.get("error", ""):
             return res["error"]["message"]
         res = res['result']
+        if res.get('error', ''):
+            return res['error']
         return res
 
     def downloadSnapshotFragment(eth, _from, size, is_binary=False):
