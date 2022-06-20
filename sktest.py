@@ -446,7 +446,7 @@ class SChain:
         nonce = kwargs.get("nonce", self.nonce(_from))
         data = kwargs.get("data", "0x")
         gas = int(kwargs.get("gas", 21000))
-        chainId = kwargs.get("chain_id", None)
+        chainId = kwargs.get("chain_id", "0x1")
 
         from_addr = self.accounts[_from]
         if type(to) is str:
