@@ -54,7 +54,7 @@ def schain(request):
         prefill=[1000000000000000000, 2000000000000000000],
         emptyBlockIntervalMs=emptyBlockIntervalMs,
         snapshotIntervalSec=snapshotIntervalSec,
-        dbStorageLimit = 100000
+        dbStorageLimit = 10000000
     )
     ch.start(start_timeout=10, shared_space_path=shared_space_path)
 
@@ -341,6 +341,47 @@ def test_wait(schain):
             pass    # already exists
 
         time.sleep(1)
+
+@pytest.mark.num_nodes(4) # only 4! (no more keys in config!)
+@pytest.mark.snapshotIntervalSec(60)
+def test_2_snapshots(schain):
+    ch = schain
+    n1 = ch.nodes[0]
+    n2 = ch.nodes[1]
+    latest_snapshot = 0
+    snapshots_count = 0
+    worked = False        # exception can occur only once!
+    while True:
+        try:
+            bn1 = n1.eth.blockNumber
+            s1 = n1.eth.getLatestSnapshotBlockNumber()
+            print(f"block/snapshot: {bn1} {s1}")
+
+            worked = True
+
+            if s1 != latest_snapshot and latest_snapshot != 0:
+                snapshots_count+=1
+
+            latest_snapshot = s1
+
+            # wait 2nd snapshot +1 for sure
+            if snapshots_count == 3:
+                break
+
+        except Exception as e:
+            print(str(e))
+            assert(not worked)
+
+        try:
+            tx = ch.transaction_obj()
+            n2.eth.sendRawTransaction(tx)
+        except:
+            pass    # already exists
+
+        time.sleep(1)
+
+    # check that skaled is still here
+    bn = n1.eth.blockNumber
 
 @pytest.mark.num_nodes(1)
 @pytest.mark.shared_space_path("shared_space")
