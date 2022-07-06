@@ -30,7 +30,8 @@
     "minimumDifficulty": "0x0",
     "difficultyBoundDivisor": "0x0800",
     "durationLimit": "0x0d",
-    "blockReward": "0x4563918244F40000"
+    "blockReward": "0x4563918244F40000",
+    "externalGasDifficulty": "0x1"
   },
   "genesis": {
     "nonce": "0x0000000000000042",
@@ -265,7 +266,11 @@
 	      "collectionQueueSize": 2,
 	      "collectionDuration": 10,
 	      "transactionQueueSize": 100,
-	      "maxOpenLeveldbFiles": 25
+	      "maxOpenLeveldbFiles": 25,
+              "skale-manager": {
+                "Nodes": "0xC6821c7f66D7E5E387F94d15887639eAF3783263",
+                "SchainsInternal": "0x65CD28BF9A5270DA4B63c9b3918Ce1AedA57fEB4"
+              }
 	    },
 	    "sChain":
 	      {

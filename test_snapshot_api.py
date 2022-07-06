@@ -20,6 +20,7 @@ def schain(request):
     snapshottedStartSeconds = -1
     num_nodes = 4
     shared_space_path = ''
+    chain_id = None
 
     marker = request.node.get_closest_marker("snapshotIntervalSec")
     if marker is not None:
@@ -36,6 +37,10 @@ def schain(request):
     marker = request.node.get_closest_marker("shared_space_path") 
     if marker is not None:
         shared_space_path = marker.args[0]
+
+    marker = request.node.get_closest_marker("chain_id") 
+    if marker is not None:
+        chain_id = marker.args[0]
 
     run_container = os.getenv('RUN_CONTAINER')
     
@@ -54,13 +59,15 @@ def schain(request):
         prefill=[1000000000000000000, 2000000000000000000],
         emptyBlockIntervalMs=emptyBlockIntervalMs,
         snapshotIntervalSec=snapshotIntervalSec,
-        dbStorageLimit = 10000000
+        dbStorageLimit = 10000000,
+        chainID = chain_id,
+        schainName = "rhythmic-tegmen"
     )
     ch.start(start_timeout=10, shared_space_path=shared_space_path)
 
     yield(ch)
 
-    print("Exiting")    
+    print("Exiting")
     ch.stop()
 
 def eth_available(eth):
@@ -320,19 +327,22 @@ def test_stateRoot_conflict(schain):
 
 @pytest.mark.num_nodes(4) # only 4! (no more keys in config!)
 @pytest.mark.snapshotIntervalSec(60)
+@pytest.mark.chain_id("0xd2ba743e9fef4")
+#@pytest.mark.chain_id("0x2")
 def test_wait(schain):
     ch = schain
     n1 = ch.nodes[0]
     n2 = ch.nodes[1]
     #for _ in range(50):
     while True:
-        try:
-            bn1 = n1.eth.blockNumber
-            s1 = n1.eth.getLatestSnapshotBlockNumber()
-            print(f"block/snapshot: {bn1} {s1}")
+        #try:
+        #    bn1 = n1.eth.blockNumber
+        #    s1 = n1.eth.getLatestSnapshotBlockNumber()
+        #    if bn1 % 10 == 0:
+        #      print(f"block/snapshot: {bn1} {s1}")
 
-        except Exception as e:
-            print(str(e))
+        #except Exception as e:
+        #    print(str(e))
 
         try:
             tx = ch.transaction_obj()
@@ -344,6 +354,7 @@ def test_wait(schain):
 
 @pytest.mark.num_nodes(4) # only 4! (no more keys in config!)
 @pytest.mark.snapshotIntervalSec(60)
+@pytest.mark.chain_id("0xd2ba743e9fef4")
 def test_2_snapshots(schain):
     ch = schain
     n1 = ch.nodes[0]
