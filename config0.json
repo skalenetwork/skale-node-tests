@@ -56,9 +56,9 @@
 	    "0x5EF25557E2ed6AFfF321B266C93e95A0B4B05AbC":{
 	        "balance": "1000000000000000000000000"
 	    },
-	    "0x6196d135CdDb9d73A0756C1E44b5b02B11acf594":{
+	    "0x7aa5e36aa15e93d10f4f26357c30f052dacdde5f":{
 	        "balance": "2000000000000000000000",
-	        "nonce": "5076",
+	        "nonce": "7",
    	        "code": "",
 			"storage":{}
 	    },
@@ -277,7 +277,7 @@
 	        "schainName": "TestChain",
 	        "schainID": 1,
 	        "schainOwner": "0x66c5a87f4a49DD75e970055A265E8dd5C3F8f852",
-	        "storageLimit": 1000000,
+	        "contractStorageLimit": 1000000,
 	        "emptyBlockIntervalMs": 3000,
 	        "nodes": [
 	          { "nodeID": 1112, "ip": "127.0.0.1", "basePort": 1231, "schainIndex" : 1, "publicKey":""}
