@@ -73,16 +73,16 @@ def patch_eth(eth):
     def getSnapshotSignature(eth, bn):
         res = eth._provider.make_request("skale_getSnapshotSignature", [bn])
         if res.get("error", ""):
-            return res["error"]
+            return res["error"]["message"]
         return res["result"]
 
     def getSnapshot(eth, block_number):
         res = eth._provider.make_request("skale_getSnapshot", {"blockNumber":block_number})
         if res.get("error", ""):
-            return res["error"]
+            return res["error"]["message"]
         res = res['result']
-        if res.get("error", ""):
-            return res["error"]
+        if res.get('error', ''):
+            return res['error']
         return res
 
     def downloadSnapshotFragment(eth, _from, size, is_binary=False):
@@ -446,7 +446,7 @@ class SChain:
         nonce = kwargs.get("nonce", self.nonce(_from))
         data = kwargs.get("data", "0x")
         gas = int(kwargs.get("gas", 21000))
-        chainId = kwargs.get("chain_id", None)
+        chainId = kwargs.get("chain_id", self.chainID)
 
         from_addr = self.accounts[_from]
         if type(to) is str:
@@ -591,7 +591,11 @@ def _make_config_node(node):
                 "commonBLSPublicKey0": "18219295635707015937645445755505569836731605273220943516712644721479866137366",
                 "commonBLSPublicKey1": "13229549502897098194754835600024217501928881864881229779950780865566962175067",
                 "commonBLSPublicKey2": "3647833147657958185393020912446135601933571182900304549078758701875919023122",
-                "commonBLSPublicKey3": "2426298721305518429857989502764051546820660937538732738470128444404528302050"
+                "commonBLSPublicKey3": "2426298721305518429857989502764051546820660937538732738470128444404528302050",
+                "skale-manager": {
+                  "Nodes": "0xC6821c7f66D7E5E387F94d15887639eAF3783263",
+                  "SchainsInternal": "0x65CD28BF9A5270DA4B63c9b3918Ce1AedA57fEB4"
+                }
             }
         } if node.ecdsaKeyName != "" else {}
         #"catchupIntervalMs": 1000000000
@@ -630,7 +634,8 @@ def _make_config_schain(chain):
         "snapshotIntervalSec": chain.snapshotIntervalSec,
         # "schainOwner": chain.accounts[0],
         "contractStorageLimit": 1000*1000*1000*1000,
-        "dbStorageLimit": chain.dbStorageLimit,
+        "dbStorageLimit": chain.dbStorageLimit
+        #"multiTransactionMode": False,
     }
     for i in range(len(chain.nodes)):
         ret["nodes"].append(_make_config_schain_node(chain.nodes[i], i))
@@ -893,7 +898,7 @@ class LocalStarter:
             popen_args = [
                 # "/usr/bin/strace", '-o'+node_dir+'/aleth.trace',
                 # "stdbuf", "-oL",
-                # "/home/dimalit/heaptrack/build/bin/heaptrack",
+                # "heaptrack",
                 # "valgrind", "--tool=callgrind", #"--separate-threads=yes",
                 self.exe,
                 "--http-port", str(n.basePort + 3),
@@ -905,7 +910,7 @@ class LocalStarter:
                 "-v", "4",
                 "--web3-trace",
                 "--acceptors", "1",
-                "--enable-debug-behavior-apis"
+                "--main-net-url", "http://127.0.0.1:1111"
             ]
 
             try:
@@ -947,7 +952,8 @@ class LocalStarter:
                 popen_args,
                 stdout=aleth_out,
                 stderr=aleth_err,
-                env=env
+                env=env,
+                preexec_fn=os.setsid
             )
 
             n.pid = popen.pid
@@ -995,7 +1001,8 @@ class LocalStarter:
             n.args + args,
             stdout=n.stdout,
             stderr=n.stderr,
-            env=n.env
+            env=n.env,
+            preexec_fn=os.setsid
         )
 
         n.pid = popen.pid
@@ -1058,7 +1065,8 @@ class LocalStarter:
                 popen_args,
                 stdout=aleth_out,
                 stderr=aleth_err,
-                env=env
+                env=env,
+                preexec_fn=os.setsid
             )
 
             n.pid = popen.pid
@@ -1087,8 +1095,6 @@ class LocalStarter:
 
         for pos in range(len(self.chain.nodes)):
             self.stop_node(pos)
-
-        for pos in range(len(self.chain.nodes)):
             self.wait_node_stop(pos)
 
         self.running = False
@@ -1114,7 +1120,7 @@ class LocalStarter:
         self.chain.nodes[pos].running = False
         p = self.exe_popens[pos]
         if p.poll() is None:
-            p.terminate()
+            os.killpg(p.pid, signal.SIGTERM)
 
     # TODO race conditions?
     def wait_node_stop(self, pos):

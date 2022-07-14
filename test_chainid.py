@@ -11,7 +11,11 @@ def schain_with_id(request):
 
 def test_transaction_without_id(schain_with_id):
     ch = schain_with_id
-    ch.transaction(chain_id = None)
+    try:
+        ch.transaction(chain_id = None)
+        assert(False and "Transaction without chainID should fail")
+    except:
+        pass
 
 def test_transaction_with_id(schain_with_id):
     ch = schain_with_id
@@ -21,6 +25,6 @@ def test_transaction_with_id(schain_with_id):
 def test_bad_transaction(schain_with_id):
     ch = schain_with_id
     chain_id = "0xdeadbeef"
-    
+
     with pytest.raises(ValueError, match="signature"):
         ch.transaction(chain_id = chain_id)
