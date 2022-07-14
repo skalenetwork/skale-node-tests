@@ -39,7 +39,7 @@ def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks=True,
                         config_file=None, chainID=None, same_ip=False,
                         run_container=False, bls=False):
     if config_file == None:
-        config_file = "config0.json"
+        config_file = "config_base.json"
 
     dbStorageLimit = -1
     # VERY empiric formula %)
