@@ -1,7 +1,7 @@
 import os
 import time
 from time import sleep
-from sktest import LocalStarter, LocalDockerStarter, Node, SChain
+from sktest import LocalStarter, Node, SChain
 
 if os.geteuid() != 0:
     print("Please run with sudo")
@@ -16,16 +16,9 @@ snapshotIntervalSec = 10
 
 run_container = os.getenv('RUN_CONTAINER')
 
-if run_container is not None:
-    node = Node(bindIP='127.0.0.1', basePort=10000,
-              emptyBlockIntervalMs=emptyBlockIntervalMs,
-              snapshotInterval=snapshotIntervalSec)
-    starter = LocalDockerStarter()
-else:
-    node = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
-              snapshotInterval=snapshotIntervalSec)
-    starter = LocalStarter(sktest_exe)
-
+node = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
+          snapshotInterval=snapshotIntervalSec)
+starter = LocalStarter(sktest_exe)
 
 ch = SChain(
     [node],

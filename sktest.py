@@ -565,279 +565,6 @@ class SChain:
     def __del__(self):
         self.stop()
 
-
-def _make_config_node(node):
-    return {
-        "nodeName": node.nodeName,
-        "nodeID": node.nodeID,
-        "bindIP": node.bindIP,
-        "basePort": node.basePort,
-        "logLevel": "trace",
-        "logLevelConfig": "trace",
-        "enable-debug-behavior-apis": True,
-        "ecdsaKeyName": node.ecdsaKeyName,
-        "wallets": {
-            "ima": {
-                #"url": "https://127.0.0.1:1026",
-                #"url": "https://45.76.3.64:1026",
-                "url": "https://34.223.63.227:1026",
-                "keyShareName": node.keyShareName,
-                "t": 3,
-                "n": 4,
-                "BLSPublicKey0": node.insecureBLSPublicKey0,
-                "BLSPublicKey1": node.insecureBLSPublicKey1,
-                "BLSPublicKey2": node.insecureBLSPublicKey2,
-                "BLSPublicKey3": node.insecureBLSPublicKey3,
-                "commonBLSPublicKey0": "18219295635707015937645445755505569836731605273220943516712644721479866137366",
-                "commonBLSPublicKey1": "13229549502897098194754835600024217501928881864881229779950780865566962175067",
-                "commonBLSPublicKey2": "3647833147657958185393020912446135601933571182900304549078758701875919023122",
-                "commonBLSPublicKey3": "2426298721305518429857989502764051546820660937538732738470128444404528302050",
-                "skale-manager": {
-                  "Nodes": "0xC6821c7f66D7E5E387F94d15887639eAF3783263",
-                  "SchainsInternal": "0x65CD28BF9A5270DA4B63c9b3918Ce1AedA57fEB4"
-                }
-            }
-        } if node.ecdsaKeyName != "" else {}
-        #"catchupIntervalMs": 1000000000
-    }
-
-
-def _make_config_schain_node(node, index):
-    if node.publicKey:
-        return {
-            "nodeID": node.nodeID,
-            "ip": node.bindIP,
-            "basePort": node.basePort,
-            "schainIndex": index + 1,
-            "blsPublicKey0": node.insecureBLSPublicKey0,
-            "blsPublicKey1": node.insecureBLSPublicKey1,
-            "blsPublicKey2": node.insecureBLSPublicKey2,
-            "blsPublicKey3": node.insecureBLSPublicKey3,
-            "publicKey": node.publicKey
-        }
-    else:
-        return {
-            "nodeID": node.nodeID,
-            "ip": node.bindIP,
-            "basePort": node.basePort,
-            "schainIndex": index + 1,
-            "publicKey": node.publicKey
-        }
-
-
-def _make_config_schain(chain):
-    ret = {
-        "schainName": chain.sChainName,
-        "schainID": chain.sChainID,
-        "nodes": [],
-        "emptyBlockIntervalMs": chain.emptyBlockIntervalMs,
-        "snapshotIntervalSec": chain.snapshotIntervalSec,
-        # "schainOwner": chain.accounts[0],
-        "contractStorageLimit": 1000*1000*1000*1000,
-        "dbStorageLimit": chain.dbStorageLimit
-        #"multiTransactionMode": False,
-    }
-    for i in range(len(chain.nodes)):
-        ret["nodes"].append(_make_config_schain_node(chain.nodes[i], i))
-    return ret
-
-
-class LocalDockerStarter:
-    chain = None
-    started = False
-
-    DEFAULT_IMAGE = 'skalenetwork/schain:1.46-develop.14'
-
-    def __init__(self, image=None, config = None):
-        self.image = image or LocalDockerStarter.DEFAULT_IMAGE
-        self.dir = TemporaryDirectory()
-        self.running = False
-        self.client = docker.client.from_env()
-        self.containers = []
-        self.volumes = []
-        if config == None:
-            with open("config0.json", "r") as f:
-                config = json.load(f)
-        self.config = copy.deepcopy(config)
-    def create_volume(self, volume_name):
-        self.volumes.append(
-            self.client.volumes.create(
-                name=volume_name, driver='lvmpy',
-                driver_opts={})
-        )
-
-    def run_container(self, name, node_dir, data_dir_volume_name,
-                      env, cmd, **kwargs):
-        self.containers.append(
-           self.client.containers.run(
-               image=self.image, name=name,
-               detach=True,
-               network='host',
-               command=cmd,
-               volumes={
-                   data_dir_volume_name: {
-                       'bind': '/data_dir', 'mode': 'rw'
-                   },
-                   node_dir: {
-                       'bind': '/skale_node_data', 'mode': 'rw'
-                   }
-               },
-               environment=env,
-               **kwargs,
-           ))
-
-    def compose_cmd(self, node):
-        cmd = ' '.join([
-                "--ws-port", str(node.basePort + 2),
-                "--http-port", str(node.basePort + 3),
-                "--aa", "always",
-                "--config", '/skale_node_data/config.json',
-                "-d", '/data_dir/',
-                "-v", "4",
-                "--web3-trace",
-                "--acceptors", "1"
-            ])
-        if node.snapshottedStartSeconds > -1:
-            url = 'http://{}:{}'.format(
-                self.chain.nodes[0].bindIP,
-                self.chain.nodes[0].basePort + 3
-            )
-            cmd += f' --download-snapshot {url}'
-            time.sleep(node.snapshottedStartSeconds)
-        return cmd
-
-    def compose_env_options(self, node):
-        return {
-            **os.environ,
-            'HTTP_RPC_PORT': self.chain.nodes[node.nodeID - 1].basePort + 3,
-            'WS_RPC_PORT': self.chain.nodes[node.nodeID - 1].basePort + 2,
-            'HTTPS_RPC_PORT': self.chain.nodes[node.nodeID - 1].basePort + 7,
-            'WSS_RPC_PORT': self.chain.nodes[node.nodeID - 1].basePort + 8,
-            'DATA_DIR': '/data_dir/',
-            'CONFIG_FILE': '/skale_node_data/config.json',
-            'LEAK_EXPIRE': '20',
-            'LEAK_PID_CHECK': '1',
-        }
-
-    @classmethod
-    def compose_docker_options(cls):
-        return {
-          "security_opt": [
-            "seccomp=unconfined"
-          ],
-          "restart_policy": {
-            "MaximumRetryCount": 10,
-            "Name": "on-failure"
-          },
-          "cap_add": [
-              "SYS_PTRACE", "SYS_ADMIN"
-          ],
-          "log_config": LogConfig(
-              type=LogConfig.types.JSON,
-              config={"max-size": "250m", "max-file": "5"}),
-        }
-
-    def make_config(self, node, chain):
-        cfg = copy.deepcopy(self.config)
-        config_merge(cfg, chain.config_addons)
-        cfg["skaleConfig"] = {
-            "nodeInfo": _make_config_node(node),
-            "sChain": _make_config_schain(self.chain)
-        }
-        return cfg
-
-    @classmethod
-    def save_config(cls, config, node_dir):
-        os.makedirs(node_dir, exist_ok=True)
-        cfg_filepath = node_dir + "/config.json"
-        with open(cfg_filepath, 'w') as cfg_file:
-            json.dump(config, cfg_file, indent=1)
-
-    def create_schain_node(self, chain, node):
-        assert not node.running
-
-        data_dir_volume_name = f'data-dir{node.nodeID}'
-        self.create_volume(data_dir_volume_name)
-
-        node_dir = os.path.join(os.getenv('DATA_DIR', self.dir.name), str(node.nodeID))
-
-        node.config = self.make_config(node, chain)
-        LocalDockerStarter.save_config(node.config, node_dir)
-
-        ipc_dir = node_dir
-        node.ipcPath = ipc_dir + "/geth.ipc"
-
-        docker_options = LocalDockerStarter.compose_docker_options()
-        env = self.compose_env_options(node)
-        cmd = self.compose_cmd(node)
-
-        container_name = f'schain-node{node.nodeID}'
-        self.run_container(container_name, node_dir,
-                           data_dir_volume_name, env, cmd, **docker_options)
-        node.running = True
-
-    def start(self, chain, start_timeout=100):
-        assert not self.started
-        self.started = True
-        self.chain = chain
-        for node in self.chain.nodes:
-            assert not node.running
-            # TODO Handle exceptions!
-            self.create_schain_node(chain, node)
-
-        assert len(self.client.volumes.list()) == len(self.chain.nodes)
-        assert len(self.client.containers.list()) == len(self.chain.nodes)
-        safe_input_with_timeout('Press enter when nodes start', start_timeout)
-        self.running = True
-    
-    def start_after_stop(self, chain, start_timeout=100):
-        self.start(chain, start_timeout)
-
-    def destroy_containers(self):
-        for c in self.containers:
-            try:
-                c.remove(force=True)
-            except docker.errors.NotFound:
-                continue
-        print('Containers removed')
-
-    def destroy_volumes(self):
-        for v in self.volumes:
-            try:
-                v.remove(force=True)
-            except docker.errors.NotFound:
-                continue
-        print('Volumes removed')
-
-    def stop(self):
-        assert hasattr(self, "chain")
-        self.destroy_containers()
-        self.destroy_volumes()
-        self.running = False
-        self.dir.cleanup()
-    
-    def stop_without_cleanup(self):
-        assert hasattr(self, "chain")
-        self.destroy_containers()
-        self.destroy_volumes()
-        self.running = False
-
-    def stop_node(self, pos):
-        if not self.chain.nodes[pos].running:
-            return
-        self.containers[pos].stop(timeout=10)
-        self.chain.nodes[pos].running = False
-
-    def wait_node_stop(self, pos):
-        if not self.chain.nodes[pos].running:
-            return
-        self.containers[pos].wait(timeout=60)
-        self.chain.nodes[pos].running = False
-
-    def node_exited(self, pos):
-        return self.containers[pos].status == 'exited'
-
-
 class LocalStarter:
     # TODO Implement monitoring of dead processes!
     chain = None
@@ -886,7 +613,7 @@ class LocalStarter:
             cfg_file = node_dir + "/config.json"
 
             ##!n.config = cfg
-            os.rename("./config"+str(idx)+".json", cfg_file)
+            shutil.move("./config"+str(idx)+".json", cfg_file)
 
             # TODO Close all of it?
             aleth_out = io.open(node_dir + "/" + "aleth.out", "w")
@@ -1015,23 +742,16 @@ class LocalStarter:
         self.chain = chain
 
         # TODO Handle exceptions!
+        idx = 0
         for n in self.chain.nodes:
             assert not n.running
+            idx+=1
 
             node_dir = os.path.join(os.getenv('DATA_DIR', self.dir.name), str(n.nodeID))
             ipc_dir = node_dir
             cfg_file = node_dir + "/config.json"
 
-            cfg = copy.deepcopy(self.config)
-            config_merge(cfg, self.chain.config_addons)
-            cfg["skaleConfig"] = {
-                "nodeInfo": _make_config_node(n),
-                "sChain": _make_config_schain(self.chain)
-            }
-            f = io.open(cfg_file, "w")
-            json.dump(cfg, f, indent=1)
-            n.config = cfg
-            f.close()
+            shutil.move("./config"+str(idx)+".json", cfg_file)
 
             # TODO Close all of it?
             aleth_out = io.open(node_dir + "/" + "aleth.out", "w")
@@ -1188,6 +908,18 @@ class RemoteStarter:
         self.started = True
         self.chain = chain
 
+        cfg = copy.deepcopy(self.config)
+        config_merge(cfg, self.chain.config_addons)
+        with open(os.path.join(self.dir.name, "config0.json"), "w") as f:
+            json.dump(cfg, f, indent = 1)
+            
+        ip_ports = [str(node.bindIP)+":"+str(node.basePort) for node in self.chain.nodes]
+            
+        os.system("./config_tools/make_configs.sh "
+                  +str(len(self.chain.nodes))+" "+",".join(ip_ports)+" "
+                  +os.path.join(self.dir.name, "config0.json")
+                 )
+
         # TODO Handle exceptions!
         for i in range(len(self.chain.nodes)):
             n = self.chain.nodes[i]
@@ -1202,14 +934,10 @@ class RemoteStarter:
             command += "mkdir -p "+node_dir
             command += "; cd " + node_dir
 
-            cfg = copy.deepcopy(self.config)
-            config_merge(cfg, self.chain.config_addons)
-            cfg["skaleConfig"] = {
-                "nodeInfo": _make_config_node(n),
-                "sChain": _make_config_schain(self.chain)
-            }
-            json_str = json.dumps(cfg)
-            n.config = cfg
+            json_str=""
+            with open("./config"+str(i+1)+".json") as f:
+                json_str = f.readLines()
+                n.config = json.loads(json_str)
 
             command += "; echo '" + json_str + "' >" + cfg_file
 

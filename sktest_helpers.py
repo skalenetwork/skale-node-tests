@@ -7,7 +7,7 @@ from hexbytes import HexBytes
 
 from web3.auto import w3
 from sktest import list_differences, \
-    LocalDockerStarter, LocalStarter, ManualStarter, Node, \
+    LocalStarter, ManualStarter, Node, \
     SChain, safe_input_with_timeout
 
 # w3.eth.enable_unaudited_features()
@@ -84,13 +84,9 @@ def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks=True,
     if chainID is None:
         chainID = "0x1"
 
-    if run_container:
-        image = os.getenv('IMAGE')
-        starter = LocalDockerStarter(image, config)
-    else:
-        global sktest_exe
-        #starter = ManualStarter(config)
-        starter = LocalStarter(sktest_exe, config)
+    global sktest_exe
+    #starter = ManualStarter(config)
+    starter = LocalStarter(sktest_exe, config)
 
     emptyBlockIntervalMs = -1
     if empty_blocks:

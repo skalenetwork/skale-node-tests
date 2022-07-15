@@ -4,7 +4,7 @@ from base64 import b64decode
 import binascii
 import pytest
 import fcntl
-from sktest import LocalStarter, LocalDockerStarter, Node, SChain
+from sktest import LocalStarter, Node, SChain
 
 #if os.geteuid() != 0:
 #    print("Please run with sudo")

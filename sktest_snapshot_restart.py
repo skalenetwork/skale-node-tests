@@ -1,6 +1,6 @@
 import os
 import time
-from sktest import LocalStarter, LocalDockerStarter, Node, SChain
+from sktest import LocalStarter, Node, SChain
 
 if os.geteuid() != 0:
     print("Please run with sudo")
@@ -15,33 +15,16 @@ snapshotIntervalSec = 10
 
 run_container = os.getenv('RUN_CONTAINER')
 
-if run_container is not None:
-    n1 = Node(bindIP='127.0.0.1', basePort=10000,
-              emptyBlockIntervalMs=emptyBlockIntervalMs,
-              snapshotInterval=snapshotIntervalSec, bls=True)
-    n2 = Node(bindIP='127.0.0.1', basePort=10011,
-              emptyBlockIntervalMs=emptyBlockIntervalMs,
-              snapshotInterval=snapshotIntervalSec, bls=True)
-    n3 = Node(bindIP='127.0.0.1', basePort=10022,
-              emptyBlockIntervalMs=emptyBlockIntervalMs,
-              snapshotInterval=snapshotIntervalSec, bls=True)
-    n4 = Node(bindIP='127.0.0.1', basePort=10033,
-              emptyBlockIntervalMs=emptyBlockIntervalMs,
-              snapshotInterval=snapshotIntervalSec,
-              snapshottedStartSeconds=60, bls=True)  # 90 # 18
-    starter = LocalDockerStarter()
-else:
-    n1 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
-              snapshotInterval=snapshotIntervalSec, bls=True)
-    n2 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
-              snapshotInterval=snapshotIntervalSec, bls=True)
-    n3 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
-              snapshotInterval=snapshotIntervalSec, bls=True)
-    n4 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
-              snapshotInterval=snapshotIntervalSec,
-              snapshottedStartSeconds=90, bls=True)  # 90 # 18
-    starter = LocalStarter(sktest_exe)
-
+n1 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
+          snapshotInterval=snapshotIntervalSec, bls=True)
+n2 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
+          snapshotInterval=snapshotIntervalSec, bls=True)
+n3 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
+          snapshotInterval=snapshotIntervalSec, bls=True)
+n4 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
+          snapshotInterval=snapshotIntervalSec,
+          snapshottedStartSeconds=90, bls=True)  # 90 # 18
+starter = LocalStarter(sktest_exe)
 
 ch = SChain(
     [n1, n2, n3, n4],

@@ -3,7 +3,7 @@ import time
 import pytest
 import binascii
 import shutil
-from sktest import LocalStarter, LocalDockerStarter, Node, SChain
+from sktest import LocalStarter, Node, SChain
 
 if os.geteuid() != 0:
     print("Please run with sudo")
