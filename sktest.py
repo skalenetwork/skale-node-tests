@@ -367,7 +367,17 @@ class SChain:
         self.nodes = list(nodes)
         self.chainID = kwargs.get('chainID', "0x1")
         self.dbStorageLimit = kwargs.get('dbStorageLimit', 120*1024*1024)
-        self.config_addons = {"params": {"chainID": self.chainID}, "accounts": {}}
+        self.config_addons = {
+            "params": {"chainID": self.chainID},
+            "accounts": {},
+            "skaleConfig": {
+                "sChain": {
+                    "emptyBlockIntervalMs": self.emptyBlockIntervalMs,
+                    "snapshotIntervalSec": self.snapshotIntervalSec,
+                    "dbStorageLimit": self.dbStorageLimit
+                }
+            }
+        }
         self.starter = starter
         self.running = False
         self.eth = None

@@ -58,14 +58,12 @@ def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks=True,
             emptyBlockIntervalMs = 1000
         if run_container or same_ip:
             node = Node(
-                emptyBlockIntervalMs=emptyBlockIntervalMs,
                 bindIP='0.0.0.0',
                 basePort=port, bls=bls
             )
         else:
             base_port = 1231
             node = Node(bindIP=f'127.0.0.{i+1}', basePort=base_port,
-                        emptyBlockIntervalMs=emptyBlockIntervalMs,
                         bls=bls)
 
         nodes.append(node)
