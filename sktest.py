@@ -601,7 +601,8 @@ class LocalStarter:
             json.dump(cfg, f, indent = 1)
             
         ip_ports = [str(node.bindIP)+":"+str(node.basePort) for node in self.chain.nodes]
-            
+
+        os.environ["SGX_URL"] = "https://34.223.63.227:1026";
         os.system("./config_tools/make_configs.sh "
                   +str(len(self.chain.nodes))+" "+",".join(ip_ports)+" "
                   +os.path.join(self.dir.name, "config0.json")
