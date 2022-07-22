@@ -359,14 +359,13 @@ class SChain:
         # TODO throw if len(prefill)>9
         # TODO throw if repeating node IDs
         SChain._counter = SChain._counter + 1
-        self.sChainName = kwargs.get('schainName',
-                                     "Chain" + str(SChain._counter))
-        self.sChainID = kwargs.get('schainID', SChain._counter)
-        self.emptyBlockIntervalMs = kwargs.get('emptyBlockIntervalMs', -1)
-        self.snapshotIntervalSec = kwargs.get('snapshotIntervalSec', -1)
+        self.sChainName = kwargs.get('schainName') or "Chain" + str(SChain._counter)
+        self.sChainID = kwargs.get('schainID') or SChain._counter
+        self.emptyBlockIntervalMs = kwargs.get('emptyBlockIntervalMs') or -1
+        self.snapshotIntervalSec = kwargs.get('snapshotIntervalSec') or -1
         self.nodes = list(nodes)
-        self.chainID = kwargs.get('chainID', "0x1")
-        self.dbStorageLimit = kwargs.get('dbStorageLimit', 120*1024*1024)
+        self.chainID = kwargs.get('chainID') or "0x1"
+        self.dbStorageLimit = kwargs.get('dbStorageLimit') or 120*1024*1024
         self.config_addons = {
             "params": {"chainID": self.chainID},
             "accounts": {},
