@@ -602,7 +602,9 @@ class LocalStarter:
             
         ip_ports = [str(node.bindIP)+":"+str(node.basePort) for node in self.chain.nodes]
 
-        os.environ["SGX_URL"] = "https://34.223.63.227:1026";
+        # HACK! use bls parameter in SChain, remove hardcoded keys!
+        if self.chain.nodes[0].publicKey:
+            os.environ["SGX_URL"] = "https://34.223.63.227:1026";
         os.system("./config_tools/make_configs.sh "
                   +str(len(self.chain.nodes))+" "+",".join(ip_ports)+" "
                   +os.path.join(self.dir.name, "config0.json")
