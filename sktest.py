@@ -651,9 +651,9 @@ class LocalStarter:
             ]
 
             try:
-              if cfg["skaleConfig"]["nodeInfo"]["wallets"]["ima"]["url"]:
+              if os.environ["SGX_URL"]:
                   popen_args.append("--sgx-url")
-                  popen_args.append(cfg["skaleConfig"]["nodeInfo"]["wallets"]["ima"]["url"])
+                  popen_args.append(os.environ["SGX_URL"])
             except:
               pass
 
