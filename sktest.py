@@ -285,42 +285,6 @@ class Node:
 
     _counter = 0
 
-    _dkg_id = 0
-
-    _nodes_bls_key_name = ['BLS_KEY:SCHAIN_ID:1111:NODE_ID:0:DKG_ID:'+str(_dkg_id),
-                           'BLS_KEY:SCHAIN_ID:1111:NODE_ID:1:DKG_ID:'+str(_dkg_id),
-                           'BLS_KEY:SCHAIN_ID:1111:NODE_ID:2:DKG_ID:'+str(_dkg_id),
-                           'BLS_KEY:SCHAIN_ID:1111:NODE_ID:3:DKG_ID:'+str(_dkg_id)
-                           ]
-
-    _nodes_bls_public_key = [['398972557509523650171401591204897806774679981615355606652515326824747980192',
-                              '2237495399968187222591258221044077953322692623450727064767075895853152685195',
-                              '18523881080846810778972136552482834212947891016918005134096777048102482973648',
-                              '842918399340701550907759340717569824368001242361285650444658290396070004999'],
-                             ['11819042580058761838200153509278584635395902406277542301571984163903011886726',
-                              '3615258402968966006050257342737073383129303457478694706767760163446637635131',
-                              '12565341391753403644186735617256183787532079097268116364601679372899146330865',
-                              '13083376173816668302662358746690417709135112526839320925862731749508058626124'],
-                             ['4210584579860409613927408476781337812468326392025134236072927933950715424270',
-                              '48258084273517682622409613894412153266446664270252183661454709117003995600',
-                              '10115345943940625579504171188715203166103111774600947522656183454035505928921',
-                              '17305546539917031262265014542925910388473132788737805583702389895008064933916'],
-                             ['18375113254412932026632799706536098495400384414301971701561241296390993815590',
-                              '4086370946041660582972720633589390363285674601286835425834870711156362800433',
-                              '3552918518934480478766829177653740302394059963372403324501839952640219254205',
-                              '348617524025681580130067469538555735685193802048371112241801230756424174115']
-                            ]
-
-    _nodes_public_key = ['0xcef9675d6bde53c4a6acf6f9b627eef98aa6db63fab81e8f7047b1aae2071b9c2d54675ed5042a7d819142d19fff4b87309c177f28fc27144f2eb0b30d806eb5',
-                         '0xe3b423463f38ec5a2310c05546d0f629e1e2bd0177ecdecf4860a477e054dcd3bd98c258f7d8cbbab02548a966d59274473e1ad32075ba5d3073be24803d46dc',
-                         '0x3f3a2fcd4eff3f1df8a86b8c86410353c6899128a7659046d3bb8dba80853bd73445513becf4601b50c45611fc4edd954994d5e6bf308ee0767b7102200bd252',
-                         '0xedb47dbc4737489d66ef6a816b67828c4f6ae28427e6a267aa04db576ebe628d976a3e45ba3705571d8e59637d1cc9ada855218a99ce12df845c5bcfc21aa958']
-                             
-    _ecdsa_keys = ['NEK:e9898dbd3fc5d222424f6078de126f2ec3501d43d9e685055ca7ad74b6137f99',
-                   'NEK:4de33507f7a548f80eb44c9193dc481834a23f5e2d2b8de159c294d86a13d673',
-                   'NEK:c09c1c7dde78fe68349e26b946ac75e49f5ba4d37dc135ee7a1d18e992b6b0c4',
-                   'NEK:7ced464fede8e5712e903c82bbceeea27927cdee3fe64cfdc86906af41126534']
-                               
     def __init__(self, **kwargs):
         Node._counter = Node._counter + 1
         self.nodeName = kwargs.get('nodeName', "Node" + str(Node._counter))
@@ -337,17 +301,7 @@ class Node:
         self.snapshottedStartSeconds = kwargs.get(
             'snapshottedStartSeconds', -1
         )
-        if kwargs.get('bls', False):
-            self.keyShareName = Node._nodes_bls_key_name[Node._counter - 1]
-            self.insecureBLSPublicKey0 = Node._nodes_bls_public_key[Node._counter - 1][0]
-            self.insecureBLSPublicKey1 = Node._nodes_bls_public_key[Node._counter - 1][1]
-            self.insecureBLSPublicKey2 = Node._nodes_bls_public_key[Node._counter - 1][2]
-            self.insecureBLSPublicKey3 = Node._nodes_bls_public_key[Node._counter - 1][3]
-            self.publicKey = Node._nodes_public_key[Node._counter - 1]
-            self.ecdsaKeyName = Node._ecdsa_keys[Node._counter - 1]
-        else:
-            self.ecdsaKeyName = ""
-            self.publicKey = ""
+
 class SChain:
 
     _counter = 0
@@ -366,6 +320,7 @@ class SChain:
         self.nodes = list(nodes)
         self.chainID = kwargs.get('chainID') or "0x1"
         self.dbStorageLimit = kwargs.get('dbStorageLimit') or 120*1024*1024
+        self.bls = kwargs.get('bls', False) or False
         self.config_addons = {
             "params": {"chainID": self.chainID},
             "accounts": {},
@@ -602,8 +557,7 @@ class LocalStarter:
             
         ip_ports = [str(node.bindIP)+":"+str(node.basePort) for node in self.chain.nodes]
 
-        # HACK! use bls parameter in SChain, remove hardcoded keys!
-        if self.chain.nodes[0].publicKey:
+        if self.chain.bls:
             os.environ["SGX_URL"] = "https://34.223.63.227:1026";
         os.system("./config_tools/make_configs.sh "
                   +str(len(self.chain.nodes))+" "+",".join(ip_ports)+" "
