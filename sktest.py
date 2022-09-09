@@ -321,6 +321,7 @@ class SChain:
         self.chainID = kwargs.get('chainID') or "0x1"
         self.dbStorageLimit = kwargs.get('dbStorageLimit') or 120*1024*1024
         self.bls = kwargs.get('bls', False) or False
+        self.mtm = kwargs.get('mtm', False) or False
         self.config_addons = {
             "params": {"chainID": self.chainID},
             "accounts": {},
@@ -328,7 +329,8 @@ class SChain:
                 "sChain": {
                     "emptyBlockIntervalMs": self.emptyBlockIntervalMs,
                     "snapshotIntervalSec": self.snapshotIntervalSec,
-                    "dbStorageLimit": self.dbStorageLimit
+                    "dbStorageLimit": self.dbStorageLimit,
+                    "multiTransactionMode": self.mtm
                 }
             }
         }

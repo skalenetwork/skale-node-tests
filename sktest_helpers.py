@@ -37,7 +37,7 @@ def dump_node_state(obj):
 def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks=True,
                         rotate_after_block=-1,
                         config_file=None, chainID=None, same_ip=False,
-                        run_container=False, bls=False):
+                        run_container=False, bls=False, mtm=False):
     if config_file == None:
         config_file = "config_base.json"
 
@@ -92,7 +92,7 @@ def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks=True,
 
     chain = SChain(nodes, starter, balances,
                    emptyBlockIntervalMs=emptyBlockIntervalMs, chainID=chainID,
-                   dbStorageLimit=dbStorageLimit)
+                   dbStorageLimit=dbStorageLimit, bls=bls, mtm=mtm)
 
     return chain
 

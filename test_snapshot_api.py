@@ -325,14 +325,13 @@ def test_stateRoot_conflict(schain):
         n1.eth.debugInterfaceCall("Client trace continue computeSnapshotHash_start")
         n2.eth.debugInterfaceCall("Client trace continue computeSnapshotHash_start")
 
-@pytest.mark.num_nodes(4) # only 4! (no more keys in config!)
+@pytest.mark.num_nodes(1)
 @pytest.mark.snapshotIntervalSec(60)
 @pytest.mark.chain_id("0xd2ba743e9fef4")
 #@pytest.mark.chain_id("0x2")
 def test_wait(schain):
     ch = schain
     n1 = ch.nodes[0]
-    n2 = ch.nodes[1]
     #for _ in range(50):
     while True:
         #try:
@@ -346,7 +345,7 @@ def test_wait(schain):
 
         try:
             tx = ch.transaction_obj()
-            n2.eth.sendRawTransaction(tx)
+            ch.nodes[1].eth.sendRawTransaction(tx)
         except:
             pass    # already exists
 
