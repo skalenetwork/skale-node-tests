@@ -317,6 +317,8 @@ class SChain:
         self.sChainID = kwargs.get('schainID') or SChain._counter
         self.emptyBlockIntervalMs = kwargs.get('emptyBlockIntervalMs') or -1
         self.snapshotIntervalSec = kwargs.get('snapshotIntervalSec') or -1
+        self.snapshotDownloadTimeout = kwargs.get('snapshotDownloadTimeout') or 60
+        self.snapshotDownloadInactiveTimeout = kwargs.get('snapshotDownloadInactiveTimeout') or 60
         self.nodes = list(nodes)
         self.chainID = kwargs.get('chainID') or "0x1"
         self.dbStorageLimit = kwargs.get('dbStorageLimit') or 120*1024*1024
@@ -329,6 +331,8 @@ class SChain:
                 "sChain": {
                     "emptyBlockIntervalMs": self.emptyBlockIntervalMs,
                     "snapshotIntervalSec": self.snapshotIntervalSec,
+                    "snapshotDownloadTimeout": self.snapshotDownloadTimeout,
+                    "snapshotDownloadInactiveTimeout": self.snapshotDownloadInactiveTimeout,
                     "dbStorageLimit": self.dbStorageLimit,
                     "multiTransactionMode": self.mtm
                 }
