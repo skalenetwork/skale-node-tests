@@ -17,6 +17,8 @@ def schain(request):
     
     emptyBlockIntervalMs = 2000
     snapshotIntervalSec = 1
+    snapshotDownloadTimeout = 60
+    snapshotDownloadInactiveTimeout = 60
     snapshottedStartSeconds = -1
     num_nodes = 4
     shared_space_path = ''
@@ -24,7 +26,15 @@ def schain(request):
 
     marker = request.node.get_closest_marker("snapshotIntervalSec")
     if marker is not None:
-        snapshotIntervalSec = marker.args[0] 
+        snapshotIntervalSec = marker.args[0]
+
+    marker = request.node.get_closest_marker("snapshotDownloadTimeout")
+    if marker is not None:
+        snapshotDownloadTimeout = marker.args[0]
+
+    marker = request.node.get_closest_marker("snapshotDownloadInactiveTimeout")
+    if marker is not None:
+        snapshotDownloadInactiveTimeout = marker.args[0] 
     
     marker = request.node.get_closest_marker("snapshottedStartSeconds")
     if marker is not None:
@@ -59,6 +69,8 @@ def schain(request):
         prefill=[1000000000000000000, 2000000000000000000],
         emptyBlockIntervalMs=emptyBlockIntervalMs,
         snapshotIntervalSec=snapshotIntervalSec,
+        snapshotDownloadTimeout=snapshotDownloadTimeout,
+        snapshotDownloadInactiveTimeout=snapshotDownloadInactiveTimeout,
         dbStorageLimit = 10000000,
         chainID = chain_id,
         schainName = "rhythmic-tegmen",
@@ -394,6 +406,104 @@ def test_2_snapshots(schain):
 
     # check that skaled is still here
     bn = n1.eth.blockNumber
+
+@pytest.mark.num_nodes(4) # only 4! (no more keys in config!)
+@pytest.mark.snapshotIntervalSec(60)
+@pytest.mark.snapshotDownloadTimeout(60)
+@pytest.mark.snapshotDownloadInactiveTimeout(60)
+@pytest.mark.shared_space_path("shared_space")
+@pytest.mark.chain_id("0xd2ba743e9fef4")
+def test_unlock_shared_space_partial_download(schain):
+    try:
+        os.mkdir("shared_space")
+    except:
+        pass
+
+    ch = schain
+    n4 = ch.nodes[3]
+        
+    wait_answer(n4.eth)
+    
+    s4_initial = n4.eth.getLatestSnapshotBlockNumber()
+
+    counter = 0
+    s4 = s4_initial
+    while s4 == s4_initial:
+        time.sleep(1)        
+        s4 = n4.eth.getLatestSnapshotBlockNumber()
+        print(f"Waiting for next snapshot: {s4}")
+        counter += 1
+        
+        # wait twice time!
+        if counter == 30*2:
+            break
+    
+    # edit here synchronously!
+    assert counter < 30*2
+
+    assert type( n4.eth.getSnapshotSignature(s4) ) is dict
+
+    snap = n4.eth.getSnapshot(s4)
+    assert type(snap) is dict
+    
+    data_size = snap['dataSize']
+    assert data_size > 0
+    ch = n4.eth.downloadSnapshotFragment(0, 10)
+    assert len(b64decode(ch['data']))==ch['size'] and ch['size'] == 10
+
+    time.sleep(90)
+    ch = n4.eth.downloadSnapshotFragment(10, 10)
+    assert ch == "there's no current snapshot, or snapshot expired; please call skale_getSnapshot() first"
+
+@pytest.mark.num_nodes(4) # only 4! (no more keys in config!)
+@pytest.mark.snapshotIntervalSec(60)
+@pytest.mark.snapshotDownloadTimeout(60)
+@pytest.mark.snapshotDownloadInactiveTimeout(60)
+@pytest.mark.shared_space_path("shared_space")
+@pytest.mark.chain_id("0xd2ba743e9fef4")
+def test_unlock_shared_space_full_download(schain):
+    try:
+        os.mkdir("shared_space")
+    except:
+        pass
+
+    ch = schain
+    n4 = ch.nodes[3]
+        
+    wait_answer(n4.eth)
+    
+    s4_initial = n4.eth.getLatestSnapshotBlockNumber()
+
+    counter = 0
+    s4 = s4_initial
+    while s4 == s4_initial:
+        time.sleep(1)        
+        s4 = n4.eth.getLatestSnapshotBlockNumber()
+        print(f"Waiting for next snapshot: {s4}")
+        counter += 1
+        
+        # wait twice time!
+        if counter == 30*2:
+            break
+    
+    # edit here synchronously!
+    assert counter < 30*2
+
+    assert type( n4.eth.getSnapshotSignature(s4) ) is dict
+
+    snap = n4.eth.getSnapshot(s4)
+    assert type(snap) is dict
+    
+    data_size = snap['dataSize']
+    max_allowed_chunk_size = snap['maxAllowedChunkSize']
+    assert data_size > 0 and max_allowed_chunk_size > 0
+    for i in range((data_size + max_allowed_chunk_size - 1) // max_allowed_chunk_size ):
+        ch = n4.eth.downloadSnapshotFragment(max_allowed_chunk_size * i, max_allowed_chunk_size)
+        assert len(b64decode(ch['data']))==ch['size'] and ch['size'] == max_allowed_chunk_size
+
+    time.sleep(90)
+    ch = n4.eth.downloadSnapshotFragment(10, 10)
+    assert ch == "there's no current snapshot, or snapshot expired; please call skale_getSnapshot() first"
 
 @pytest.mark.num_nodes(1)
 @pytest.mark.shared_space_path("shared_space")
