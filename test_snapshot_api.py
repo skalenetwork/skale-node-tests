@@ -497,7 +497,7 @@ def test_unlock_shared_space_full_download(schain):
     assert data_size > 0 and max_allowed_chunk_size > 0
     for i in range((data_size + max_allowed_chunk_size - 1) // max_allowed_chunk_size ):
         ch = n4.eth.downloadSnapshotFragment(max_allowed_chunk_size * i, max_allowed_chunk_size)
-        assert len(b64decode(ch['data']))==ch['size'] and ch['size'] == max_allowed_chunk_size
+        assert len(b64decode(ch['data']))==ch['size'] and ch['size'] <= max_allowed_chunk_size
 
     time.sleep(90)
     ch = n4.eth.downloadSnapshotFragment(10, 10)
