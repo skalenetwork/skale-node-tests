@@ -536,12 +536,12 @@ class LocalStarter:
     chain = None
     started = False
 
-    def __init__(self, exe, config=None):
+    def __init__(self, exe, config={}):
         self.exe = exe
         self.dir = TemporaryDirectory()
-        if config == None:
-            with open("config0.json", "r") as f:
-                config = json.load(f)
+        #if config == None:
+        #    with open("config0.json", "r") as f:
+        #        config = json.load(f)
         self.config = copy.deepcopy(config)
         self.exe_popens = []
         self.running = False
@@ -862,11 +862,11 @@ class RemoteStarter:
     started = False
 
     # condif is array of hashes: {address, dir, exe}
-    def __init__(self, ssh_config, config = None):
+    def __init__(self, ssh_config, config = {}):
         self.ssh_config = copy.deepcopy(ssh_config)
-        if config == None:
-            with open("config0.json", "r") as f:
-                config = json.load(f)
+        #if config == None:
+        #    with open("config0.json", "r") as f:
+        #        config = json.load(f)
         self.config = copy.deepcopy(config)
         self.running = False
 
@@ -941,11 +941,11 @@ class RemoteDockerStarter:
     started = False
 
     # config is array of hashes: {address, dir, exe}
-    def __init__(self, ssh_config, config=None):
+    def __init__(self, ssh_config, config={}):
         self.ssh_config = copy.deepcopy(ssh_config)
-        if config == None:
-            with open("config0.json", "r") as f:
-                config = json.load(f)
+        #if config == None:
+        #    with open("config0.json", "r") as f:
+        #        config = json.load(f)
         self.config = copy.deepcopy(config)
         self.running = False
 
