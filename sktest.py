@@ -589,6 +589,7 @@ class LocalStarter:
 
             env = os.environ.copy()
             env['DATA_DIR'] = node_dir
+            env["NO_ULIMIT_CHECK"] = "1"
 
             popen_args = [
                 # "/usr/bin/strace", '-o'+node_dir+'/aleth.trace',

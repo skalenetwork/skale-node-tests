@@ -17,8 +17,6 @@ BASE_PORT = 10000
 PORT_RANGE = 11
 
 global sktest_exe
-# sktest_exe = os.getenv("SKTEST_EXE",
-#                        "/home/dimalit/skale-ethereum/scripts/aleth")
 sktest_exe = os.getenv("SKTEST_EXE",
                        "/home/dimalit/skaled/build-no-mp/skaled/skaled")
 
