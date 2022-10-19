@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 from sktest import LocalStarter, Node, SChain
 
@@ -35,6 +36,8 @@ ch.start(start_timeout=0)  # 300
 
 print("Waiting for full catch-up")
 
+res = 1
+
 # while True:
 for _ in range(50):
     bn1 = n1.eth.blockNumber
@@ -49,6 +52,7 @@ for _ in range(50):
     print(f"blockNumber's: {bn1} {bn2} {bn3} {bn4}")
 
     if bn1 == bn2 and bn2 == bn3 and bn3 == bn4:
+        res = 0
         break
 
     try:
@@ -61,3 +65,5 @@ for _ in range(50):
 print("Exiting")
 
 ch.stop()
+
+sys.exit(res)
