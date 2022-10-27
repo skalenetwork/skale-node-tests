@@ -45,10 +45,10 @@ def schain(request):
     run_container = os.getenv('RUN_CONTAINER')
     
     nodes = [Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
-              snapshotInterval=snapshotIntervalSec, bls=True)
+              snapshotInterval=snapshotIntervalSec)
              for i in range(num_nodes-1)]
     nodes.append( Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
-              snapshotInterval=snapshotIntervalSec, bls=True,
+              snapshotInterval=snapshotIntervalSec,
               snapshottedStartSeconds=snapshottedStartSeconds) )
    
     starter = LocalStarter(sktest_exe)
@@ -61,9 +61,10 @@ def schain(request):
         snapshotIntervalSec=snapshotIntervalSec,
         dbStorageLimit = 10000000,
         chainID = chain_id,
-        schainName = "rhythmic-tegmen"
+        schainName = "rhythmic-tegmen",
+        bls = True
     )
-    ch.start(start_timeout=10, shared_space_path=shared_space_path)
+    ch.start(start_timeout=5, shared_space_path=shared_space_path)
 
     yield(ch)
 
@@ -325,7 +326,7 @@ def test_stateRoot_conflict(schain):
         n1.eth.debugInterfaceCall("Client trace continue computeSnapshotHash_start")
         n2.eth.debugInterfaceCall("Client trace continue computeSnapshotHash_start")
 
-@pytest.mark.num_nodes(1)
+@pytest.mark.num_nodes(16)
 @pytest.mark.snapshotIntervalSec(60)
 @pytest.mark.chain_id("0xd2ba743e9fef4")
 #@pytest.mark.chain_id("0x2")
