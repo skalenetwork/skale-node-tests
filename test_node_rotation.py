@@ -29,13 +29,13 @@ def schain(request):
     run_container = os.getenv('RUN_CONTAINER')
     
     n1 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
-              snapshotInterval=snapshotIntervalSec, bls=True)
+              snapshotInterval=snapshotIntervalSec)
     n2 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
-              snapshotInterval=snapshotIntervalSec, bls=True)
+              snapshotInterval=snapshotIntervalSec)
     n3 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
-              snapshotInterval=snapshotIntervalSec, bls=True)
+              snapshotInterval=snapshotIntervalSec)
     n4 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
-              snapshotInterval=snapshotIntervalSec, bls=True,
+              snapshotInterval=snapshotIntervalSec,
               snapshottedStartSeconds=snapshottedStartSeconds)
     starter = LocalStarter(sktest_exe)
     
@@ -45,7 +45,8 @@ def schain(request):
         starter,
         prefill=[1000000000000000000, 2000000000000000000],
         emptyBlockIntervalMs=emptyBlockIntervalMs,
-        snapshotIntervalSec=snapshotIntervalSec
+        snapshotIntervalSec=snapshotIntervalSec,
+	bls = True
     )
     ch.start(start_timeout=0)
 
