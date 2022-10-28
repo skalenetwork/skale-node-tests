@@ -9,7 +9,7 @@ if len(sys.argv) > 1:
     nBlocks = int(sys.argv[1])
 nAcc  = 240
 
-ch = create_custom_chain(num_nodes=nNodes, num_accounts=nAcc, empty_blocks = True, rotate_after_block=128, config_file="/home/dimalit/SkaleExperimental/skaled-tests/cat-cycle/init.json", chainID="0xD39D", bls=False)
+ch = create_custom_chain(num_nodes=nNodes, num_accounts=nAcc, empty_blocks = True, rotate_after_block=10, config_file="/home/dimalit/SkaleExperimental/skaled-tests/cat-cycle/init.json", chainID="0xD39D", bls=False)
 
 ch.start()
 

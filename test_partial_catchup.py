@@ -23,27 +23,27 @@ def schain(request):
 
     marker = request.node.get_closest_marker("snapshotIntervalSec")
     if marker is not None:
-        snapshotIntervalSec = marker.args[0] 
+        snapshotIntervalSec = marker.args[0]
 
     marker = request.node.get_closest_marker("snapshottedStartSeconds")
     if marker is not None:
         snapshottedStartSeconds = marker.args[0]
 
-    marker = request.node.get_closest_marker("num_nodes") 
+    marker = request.node.get_closest_marker("num_nodes")
     if marker is not None:
         num_nodes = marker.args[0]
 
-    marker = request.node.get_closest_marker("shared_space_path") 
+    marker = request.node.get_closest_marker("shared_space_path")
     if marker is not None:
         shared_space_path = marker.args[0]
 
     run_container = os.getenv('RUN_CONTAINER')
 
     nodes = [Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
-              snapshotInterval=snapshotIntervalSec, bls=True)
+              snapshotInterval=snapshotIntervalSec)
              for i in range(num_nodes-1)]
     nodes.append( Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
-              snapshotInterval=snapshotIntervalSec, bls=True,
+              snapshotInterval=snapshotIntervalSec,
               snapshottedStartSeconds=snapshottedStartSeconds) )
 
     starter = LocalStarter(sktest_exe)
@@ -54,13 +54,14 @@ def schain(request):
         prefill=[1000000000000000000, 2000000000000000000],
         emptyBlockIntervalMs=emptyBlockIntervalMs,
         snapshotIntervalSec=snapshotIntervalSec,
-        dbStorageLimit = 100000
+        dbStorageLimit = 100000,
+	bls=True
     )
     ch.start(start_timeout=0, shared_space_path=shared_space_path)
 
     yield(ch)
 
-    print("Exiting")    
+    print("Exiting")
     ch.stop()
 
 def eth_available(eth):

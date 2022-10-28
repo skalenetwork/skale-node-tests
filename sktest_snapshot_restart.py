@@ -16,14 +16,14 @@ snapshotIntervalSec = 10
 run_container = os.getenv('RUN_CONTAINER')
 
 n1 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
-          snapshotInterval=snapshotIntervalSec, bls=True)
+          snapshotInterval=snapshotIntervalSec)
 n2 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
-          snapshotInterval=snapshotIntervalSec, bls=True)
+          snapshotInterval=snapshotIntervalSec)
 n3 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
-          snapshotInterval=snapshotIntervalSec, bls=True)
+          snapshotInterval=snapshotIntervalSec)
 n4 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
           snapshotInterval=snapshotIntervalSec,
-          snapshottedStartSeconds=90, bls=True)  # 90 # 18
+          snapshottedStartSeconds=90)  # 90 # 18
 starter = LocalStarter(sktest_exe)
 
 ch = SChain(
@@ -31,7 +31,8 @@ ch = SChain(
     starter,
     prefill=[1000000000000000000, 2000000000000000000],
     emptyBlockIntervalMs=emptyBlockIntervalMs,
-    snapshotIntervalSec=snapshotIntervalSec
+    snapshotIntervalSec=snapshotIntervalSec,
+    bls=True
 )
 ch.start(start_timeout=300, restart_option=True)  # 300
 
