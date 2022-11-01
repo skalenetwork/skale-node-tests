@@ -123,7 +123,7 @@ def test_download_snapshot(schain, have_others, have_4):
                 print("Restarting")
                 
                 # restart n4    
-                args = ['--public-key', '18219295635707015937645445755505569836731605273220943516712644721479866137366:13229549502897098194754835600024217501928881864881229779950780865566962175067:3647833147657958185393020912446135601933571182900304549078758701875919023122:2426298721305518429857989502764051546820660937538732738470128444404528302050']
+                args = []
                 args.append("--download-snapshot")
                 args.append("http://" + ch.nodes[0].bindIP + ":" + str(ch.nodes[0].basePort + 3))  # noqa
                 starter.restart_node(3, args)
@@ -274,7 +274,7 @@ def test_download_download(schain, who, from_who):
 
     args=[]
     if who!=3:
-        args = ['--public-key', '18219295635707015937645445755505569836731605273220943516712644721479866137366:13229549502897098194754835600024217501928881864881229779950780865566962175067:3647833147657958185393020912446135601933571182900304549078758701875919023122:2426298721305518429857989502764051546820660937538732738470128444404528302050']
+        args = []
         args.append("--download-snapshot")
         args.append("http://" + ch.nodes[from_who].bindIP + ":" + str(ch.nodes[from_who].basePort + 13))
     starter.restart_node(who, args, 10)
@@ -388,7 +388,7 @@ def test_wrong_stateRoot_in_proposal(schain):
             time.sleep(3)
             assert(eth_available(n1.eth))
             print("Restarting n3 (crashed)")
-            starter.restart_node(2, ["--download-snapshot", "http://127.0.0.1:9999", '--public-key', '18219295635707015937645445755505569836731605273220943516712644721479866137366:13229549502897098194754835600024217501928881864881229779950780865566962175067:3647833147657958185393020912446135601933571182900304549078758701875919023122:2426298721305518429857989502764051546820660937538732738470128444404528302050'])
+            starter.restart_node(2, ["--download-snapshot", "http://127.0.0.1:9999"])
             assert( wait_answer(n3.eth) )
             print("n3 should be fixed now")
             
