@@ -88,14 +88,17 @@ def test_bcast(schain2, receive_before):
     cnt = int(eth1.debugInterfaceCall("SkaleHost trace count drop_bad"))
     counters.append(cnt)
 
+    cnt = int(eth1.debugInterfaceCall("SkaleHost trace count receive_transaction_success"))
+    counters.append(cnt)
+
     if receive_before == "fetch_transactions":
-        assert( counters == [0, 0, 1, 0] )
+        assert( counters == [0, 0, 1, 0, 1] )
     elif receive_before == "create_block":
-        assert (counters == [1, 1, 0, 1])
+        assert (counters == [1, 1, 0, 1, 1])
     elif receive_before == "import_block":
-        assert (counters == [1, 0, 0, 1])
+        assert (counters == [1, 0, 0, 0, 0])
     elif receive_before == "never":
-        assert (counters == [1, 0, 0, 0])
+        assert (counters == [1, 0, 0, 0, 0])
     else:
         assert False
 
