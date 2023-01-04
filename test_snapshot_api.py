@@ -221,6 +221,7 @@ def test_main(schain):
     assert type( n1.eth.getSnapshotSignature(2) ) is dict   # ok
     assert type( n1.eth.getSnapshotSignature(3) ) is dict   # ok
     assert type( n1.eth.getSnapshotSignature(4) ) is str    # error
+    time.sleep(1.0)			# allow snapshot hash to start being computed
     n1.eth.debugInterfaceCall("Client trace continue computeSnapshotHash_start")
     time.sleep(0.5)
     assert_b_s(n1.eth, 4, 3)    # still not exposed
