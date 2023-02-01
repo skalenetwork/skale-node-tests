@@ -406,3 +406,52 @@ def test_wrong_stateRoot_in_proposal(schain):
             
         time.sleep(1)
         hang_counter += 1
+        
+@pytest.mark.snapshotIntervalSec(300)
+def test_getSnapshot_timeout(schain):
+    ch = schain
+    n1 = ch.nodes[0]
+    n2 = ch.nodes[1]
+    n3 = ch.nodes[2]
+    n4 = ch.nodes[3]
+    starter = ch.starter
+    
+    print("Starting 4 nodes")
+    
+    assert( wait_answer(n1.eth) )
+    
+    print("Waiting for available snapshot")
+    snapshot_bn = 0
+    while snapshot_bn == 0:
+        snapshot_bn = n1.eth.getLatestSnapshotBlockNumber()
+        time.sleep(1)
+    while snapshot_bn != n2.eth.getLatestSnapshotBlockNumber():
+        time.sleep(1)
+    while snapshot_bn != n3.eth.getLatestSnapshotBlockNumber():
+        time.sleep(1)
+    while snapshot_bn != n4.eth.getLatestSnapshotBlockNumber():
+        time.sleep(1)
+    
+    print(f"Filling data_dir with data")
+    
+    for n in ch.nodes[:3]:
+        path = n.data_dir + f"/filestorage/dummy.dat"
+        print(path)
+        res=os.system(f"dd if=/dev/zero of={path} bs=1M count=1")
+
+    print("3 files finished")
+
+    print("Waiting n4 to crash")
+    while wait_answer(n4.eth):
+        time.sleep(10)
+    print("Success")
+
+    print("Waiting 1 snapshot")
+    time.sleep(300)
+
+    print("Restarting n4 from snapshot")
+    starter.restart_node(3, ["--download-snapshot", "ddduuummmyyy"])
+    time.sleep(120)
+    assert( wait_answer(n4.eth) )
+    print("Now check how much time skale_getSnapshot took!")
+    
