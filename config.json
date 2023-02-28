@@ -2,17 +2,16 @@
         "sealEngine": "Ethash",
         "params": {
 		"accountStartNonce": "0x00",
-		 "maximumExtraDataSize": "0x20",
+		"maximumExtraDataSize": "0x20",
 		"blockReward": "0x4563918244F40000",
-                "homesteadForkBlock": "0",
-                "EIP150ForkBlock": "0",
-                "EIP158ForkBlock": "0",
-                "networkID" : "23956",
-                "chainID": "23956",
-                "maxGasLimit": "7fffffffffffffff",
-                "minimumDifficulty": "0x002000",
-                "difficultyBoundDivisor": "0x0800",
-                "blockReward": "0x4563918244F40000"
+		"homesteadForkBlock": "0",
+		"EIP150ForkBlock": "0",
+		"EIP158ForkBlock": "0",
+		"networkID" : "23956",
+		"chainID": "23956",
+		"maxGasLimit": "7fffffffffffffff",
+		"minimumDifficulty": "0x002000",
+		"difficultyBoundDivisor": "0x0800"
         },
         "genesis": {
 

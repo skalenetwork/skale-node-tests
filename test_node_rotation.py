@@ -17,6 +17,7 @@ def schain(request):
     emptyBlockIntervalMs = 1000
     snapshotIntervalSec = 1
     snapshottedStartSeconds = -1
+    requireSnapshotMajority = True
     
     marker = request.node.get_closest_marker("snapshotIntervalSec") 
     if marker is not None:
@@ -26,6 +27,10 @@ def schain(request):
     if marker is not None:
         snapshottedStartSeconds = marker.args[0]
     
+    marker = request.node.get_closest_marker("requireSnapshotMajority")
+    if marker is not None:
+        requireSnapshotMajority = marker.args[0]
+
     run_container = os.getenv('RUN_CONTAINER')
     
     n1 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
@@ -36,7 +41,8 @@ def schain(request):
               snapshotInterval=snapshotIntervalSec)
     n4 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
               snapshotInterval=snapshotIntervalSec,
-              snapshottedStartSeconds=snapshottedStartSeconds)
+              snapshottedStartSeconds=snapshottedStartSeconds,
+              requireSnapshotMajority=requireSnapshotMajority)
     starter = LocalStarter(sktest_exe)
     
     
@@ -340,6 +346,43 @@ def test_late_join(schain):
         time.sleep(1)
     else:
         assert False
+
+@pytest.mark.snapshotIntervalSec(10)
+@pytest.mark.snapshottedStartSeconds(30)
+@pytest.mark.requireSnapshotMajority(False)
+def test_download_without_majority(schain):
+    return
+
+@pytest.mark.snapshotIntervalSec(60)
+@pytest.mark.snapshottedStartSeconds(30)
+@pytest.mark.requireSnapshotMajority(False)
+def test_download_without_majority_early(schain):
+    ch = schain
+    n1 = ch.nodes[0]
+    n2 = ch.nodes[1]
+    n3 = ch.nodes[2]
+    n4 = ch.nodes[3]
+    starter = ch.starter
+
+    avail = wait_answer(n4.eth)
+    print(f"n1's block number = {n1.eth.blockNumber}")
+    assert avail
+    print(f"n4's block number = {n4.eth.blockNumber}")
+
+    for _ in range(50):
+        bn1 = n1.eth.blockNumber
+        bn4 = n4.eth.blockNumber
+        print(f"{bn1} {bn4}")
+        time.sleep(1)
+
+    assert abs(bn1-bn4)<=1
+    assert n1.eth.getLatestSnapshotBlockNumber() != "earliest"
+
+@pytest.mark.snapshotIntervalSec(10)
+@pytest.mark.snapshottedStartSeconds(30)
+@pytest.mark.requireSnapshotMajority(False)
+def test_download_with_majority(schain):
+    return
 
 @pytest.mark.snapshotIntervalSec(10)
 def test_wrong_stateRoot_in_proposal(schain):

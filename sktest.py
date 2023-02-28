@@ -301,6 +301,7 @@ class Node:
         self.snapshottedStartSeconds = kwargs.get(
             'snapshottedStartSeconds', -1
         )
+        self.requireSnapshotMajority = kwargs.get('requireSnapshotMajority', True)
 
 class SChain:
 
@@ -634,6 +635,10 @@ class LocalStarter:
                         print(str(ex))
                         pass    # already exists
                     time.sleep(1)
+
+            if not n.requireSnapshotMajority:
+                popen_args.append('--no-snapshot-majority')
+                popen_args.append(self.chain.nodes[0].bindIP)
 
             if shared_space_path != "":
                 popen_args.append('--shared-space-path')
