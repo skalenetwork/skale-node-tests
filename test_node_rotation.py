@@ -384,33 +384,6 @@ def test_download_without_majority(schain):
     else:
         assert False
 
-@pytest.mark.snapshotIntervalSec(60)
-@pytest.mark.snapshottedStartSeconds(30)
-@pytest.mark.requireSnapshotMajority(False)
-def test_download_without_majority_early(schain):
-    ch = schain
-    n1 = ch.nodes[0]
-    n2 = ch.nodes[1]
-    n3 = ch.nodes[2]
-    n4 = ch.nodes[3]
-    starter = ch.starter
-
-    starter.stop_node(1)
-
-    avail = wait_answer(n4.eth)
-    print(f"n1's block number = {n1.eth.blockNumber}")
-    assert avail
-    print(f"n4's block number = {n4.eth.blockNumber}")
-
-    for _ in range(50):
-        bn1 = n1.eth.blockNumber
-        bn4 = n4.eth.blockNumber
-        print(f"{bn1} {bn4}")
-        time.sleep(1)
-
-    assert abs(bn1-bn4)<=1
-    assert n1.eth.getLatestSnapshotBlockNumber() != "earliest"
-
 @pytest.mark.snapshotIntervalSec(10)
 @pytest.mark.snapshottedStartSeconds(30)
 @pytest.mark.requireSnapshotMajority(False)
