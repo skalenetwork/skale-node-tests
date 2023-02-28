@@ -348,10 +348,41 @@ def test_late_join(schain):
         assert False
 
 @pytest.mark.snapshotIntervalSec(10)
-@pytest.mark.snapshottedStartSeconds(30)
+@pytest.mark.snapshottedStartSeconds(60)
 @pytest.mark.requireSnapshotMajority(False)
 def test_download_without_majority(schain):
-    return
+    ch = schain
+    n1 = ch.nodes[0]
+    n2 = ch.nodes[1]
+    n3 = ch.nodes[2]
+    n4 = ch.nodes[3]
+    starter = ch.starter
+
+    time.sleep(40)
+
+    print(f"n1's block number = {n1.eth.blockNumber}")
+    assert n1.eth.blockNumber > 0
+
+    starter.stop_node(1)
+
+    avail = wait_answer(n4.eth)
+    print(f"n1's block number = {n1.eth.blockNumber}")
+    assert avail
+    print(f"n4's block number = {n4.eth.blockNumber}")
+
+    for _ in range(50):
+        bn1 = n1.eth.blockNumber
+        bn3 = n3.eth.blockNumber
+        bn4 = n4.eth.blockNumber
+
+        print(f"{bn1} {bn3} {bn4}")
+
+        if bn1==bn3 and bn3==bn4:
+            break
+
+        time.sleep(1)
+    else:
+        assert False
 
 @pytest.mark.snapshotIntervalSec(60)
 @pytest.mark.snapshottedStartSeconds(30)
@@ -363,6 +394,8 @@ def test_download_without_majority_early(schain):
     n3 = ch.nodes[2]
     n4 = ch.nodes[3]
     starter = ch.starter
+
+    starter.stop_node(1)
 
     avail = wait_answer(n4.eth)
     print(f"n1's block number = {n1.eth.blockNumber}")
@@ -382,7 +415,32 @@ def test_download_without_majority_early(schain):
 @pytest.mark.snapshottedStartSeconds(30)
 @pytest.mark.requireSnapshotMajority(False)
 def test_download_with_majority(schain):
-    return
+    ch = schain
+    n1 = ch.nodes[0]
+    n2 = ch.nodes[1]
+    n3 = ch.nodes[2]
+    n4 = ch.nodes[3]
+    starter = ch.starter
+
+    avail = wait_answer(n4.eth)
+    print(f"n1's block number = {n1.eth.blockNumber}")
+    assert avail
+    print(f"n4's block number = {n4.eth.blockNumber}")
+
+    for _ in range(50):
+        bn1 = n1.eth.blockNumber
+        bn2 = n2.eth.blockNumber
+        bn3 = n3.eth.blockNumber
+        bn4 = n4.eth.blockNumber
+
+        print(f"{bn1} {bn2} {bn3} {bn4}")
+
+        if bn1==bn2 and bn2==bn3 and bn3==bn4:
+            break
+
+        time.sleep(1)
+    else:
+        assert False
 
 @pytest.mark.snapshotIntervalSec(10)
 def test_wrong_stateRoot_in_proposal(schain):
