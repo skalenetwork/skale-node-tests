@@ -385,7 +385,7 @@ def test_download_without_majority(schain):
         assert False
 
 @pytest.mark.snapshotIntervalSec(10)
-@pytest.mark.snapshottedStartSeconds(30)
+@pytest.mark.snapshottedStartSeconds(40)
 @pytest.mark.requireSnapshotMajority(False)
 def test_download_with_majority(schain):
     ch = schain
