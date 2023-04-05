@@ -73,7 +73,7 @@ if nThreads == 0:
                     print(e2)
                     retries += 1
                     if retries == MAX_RETRIES:
-                        os.system("pkill -9 -f kill4")
+#                        os.system("pkill -9 -f kill4")
                         compare_nodes(eths)
                         raw_prev = None
                         if i-nAcc >= 0:
@@ -112,7 +112,7 @@ dt = t2 - t1
 
 print("Txns: "+str(nTxns)+" Time: "+str(dt)+" => "+str(nTxns/(dt))+" tx/sec")
 
-os.system("pkill -9 -f kill4")
+#os.system("pkill -9 -f kill4")
 time.sleep(20)    # let possibly killed skaled to restore
 
 print("Comparing blocks:")
