@@ -1,3 +1,4 @@
+set -x
 RET=0
 cleanup () {
 	trap '' INT TERM HUP EXIT
