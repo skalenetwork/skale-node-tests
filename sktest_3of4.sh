@@ -3,7 +3,8 @@ RET=0
 cleanup () {
 	trap '' INT TERM HUP EXIT
 	kill $KILL4_PID
-    pkill -9 -f restarting_skaled
+    pkill -f restarting_skaled
+    pkill -f skaled
     pkill -f skaled
 	wait
     echo Func exiting $RET
