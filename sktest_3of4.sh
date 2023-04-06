@@ -4,8 +4,8 @@ cleanup () {
 	trap '' INT TERM HUP EXIT
 	kill $KILL4_PID
     pkill -f restarting_skaled
-#    pkill -f skaled
-#    pkill -f skaled
+    pkill -f '\--ws-port'
+    pkill -f '\--ws-port'
 	wait
     echo Func exiting $RET
     exit $RET
