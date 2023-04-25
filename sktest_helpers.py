@@ -35,7 +35,7 @@ def dump_node_state(obj):
 def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks=True,
                         rotate_after_block=-1,
                         config_file=None, chainID=None, same_ip=False,
-                        run_container=False, bls=False, mtm=False):
+                        run_container=False, bls=False, mtm=False, **kwargs):
     if config_file == None:
         config_file = "config_base.json"
 
@@ -50,9 +50,9 @@ def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks=True,
     balances = []
 
     base_ports = [BASE_PORT + PORT_RANGE * i for i in range(num_nodes)]
+    emptyBlockIntervalMs = kwargs.get('emptyBlockIntervalMs', -1)
     for i, port in enumerate(base_ports):
-        emptyBlockIntervalMs = -1
-        if empty_blocks:
+        if empty_blocks and emptyBlockIntervalMs < 0:
             emptyBlockIntervalMs = 1000
         if run_container or same_ip:
             node = Node(
@@ -84,8 +84,8 @@ def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks=True,
     #starter = ManualStarter(config)
     starter = LocalStarter(sktest_exe, config)
 
-    emptyBlockIntervalMs = -1
-    if empty_blocks:
+    emptyBlockIntervalMs = kwargs.get('emptyBlockIntervalMs', -1)
+    if empty_blocks and emptyBlockIntervalMs < 0:
         emptyBlockIntervalMs = 1000
 
     chain = SChain(nodes, starter, balances,
@@ -96,11 +96,11 @@ def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks=True,
 
 
 def create_default_chain(num_nodes=2, num_accounts=2, empty_blocks=True,
-                         config_file=None):
+                         config_file=None, **kwargs):
     run_container = os.getenv('RUN_CONTAINER')
     return create_custom_chain(num_nodes, num_accounts, empty_blocks, -1,
                                config_file,
-                               run_container=run_container)
+                               run_container=run_container, **kwargs)
 
 
 def create_chain_with_id(num_nodes=2, num_accounts=2, empty_blocks=True,

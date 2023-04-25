@@ -89,6 +89,11 @@ def patch_eth(eth):
         res = eth._provider.make_request("skale_downloadSnapshotFragment", {"from":_from,"isBinary":is_binary,"size":size})
         return res["result"]
 
+    def setSchainExitTime(eth, finishTime):
+        res = eth._provider.make_request("setSchainExitTime", {'finishTime':finishTime})
+        if res.get("error", ""):
+            return res["error"]["message"]
+
     eth.pauseConsensus = types.MethodType(pauseConsensus, eth)
     eth.pauseBroadcast = types.MethodType(pauseBroadcast, eth)
     eth.forceBlock = types.MethodType(forceBlock, eth)
@@ -98,6 +103,7 @@ def patch_eth(eth):
     eth.getSnapshotSignature = types.MethodType(getSnapshotSignature, eth)
     eth.getSnapshot = types.MethodType(getSnapshot, eth)
     eth.downloadSnapshotFragment = types.MethodType(downloadSnapshotFragment, eth)
+    eth.setSchainExitTime = types.MethodType(setSchainExitTime, eth)
 
 def _transaction2json(eth, t, accounts):
     # print("_transaction2json", t)
@@ -598,7 +604,7 @@ class LocalStarter:
 
             popen_args = [
                 # "/usr/bin/strace", '-o'+node_dir+'/aleth.trace',
-                # "stdbuf", "-oL",
+                "stdbuf", "-oL",
                 # "heaptrack",
                 # "valgrind", "--tool=callgrind", #"--separate-threads=yes",
                 self.exe,
