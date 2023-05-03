@@ -93,6 +93,15 @@ def patch_eth(eth):
         res = eth._provider.make_request("setSchainExitTime", {'finishTime':finishTime})
         if res.get("error", ""):
             return res["error"]["message"]
+    
+    def getGenesisState(eth):
+        res = eth._provider.make_request("skale_getGenesisState", {})
+        if res.get("error", ""):
+            return res["error"]["message"]
+        res = res['result']
+        if res.get('error', ''):
+            return res['error']
+        return res
 
     eth.pauseConsensus = types.MethodType(pauseConsensus, eth)
     eth.pauseBroadcast = types.MethodType(pauseBroadcast, eth)
@@ -308,6 +317,7 @@ class Node:
             'snapshottedStartSeconds', -1
         )
         self.requireSnapshotMajority = kwargs.get('requireSnapshotMajority', True)
+        self.downloadGenesisState = kwargs.get('downloadGenesisState', True)
 
 class SChain:
 
@@ -649,6 +659,9 @@ class LocalStarter:
             if not n.requireSnapshotMajority:
                 popen_args.append('--no-snapshot-majority')
                 popen_args.append(self.chain.nodes[0].bindIP)
+
+            if not n.downloadGenesisState:
+                popen_args.append('--download-genesis-state')
 
             if shared_space_path != "":
                 popen_args.append('--shared-space-path')
