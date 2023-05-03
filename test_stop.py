@@ -26,65 +26,99 @@ def wait_block_start(eth):
     while eth.blockNumber == bn:
         time.sleep(0.1)
 
-def timed_stop(ch, i, use_exit_time = False):
+def timed_stop(ch, i, stop_time = None, timeout=20):
+
+    print(f"pauseConsensus(True)")
+    ch.nodes[0].eth.pauseConsensus(True)
+
     block_before = ch.nodes[i].eth.blockNumber
+
+    print("Transaction")
+    try:
+        ch.transaction_async()
+    except Exception as ex:
+        print(repr(ex))
+
     print(f"Stopping {i+1} at block {block_before}")
 
-    stop_time = None
-    if not use_exit_time:
-        ch.stop_node(i)
-    else:
-        t = ch.nodes[i].eth.getBlock('latest')['timestamp']
-        stop_time = t + 2
+    if stop_time:
+        print("(using stop_time)")
         ch.nodes[i].eth.setSchainExitTime(stop_time)
+    else:
+        ch.stop_node(i)
 
     t0 = time.time()
-    while not ch.node_exited(i):
-        try:
-            block_after = ch.nodes[i].eth.blockNumber
-        except:
-            pass    # ignore exception
-        time.sleep(0.1)
-    t_total = time.time()-t0
-    print(f"{i+1} stopped in {t_total}s at block {block_after}")
 
-    if use_exit_time:
-        assert(ch.eth.getBlock(block_after)['timestamp'] >= stop_time and ch.eth.getBlock(block_after-1)['timestamp'] < stop_time)
+    if timeout > 0:
+        print(f"Sleep {timeout}")
+        time.sleep(timeout)
+    print(f"pauseConsensus(False)")
+    ch.nodes[0].eth.pauseConsensus(False)
+
+    while not ch.node_exited(i):
+        time.sleep(0.1)
+
+    t_total = time.time()-t0
+    print(f"{i+1} stopped in {t_total}s")
 
     return {
         'time': t_total,
         'block_before': block_before,
-        'block_after': block_after
     }
 
-# 1 stop when frequently mining blocks
-# 2 stop when 1/3 of nodes lagging
-# 3 stop without 2/3
 def test_stop_ladder(schain4):
     (ch, eth1, eth2, eth3, eth4) = schain4
 
+    # 1 stop inside block creation
+    # should exit on next block
+    print("Note: 3 nodes mining")
+    eth2.pauseConsensus(True)
     wait_block_start(eth4)
     time.sleep(0.5)
     stop_res = timed_stop(ch, 3)
-    assert(stop_res['block_after'] > stop_res['block_before'])
+    block_after = eth3.blockNumber
+    print(f"Block after stop = {block_after}")
+    eth2.pauseConsensus(False)
+    assert(block_after - 1 == stop_res['block_before'])
     assert(stop_res['time'] < 60*5)
 
-    time.sleep(0.5)
+    # let 1st transaction be mined
+    wait_block_start(eth1)
+    wait_block_start(eth1)
+
+    # 2 stop by timeout
+    # while 3 nodes are up,
+    # consensus should exit before creating next block
+    print("Note: 3 nodes mining")
     wait_block_start(eth3)
-    stop_res = timed_stop(ch, 2)
-    assert(stop_res['block_after'] > stop_res['block_before'])
+    stop_res = timed_stop(ch, 2, timeout=40)
+    block_after = eth1.blockNumber
+    print(f"Block after stop = {block_after}")
+    assert(block_after == stop_res['block_before'])
     assert(stop_res['time'] < 60*5)
 
+    # 3 stop totally stuck chain
+    print("Note: 2 nodes mining")
     stop_res = timed_stop(ch, 1)
-    assert(stop_res['block_after'] == stop_res['block_before'])
+    block_after = eth1.blockNumber
+    print(f"Block after stop = {block_after}")
+    assert(block_after == stop_res['block_before'])
     assert(stop_res['time'] < 60*5)
 
 @pytest.mark.emptyBlockIntervalMs(1)
 def test_exit_time(schain4):
     (ch, eth1, eth2, eth3, eth4) = schain4
+
+    print("Note: 3 nodes mining")
+    eth2.pauseConsensus(True)
     wait_block_start(eth4)
     time.sleep(0.5)
-    stop_res = timed_stop(ch, 3, use_exit_time = True)
+    stop_time = eth4.getBlock('latest')['timestamp'] + 2
+    stop_res = timed_stop(ch, 3, stop_time = stop_time)
+    block_after = eth1.blockNumber
+    print(f"Block after stop = {block_after}")
+    eth2.pauseConsensus(False)
+    assert(ch.eth.getBlock(block_after)['timestamp'] >= stop_time and ch.eth.getBlock(block_after-1)['timestamp'] < stop_time)
 
 def excluded_test_stop_in_block(schain4):
     (ch, eth1, eth2, eth3, eth4) = schain4
