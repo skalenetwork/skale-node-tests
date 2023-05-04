@@ -105,6 +105,34 @@ def test_stop_ladder(schain4):
     assert(block_after == stop_res['block_before'])
     assert(stop_res['time'] < 60*5)
 
+# Exit while waiting for new transactions
+def test_in_queue(schain4):
+    (ch, eth1, eth2, eth3, eth4) = schain4
+
+    eth2.pauseConsensus(True)
+
+    wait_block_start(eth4)
+
+    block_before = eth4.blockNumber
+    t0 = time.time()
+
+    print(f"Stopping 4 at block {block_before}, while getting transactions for next")
+    ch.stop_node(3)
+
+    while not ch.node_exited(3):
+        time.sleep(0.1)
+
+    t_total = time.time()-t0
+    print(f"4 stopped in {t_total}s")
+
+    block_after = eth3.blockNumber
+    print(f"Block after stop = {block_after}")
+
+    eth2.pauseConsensus(False)
+
+    assert(block_after  == block_before)
+    assert(t_total < 60*5)
+
 @pytest.mark.emptyBlockIntervalMs(1)
 def test_exit_time(schain4):
     (ch, eth1, eth2, eth3, eth4) = schain4
