@@ -386,7 +386,7 @@ def test_download_without_majority(schain):
 
 @pytest.mark.snapshotIntervalSec(10)
 @pytest.mark.snapshottedStartSeconds(40)
-@pytest.mark.requireSnapshotMajority(False)
+@pytest.mark.requireSnapshotMajority(True)
 def test_download_with_majority(schain):
     ch = schain
     n1 = ch.nodes[0]
@@ -394,6 +394,8 @@ def test_download_with_majority(schain):
     n3 = ch.nodes[2]
     n4 = ch.nodes[3]
     starter = ch.starter
+
+    time.sleep(40)
 
     avail = wait_answer(n4.eth)
     print(f"n1's block number = {n1.eth.blockNumber}")
