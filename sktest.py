@@ -700,7 +700,11 @@ class LocalStarter:
 #        time.sleep(2)
 
         self.running = True
-    
+
+    def cpulimit(self, pos, limit):
+        n = self.chain.nodes[pos]
+        os.system(f"cpulimit -p {n.pid} -l {limit} -b")
+
     def restart_node(self, pos, args, delay_sec = 0):
         assert self.started
         n = self.chain.nodes[pos]
