@@ -12,6 +12,11 @@ def schain4(request):
     ch = create_default_chain(num_nodes=4, num_accounts=2, emptyBlockIntervalMs = emptyBlockIntervalMs)
     ch.start()
 
+    ch.starter.cpulimit(0, 2)
+    ch.starter.cpulimit(1, 2)
+    ch.starter.cpulimit(2, 2)
+    ch.starter.cpulimit(3, 2)
+
     eth1  = ch.nodes[0].eth
     eth2  = ch.nodes[1].eth
     eth3  = ch.nodes[2].eth
@@ -91,7 +96,7 @@ def test_stop_ladder(schain4):
     # consensus should exit before creating next block
     print("Note: 3 nodes mining")
     wait_block_start(eth3)
-    stop_res = timed_stop(ch, 2, timeout=40)
+    stop_res = timed_stop(ch, 2, timeout=70)
     block_after = eth1.blockNumber
     print(f"Block after stop = {block_after}")
     assert(block_after == stop_res['block_before'])
