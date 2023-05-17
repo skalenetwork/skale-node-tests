@@ -205,14 +205,14 @@ def test_main(schain):
     n1 = ch.nodes[0]
     
     wait_answer(n1.eth)
-    assert type( n1.eth.getSnapshotSignature(0) ) is dict    # error
+    assert type( n1.eth.getSnapshotSignature(0) ) is str    # error
     wait_block(n1.eth, 3)
     assert_b_s(n1.eth, 3, 2)
     time.sleep(1)
     assert_b_s(n1.eth, 3, 2)    # wait for hash ready but not exposed
     # disallow it to switch to next block
     n1.eth.debugInterfaceCall("SkaleHost trace break create_block")
-    assert type( n1.eth.getSnapshotSignature(0) ) is dict    # error
+    assert type( n1.eth.getSnapshotSignature(0) ) is str    # error
     assert type( n1.eth.getSnapshotSignature(1) ) is str    # error because 1 is never snapshotted
     assert type( n1.eth.getSnapshotSignature(2) ) is dict   # ok
     assert type( n1.eth.getSnapshotSignature(3) ) is str    # error
