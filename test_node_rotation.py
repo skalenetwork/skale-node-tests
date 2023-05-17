@@ -229,6 +229,8 @@ def test_download_early(schain):
     n4 = ch.nodes[3]
     starter = ch.starter
 
+    time.sleep(90) # wait till 0 snapshot will be downloaded
+
     avail = wait_answer(n4.eth)
     print(f"n1's block number = {n1.eth.blockNumber}")
     assert avail
@@ -441,7 +443,7 @@ def test_wrong_stateRoot_in_proposal(schain):
     path = n3.data_dir + "/filestorage"
     with open(path+"/dummy_file.txt", "w") as f:
         f.write("dummy data\n")
-    print("Breaking filestorage hash in "  +path)
+    print("Breaking filestorage hash in " + path)
     
     old_bn3 = 0
     hang_counter = 0
@@ -465,6 +467,7 @@ def test_wrong_stateRoot_in_proposal(schain):
             assert(eth_available(n1.eth))
             print("Restarting n3 (crashed)")
             starter.restart_node(2, ["--download-snapshot", "http://127.0.0.1:9999"])
+            time.sleep(80) # wait till 0 snapshot will be downloaded
             assert( wait_answer(n3.eth) )
             print("n3 should be fixed now")
             

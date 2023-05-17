@@ -120,7 +120,7 @@ def test_download_download(schain):
     n1 = ch.nodes[0]    
     n4 = ch.nodes[3]
 
-    time.sleep(60)
+    time.sleep(70) # wait till 0 snapshot will be downloaded
         
     wait_answer(n4.eth)
     
