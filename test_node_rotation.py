@@ -139,6 +139,7 @@ def test_download_snapshot(schain, have_others, have_4):
                 assert not eth_available(n4.eth)
                 
                 # should break if no others
+                time.sleep(70) # wait till 0 snapshot will be downloaded
                 avail = wait_answer(n4.eth)
     
                 if not have_others:                                                               
