@@ -96,7 +96,7 @@ def test_stop_ladder(schain4):
     # consensus should exit before creating next block
     print("Note: 3 nodes mining")
     wait_block_start(eth3)
-    stop_res = timed_stop(ch, 2, timeout=70)
+    stop_res = timed_stop(ch, 2, timeout=40)
     block_after = eth1.blockNumber
     print(f"Block after stop = {block_after}")
     assert(block_after == stop_res['block_before'])
@@ -111,6 +111,7 @@ def test_stop_ladder(schain4):
     assert(stop_res['time'] < 60*5)
 
 # Exit while waiting for new transactions
+@pytest.mark.emptyBlockIntervalMs(9000)
 def test_in_queue(schain4):
     (ch, eth1, eth2, eth3, eth4) = schain4
 
