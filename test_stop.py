@@ -94,9 +94,10 @@ def test_stop_ladder(schain4):
     # 2 stop by timeout
     # while 3 nodes are up,
     # consensus should exit before creating next block
+    # Use 70 sec timeout to allow for long exit of http server
     print("Note: 3 nodes mining")
     wait_block_start(eth3)
-    stop_res = timed_stop(ch, 2, timeout=40)
+    stop_res = timed_stop(ch, 2, timeout=70)
     block_after = eth1.blockNumber
     print(f"Block after stop = {block_after}")
     assert(block_after == stop_res['block_before'])
@@ -111,7 +112,8 @@ def test_stop_ladder(schain4):
     assert(stop_res['time'] < 60*5)
 
 # Exit while waiting for new transactions
-@pytest.mark.emptyBlockIntervalMs(9000)
+# As http server is exiting long - use this big block interval
+@pytest.mark.emptyBlockIntervalMs(19000)
 def test_in_queue(schain4):
     (ch, eth1, eth2, eth3, eth4) = schain4
 
