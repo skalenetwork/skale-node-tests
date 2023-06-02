@@ -3,26 +3,38 @@ import pytest
 
 @pytest.fixture
 def schain4(request):
+    gen = schain_helper(4, request)
+    ch = next(gen)
+    yield (ch, ch.nodes[0].eth, ch.nodes[1].eth, ch.nodes[2].eth, ch.nodes[3].eth)
+
+@pytest.fixture
+def schain1(request):
+    yield from schain_helper(1, request)
+
+def schain_helper(num_nodes, request):
 
     emptyBlockIntervalMs = 4000
     marker = request.node.get_closest_marker("emptyBlockIntervalMs") 
     if marker is not None:
         emptyBlockIntervalMs = marker.args[0]
 
-    ch = create_default_chain(num_nodes=4, num_accounts=2, emptyBlockIntervalMs = emptyBlockIntervalMs)
+    snapshotIntervalSec = -1
+    marker = request.node.get_closest_marker("snapshotIntervalSec")
+    if marker is not None:
+        snapshotIntervalSec = marker.args[0]
+
+    ch = create_default_chain(num_nodes=num_nodes, num_accounts=2,
+        emptyBlockIntervalMs = emptyBlockIntervalMs,
+        snapshotIntervalSec=snapshotIntervalSec)
     ch.start()
 
-    ch.starter.cpulimit(0, 2)
-    ch.starter.cpulimit(1, 2)
-    ch.starter.cpulimit(2, 2)
-    ch.starter.cpulimit(3, 2)
+    marker = request.node.get_closest_marker("cpulimit")
+    if marker is not None:
+        limit = int(marker.args[0])
+        for i in range(0, num_nodes):
+            ch.starter.cpulimit(i, limit)
 
-    eth1  = ch.nodes[0].eth
-    eth2  = ch.nodes[1].eth
-    eth3  = ch.nodes[2].eth
-    eth4  = ch.nodes[3].eth
-
-    yield (ch, eth1, eth2, eth3, eth4)
+    yield ch
 
     ch.stop()
 
@@ -31,6 +43,23 @@ def wait_block_start(eth):
     while eth.blockNumber == bn:
         time.sleep(0.1)
 
+def eth_available(eth):
+        try:
+            bn = eth.blockNumber
+            return True
+        except:
+            return False
+
+def wait_answer(eth):
+    for i in range(40):
+        avail = eth_available(eth)
+        print(f"available: {avail}")
+        if avail:
+            return avail
+        time.sleep(1)
+    return False
+
+@pytest.mark.cpulimit(2)
 def timed_stop(ch, i, stop_time = None, timeout=20):
 
     print(f"pauseConsensus(True)")
@@ -71,6 +100,7 @@ def timed_stop(ch, i, stop_time = None, timeout=20):
         'block_before': block_before,
     }
 
+@pytest.mark.cpulimit(2)
 def test_stop_ladder(schain4):
     (ch, eth1, eth2, eth3, eth4) = schain4
 
@@ -114,6 +144,7 @@ def test_stop_ladder(schain4):
 # Exit while waiting for new transactions
 # As http server is exiting long - use this big block interval
 @pytest.mark.emptyBlockIntervalMs(19000)
+@pytest.mark.cpulimit(2)
 def test_in_queue(schain4):
     (ch, eth1, eth2, eth3, eth4) = schain4
 
@@ -142,6 +173,7 @@ def test_in_queue(schain4):
     assert(t_total < 60*5)
 
 @pytest.mark.emptyBlockIntervalMs(1)
+@pytest.mark.cpulimit(2)
 def test_exit_time(schain4):
     (ch, eth1, eth2, eth3, eth4) = schain4
 
@@ -155,6 +187,60 @@ def test_exit_time(schain4):
     print(f"Block after stop = {block_after}")
     eth2.pauseConsensus(False)
     assert(ch.eth.getBlock(block_after)['timestamp'] >= stop_time and ch.eth.getBlock(block_after-1)['timestamp'] < stop_time)
+
+@pytest.mark.snapshotIntervalSec(60)
+def test_stop_in_snapshot(schain1):
+    ch = schain1
+
+    # 100k files requre approx 19 sec of hash computing
+    num_files = 500000
+    print(f"Creating {num_files} files")
+    data_dir = ch.nodes[0].data_dir
+    for i in range(0, num_files):
+        path = data_dir + "/" + "filestorage" + "/" + f"dummy{i}.txt"
+        with open(path, 'w') as file:
+            pass
+
+    # 1 wait for snapshot
+    print("Waiting for snapshot")
+    s0 = ch.eth.getLatestSnapshotBlockNumber()
+    s = s0
+    while s==s0:
+        time.sleep(1)
+        s = ch.eth.getLatestSnapshotBlockNumber()
+    print(f"Got snapshot {s}")
+    
+    # 2 search for new snapshot without hash!
+    guess = s + 1
+    while not os.path.isdir(data_dir+"/snapshots/"+str(guess)) and guess < 1000:
+        guess += 1
+    assert(guess < 1000)
+    print(f"Found new snapshot {guess}")
+    s = guess
+        
+    # 3 send SIGTERM
+    ch.starter.stop_node(0)
+    ch.starter.wait_node_stop(0)
+    print("Node stopped")
+    
+    # 4 check that hash was not computed
+    assert(not os.path.exists(data_dir+f"/snapshots/{s}/snapshot_hash.txt"))
+    
+    # 5 restart and check that start is ok
+    ch.starter.start_node_after_stop(0)
+    print("Node restarted")
+
+    wait_answer(ch.eth)
+
+    print("Waiting for snapshot")
+    s0 = ch.eth.getLatestSnapshotBlockNumber()
+    s = s0
+    while s==s0:
+        time.sleep(1)
+        s = ch.eth.getLatestSnapshotBlockNumber()
+    print(f"Got snapshot {s}")
+
+    # do same for hash verification after download
 
 def excluded_test_stop_in_block(schain4):
     (ch, eth1, eth2, eth3, eth4) = schain4
