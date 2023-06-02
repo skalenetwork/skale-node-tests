@@ -619,7 +619,7 @@ class LocalStarter:
                 # "valgrind", "--tool=callgrind", #"--separate-threads=yes",
                 self.exe,
                 "--http-port", str(n.basePort + 3),
-                "--ws-port", str(n.wsPort),
+#                "--ws-port", str(n.wsPort),
                 "--aa", "always",
                 "--config", cfg_file,
                 "-d", node_dir,
@@ -720,17 +720,7 @@ class LocalStarter:
                 print(str(ex))
             time.sleep(1)
 
-        popen = Popen(
-            n.args + args,
-            stdout=n.stdout,
-            stderr=n.stderr,
-            env=n.env,
-            preexec_fn=os.setsid
-        )
-
-        n.pid = popen.pid
-        self.exe_popens[pos] = popen
-        n.running = True
+        self.start_node_after_stop(pos, args)
     
     def start_after_stop(self, chain, start_timeout=40):
         assert not self.started
@@ -847,6 +837,20 @@ class LocalStarter:
 
     def node_exited(self, pos):
         return self.exe_popens[pos].poll() is not None
+
+    def start_node_after_stop(self, pos, args=[]):
+        n = self.chain.nodes[pos]
+        popen = Popen(
+            n.args + args,
+            stdout=n.stdout,
+            stderr=n.stderr,
+            env=n.env,
+            preexec_fn=os.setsid
+        )
+
+        n.pid = popen.pid
+        self.exe_popens[pos] = popen
+        n.running = True
 
     def prepare_to_restore(self, latest_snapshot):
         for n in self.chain.nodes:

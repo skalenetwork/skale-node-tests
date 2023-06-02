@@ -88,9 +88,12 @@ def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks=True,
     if empty_blocks and emptyBlockIntervalMs < 0:
         emptyBlockIntervalMs = 1000
 
+    snapshotIntervalSec = kwargs.get('snapshotIntervalSec', -1)
+
     chain = SChain(nodes, starter, balances,
                    emptyBlockIntervalMs=emptyBlockIntervalMs, chainID=chainID,
-                   dbStorageLimit=dbStorageLimit, bls=bls, mtm=mtm)
+                   dbStorageLimit=dbStorageLimit, bls=bls, mtm=mtm,
+                   snapshotIntervalSec=snapshotIntervalSec)
 
     return chain
 
