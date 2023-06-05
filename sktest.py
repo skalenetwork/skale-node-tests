@@ -518,12 +518,9 @@ class SChain:
                 time.sleep(1)
 
     def stop(self):
-
-        time.sleep(10)	# HACK for Serge!
-
         self.starter.stop()
         self.running = False
-    
+
     def stop_without_cleanup(self):
         self.starter.stop_without_cleanup()
         self.running = False
@@ -805,7 +802,7 @@ class LocalStarter:
 
         self.running = False
         self.dir.cleanup()
-    
+
     def stop_without_cleanup(self):
         assert hasattr(self, "chain")
 

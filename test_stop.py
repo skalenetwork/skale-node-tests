@@ -6,6 +6,7 @@ def schain4(request):
     gen = schain_helper(4, request)
     ch = next(gen)
     yield (ch, ch.nodes[0].eth, ch.nodes[1].eth, ch.nodes[2].eth, ch.nodes[3].eth)
+    yield( next(gen) )
 
 @pytest.fixture
 def schain1(request):
