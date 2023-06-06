@@ -590,7 +590,7 @@ class LocalStarter:
             assert not n.running
             idx+=1
 
-            node_dir = os.path.join(os.getenv('DATA_DIR', self.dir.name), str(n.nodeID))
+            node_dir = os.path.join(os.getenv('DATA_DIR', self.dir.name), str(idx))
             ipc_dir = node_dir
             try:
                 os.makedirs(node_dir)
@@ -795,7 +795,7 @@ class LocalStarter:
 
     def stop(self):
         assert hasattr(self, "chain")
-        if self.running:
+        if not self.running:
             return
 
         for pos in range(len(self.chain.nodes)):
