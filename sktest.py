@@ -797,6 +797,7 @@ class LocalStarter:
         assert hasattr(self, "chain")
 
         for pos in range(len(self.chain.nodes)):
+            shutil.copyfile(self.dir.name+"/"+str(pos+1)+"/aleth.out", f"/tmp/{pos+1}.log")
             self.stop_node(pos)
             self.wait_node_stop(pos)
 
