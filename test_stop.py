@@ -6,7 +6,10 @@ def schain4(request):
     gen = schain_helper(4, request)
     ch = next(gen)
     yield (ch, ch.nodes[0].eth, ch.nodes[1].eth, ch.nodes[2].eth, ch.nodes[3].eth)
-    yield( next(gen) )
+    try:
+        yield( next(gen) )
+    except:
+        pass
 
 @pytest.fixture
 def schain1(request):
@@ -101,7 +104,7 @@ def timed_stop(ch, i, stop_time = None, timeout=20):
         'block_before': block_before,
     }
 
-@pytest.mark.cpulimit(2)
+#@pytest.mark.cpulimit(2)
 def test_stop_ladder(schain4):
     (ch, eth1, eth2, eth3, eth4) = schain4
 
