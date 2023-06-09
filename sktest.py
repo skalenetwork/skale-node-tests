@@ -799,8 +799,11 @@ class LocalStarter:
             return
 
         for pos in range(len(self.chain.nodes)):
-            shutil.copyfile(self.dir.name+"/"+str(pos+1)+"/aleth.out", f"/tmp/{pos+1}.log")
-            shutil.copyfile(self.dir.name+"/"+str(pos+1)+"/aleth.err", f"/tmp/{pos+1}_err.log")
+            try:
+                shutil.copyfile(self.dir.name+"/"+str(pos+1)+"/aleth.out", f"/tmp/{pos+1}.log")
+                shutil.copyfile(self.dir.name+"/"+str(pos+1)+"/aleth.err", f"/tmp/{pos+1}_err.log")
+            except:
+                pass
             self.stop_node(pos)
             self.wait_node_stop(pos)
 
