@@ -611,7 +611,7 @@ class LocalStarter:
 
             popen_args = [
                 # "/usr/bin/strace", '-o'+node_dir+'/aleth.trace',
-                "stdbuf", "-oL",
+                #"stdbuf", "-oL",
                 # "heaptrack",
                 # "valgrind", "--tool=callgrind", #"--separate-threads=yes",
                 self.exe,
