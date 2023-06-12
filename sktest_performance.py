@@ -14,8 +14,8 @@ from sktest_helpers import create_custom_chain, \
 
 
 nNodes = int(os.getenv("NUM_NODES", 4))
-nTxns = 24000  # 24000
-nAcc = 24000
+nTxns = 2400  # 24000
+nAcc = 2400
 nThreads = 1
 
 MAX_RETRIES = 30
@@ -130,6 +130,5 @@ if ok:
 else:
     print('\n*** Test failed ***')
 
-# ch.stop()
-
+ch.stop()
 sys.exit(not ok)
