@@ -86,7 +86,7 @@ def test_download_snapshot(schain, have_others, have_4):
     n3 = ch.nodes[2]
     n4 = ch.nodes[3]
     starter = ch.starter
-    for _ in range(50):
+    for _ in range(30+50):
         try:
             bn1 = n1.eth.blockNumber
             bn2 = n2.eth.blockNumber
