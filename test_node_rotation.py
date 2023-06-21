@@ -207,7 +207,7 @@ def test_restart(schain):
                 
                 avail = wait_answer(n4.eth)
                 assert avail
-                time.sleep(10+10)
+                time.sleep(10+20)
         
             if bn1 >= 60 and bn1==bn2 and bn2==bn3 and bn3==bn4:
                 break
