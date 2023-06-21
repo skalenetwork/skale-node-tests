@@ -468,7 +468,7 @@ def test_wrong_stateRoot_in_proposal(schain):
             assert(eth_available(n1.eth))
             print("Restarting n3 (crashed)")
             starter.restart_node(2, ["--download-snapshot", "http://127.0.0.1:9999"])
-            time.sleep(80) # wait till 0 snapshot will be downloaded
+            time.sleep(80+10) # wait till 0 snapshot will be downloaded
             assert( wait_answer(n3.eth) )
             print("n3 should be fixed now")
             
