@@ -466,6 +466,11 @@ def test_wrong_stateRoot_in_proposal(schain):
             # check n1 if n3 crashed
             time.sleep(3)
             assert(eth_available(n1.eth))
+            # check status file
+            with open(n3.data_dir+"/skaled.status", 'r') as f:
+                status_text = f.read()
+            assert('"StartFromSnapshot": true' in status_text)
+            assert('"StartAgain": true' in status_text)
             print("Restarting n3 (crashed)")
             starter.restart_node(2, ["--download-snapshot", "http://127.0.0.1:9999"])
             time.sleep(80) # wait till 0 snapshot will be downloaded
