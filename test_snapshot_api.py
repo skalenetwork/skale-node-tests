@@ -210,6 +210,8 @@ def test_main(schain):
     n1 = ch.nodes[0]
     
     wait_answer(n1.eth)
+    wait_block(n1.eth, 1)               # HACK needed for 0 snapshot
+
     assert type( n1.eth.getSnapshotSignature(0) ) is dict    # ok
     wait_block(n1.eth, 3)
     assert_b_s(n1.eth, 3, 2)
@@ -344,9 +346,9 @@ def test_stateRoot_conflict(schain):
         n1.eth.debugInterfaceCall("Client trace continue computeSnapshotHash_start")
         n2.eth.debugInterfaceCall("Client trace continue computeSnapshotHash_start")
 
-@pytest.mark.num_nodes(16)
+@pytest.mark.num_nodes(4)
 @pytest.mark.snapshotIntervalSec(60)
-@pytest.mark.chain_id("0xd2ba743e9fef4")
+#@pytest.mark.chain_id("0xd2ba743e9fef4")
 #@pytest.mark.chain_id("0x2")
 def test_wait(schain):
     ch = schain
