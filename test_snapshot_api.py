@@ -215,7 +215,7 @@ def test_main(schain):
     assert type( n1.eth.getSnapshotSignature(0) ) is dict    # ok
     wait_block(n1.eth, 3)
     assert_b_s(n1.eth, 3, 2)
-    time.sleep(1)
+
     assert_b_s(n1.eth, 3, 2)    # wait for hash ready but not exposed
     # disallow it to switch to next block
     n1.eth.debugInterfaceCall("SkaleHost trace break create_block")
@@ -253,10 +253,9 @@ def test_main(schain):
 
     # check rotation
     wait_block(n1.eth, 5)
-    time.sleep(1)
     # disallow it to switch to next block
     n1.eth.debugInterfaceCall("SkaleHost trace break create_block")
-    assert type( n1.eth.getSnapshotSignature(2) ) is str    # rotated    
+    assert type( n1.eth.getSnapshotSignature(2) ) is str    # rotated
     assert type( n1.eth.getSnapshotSignature(3) ) is dict   # ok
     assert type( n1.eth.getSnapshotSignature(4) ) is dict   # ok
     assert type( n1.eth.getSnapshotSignature(5) ) is str    # error
