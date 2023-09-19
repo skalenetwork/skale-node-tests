@@ -578,8 +578,8 @@ class LocalStarter:
         ip_ports = [str(node.bindIP)+":"+str(node.basePort) for node in self.chain.nodes]
 
         if self.chain.bls:
-            #os.environ["SGX_URL"] = "https://167.235.155.228:1026";
-            os.environ["SGX_URL"] = "https://34.223.63.227:1026";
+            os.environ["SGX_URL"] = "https://167.235.155.228:1026";
+            #os.environ["SGX_URL"] = "https://34.223.63.227:1026";
         os.system("./config_tools/make_configs.sh "
                   +str(len(self.chain.nodes))+" "+",".join(ip_ports)+" "
                   +os.path.join(self.dir.name, "config0.json")
