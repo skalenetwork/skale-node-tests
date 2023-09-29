@@ -202,16 +202,18 @@ def test_restart(schain):
                 starter.restart_node(3, [])
                 
                 # to be sure it really restarted
-                time.sleep(5)
                 assert not eth_available(n4.eth)
                 
                 avail = wait_answer(n4.eth)
                 assert avail
                 time.sleep(30)
         
+            print(bn1, bn2, bn3, bn4)
             if bn1 >= 60 and bn1==bn2 and bn2==bn3 and bn3==bn4:
                 break
     
+        except AssertionError as e:
+            raise e
         except Exception as e:
             print(str(e))
             pass
