@@ -246,6 +246,47 @@ def test_stop_in_snapshot(schain1):
 
     # do same for hash verification after download
 
+# send SIGTERM while skaled is exiting by exit time
+@pytest.mark.emptyBlockIntervalMs(1)
+#@pytest.mark.cpulimit(2)
+def test_double_stop(schain4):
+    (ch, eth1, eth2, eth3, eth4) = schain4
+
+    print("Note: 3 nodes mining")
+    eth2.pauseConsensus(True)
+
+    wait_block_start(eth4)
+
+    stop_time = eth4.getBlock('latest')['timestamp']
+
+    block_before = eth4.blockNumber
+
+    print(f"Stopping 4 at block {block_before}")
+    print("(using stop_time)")
+    eth4.setSchainExitTime(stop_time)
+
+    # should exit here
+    wait_block_start(eth4)
+    # send additional SIGTERM
+    time.sleep(2)
+    ch.starter.stop_node(3)
+
+    t0 = time.time()
+
+    while not ch.node_exited(3):
+        time.sleep(0.1)
+
+    t_total = time.time()-t0
+    print(f"4 stopped in {t_total}s")
+
+    assert(t_total > 2)
+
+    block_after = eth1.blockNumber
+    print(f"Block after stop = {block_after}")
+    assert(block_after == block_before+1)
+
+    eth2.pauseConsensus(False)
+
 def excluded_test_stop_in_block(schain4):
     (ch, eth1, eth2, eth3, eth4) = schain4
 
