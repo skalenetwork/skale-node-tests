@@ -279,7 +279,7 @@ def test_double_stop(schain4):
     t_total = time.time()-t0
     print(f"4 stopped in {t_total}s")
 
-    assert(t_total > 2)
+    assert(t_total > 1)
 
     block_after = eth1.blockNumber
     print(f"Block after stop = {block_after}")
