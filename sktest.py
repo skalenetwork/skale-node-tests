@@ -843,6 +843,9 @@ class LocalStarter:
     def node_exited(self, pos):
         return self.exe_popens[pos].poll() is not None
 
+    def node_exit_code(self, pos):
+        return self.exe_popens[pos].poll()
+
     def start_node_after_stop(self, pos, args=[]):
         n = self.chain.nodes[pos]
         popen = Popen(

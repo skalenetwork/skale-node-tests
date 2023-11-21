@@ -276,10 +276,12 @@ def test_double_stop(schain4):
     while not ch.node_exited(3):
         time.sleep(0.1)
 
-    t_total = time.time()-t0
-    print(f"4 stopped in {t_total}s")
+    exit_code = ch.starter.node_exit_code(3)
 
-    assert(t_total > 1)
+    t_total = time.time()-t0
+    print(f"4 stopped in {t_total}s with exit code {exit_code}")
+
+    assert(exit_code == 0)
 
     block_after = eth1.blockNumber
     print(f"Block after stop = {block_after}")
