@@ -599,6 +599,22 @@ class LocalStarter:
                 pass
             cfg_file = node_dir + "/config.json"
 
+            # add address field to nodeGroups section in config if bls is enabled
+            if self.chain.bls:
+                config_json = None
+                with open("./config"+str(idx)+".json") as f:
+                    config_json = json.load(f)
+                new_config = config_json
+                for _, node_info in config_json['skaleConfig']['sChain']['nodeGroups']['0']['nodes'].items():
+                    pk_str = node_info[2][2:]
+                    address = web3.Web3.keccak(hexstr=pk_str).hex()
+                    address = "0x" + address[26:]
+                    node_info.append( address )
+                #write updated config on disk
+                json_dump = json.dumps(new_config, indent=4)
+                with open("./config"+str(idx)+".json", "w+") as outfile:
+                    outfile.write(json_dump)
+
             ##!n.config = cfg
             shutil.move("./config"+str(idx)+".json", cfg_file)
 
