@@ -318,6 +318,8 @@ class Node:
         )
         self.requireSnapshotMajority = kwargs.get('requireSnapshotMajority', True)
         self.downloadGenesisState = kwargs.get('downloadGenesisState', True)
+        self.historic = kwargs.get('historic', False)
+        self.sync = kwargs.get('sync', False)
 
 class SChain:
 
@@ -575,15 +577,31 @@ class LocalStarter:
         with open(os.path.join(self.dir.name, "config0.json"), "w") as f:
             json.dump(cfg, f, indent = 1)
             
-        ip_ports = [str(node.bindIP)+":"+str(node.basePort) for node in self.chain.nodes]
+        ip_ports = [str(node.bindIP)+":"+str(node.basePort) for node in self.chain.nodes if not node.sync and not node.historic]
+
+        have_sync = any(n.sync for n in self.chain.nodes)
+        if have_sync:
+            sync_ip_port = [str(node.bindIP)+":"+str(node.basePort) for node in self.chain.nodes if node.sync][0]
+        have_historic = any(n.historic for n in self.chain.nodes)
+        if have_historic:
+            historic_ip_port = [str(node.bindIP)+":"+str(node.basePort) for node in self.chain.nodes if node.historic][0]
+
+        simple_nodes_count = len(self.chain.nodes)-have_sync-have_historic
 
         if self.chain.bls:
             os.environ["SGX_URL"] = "https://167.235.155.228:1026";
-            #os.environ["SGX_URL"] = "https://34.223.63.227:1026";
         os.system("./config_tools/make_configs.sh "
-                  +str(len(self.chain.nodes))+" "+",".join(ip_ports)+" "
-                  +os.path.join(self.dir.name, "config0.json")
+                  +str(simple_nodes_count)+" "+",".join(ip_ports)+" "
+                  +os.path.join(self.dir.name, "config0.json") + " "
+                  +(f"--historic {historic_ip_port}" if have_historic else "") + " "
+                  +(f"--sync {sync_ip_port}" if have_sync else "") + " "
                  )
+
+        # give numbers to sync and historic configs
+        if have_sync:
+            os.rename("config-sync.json", f"config{simple_nodes_count+have_sync}.json");
+        if have_historic:
+            os.rename("config-historic.json", f"config{simple_nodes_count+have_sync+have_historic}.json");
 
         # TODO Handle exceptions!
         idx = 0
@@ -645,7 +663,7 @@ class LocalStarter:
             ]
 
             try:
-              if os.environ["SGX_URL"]:
+              if os.environ["SGX_URL"] and not n.sync and not n.historic:
                   popen_args.append("--sgx-url")
                   popen_args.append(os.environ["SGX_URL"])
             except:

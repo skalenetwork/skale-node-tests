@@ -35,7 +35,7 @@ def dump_node_state(obj):
 def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks=True,
                         rotate_after_block=-1,
                         config_file=None, chainID=None, same_ip=False,
-                        run_container=False, bls=False, mtm=False, **kwargs):
+                        run_container=False, bls=False, mtm=False, sync=False, historic=False, **kwargs):
     if config_file == None:
         config_file = "config_base.json"
 
@@ -49,20 +49,27 @@ def create_custom_chain(num_nodes=2, num_accounts=2, empty_blocks=True,
     nodes = []
     balances = []
 
-    base_ports = [BASE_PORT + PORT_RANGE * i for i in range(num_nodes)]
+    base_ports = [BASE_PORT + PORT_RANGE * i for i in range(num_nodes+historic+sync)]
     emptyBlockIntervalMs = kwargs.get('emptyBlockIntervalMs', -1)
     for i, port in enumerate(base_ports):
+        this_is_sync = sync and i==num_nodes
+        this_is_historic = historic and i==num_nodes+sync
         if empty_blocks and emptyBlockIntervalMs < 0:
             emptyBlockIntervalMs = 1000
         if run_container or same_ip:
             node = Node(
                 bindIP='0.0.0.0',
-                basePort=port, bls=bls
+                basePort=port, bls=bls,
+                sync = this_is_sync,
+                historic = this_is_historic
             )
         else:
             base_port = 1231
             node = Node(bindIP=f'127.0.0.{i+1}', basePort=base_port,
-                        bls=bls)
+                        bls=bls,
+                sync = this_is_sync,
+                historic = this_is_historic
+            )
 
         nodes.append(node)
 

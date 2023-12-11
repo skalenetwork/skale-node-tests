@@ -60,9 +60,17 @@ def schain(request):
     nodes.append( Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
               snapshotInterval=snapshotIntervalSec,
               snapshottedStartSeconds=snapshottedStartSeconds) )
-   
+    nodes.append( Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
+              snapshotInterval=snapshotIntervalSec,
+              sync=True,
+              snapshottedStartSeconds=20) )
+    nodes.append( Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
+              snapshotInterval=snapshotIntervalSec,
+              historic=True,
+              snapshottedStartSeconds=25) )
+
     starter = LocalStarter(sktest_exe)
-        
+
     ch = SChain(
         nodes,
         starter,
