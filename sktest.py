@@ -519,8 +519,8 @@ class SChain:
             except Exception:
                 time.sleep(1)
 
-    def stop(self):
-        self.starter.stop()
+    def stop(self, force=False):
+        self.starter.stop(force)
         self.running = False
 
     def stop_without_cleanup(self):
@@ -829,7 +829,7 @@ class LocalStarter:
 
         self.running = True
 
-    def stop(self):
+    def stop(self, force=False):
         assert hasattr(self, "chain")
         if not self.running:
             return
@@ -840,7 +840,7 @@ class LocalStarter:
                 shutil.copyfile(self.dir.name+"/"+str(pos+1)+"/aleth.err", f"/tmp/{pos+1}_err.log")
             except:
                 pass
-            self.stop_node(pos)
+            self.stop_node(pos, force)
             self.wait_node_stop(pos)
 
         self.running = False
@@ -860,13 +860,16 @@ class LocalStarter:
         self.exe_popens.clear()
 
     # TODO race conditions?
-    def stop_node(self, pos):
+    def stop_node(self, pos, force = False):
         if not self.chain.nodes[pos].running:
             return
         self.chain.nodes[pos].running = False
         p = self.exe_popens[pos]
         if p.poll() is None:
-            os.killpg(p.pid, signal.SIGTERM)
+            if not force:
+                os.killpg(p.pid, signal.SIGTERM)
+            else:
+                os.killpg(p.pid, signal.SIGQUIT)
 
     # TODO race conditions?
     def wait_node_stop(self, pos):

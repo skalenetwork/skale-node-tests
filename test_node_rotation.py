@@ -59,7 +59,7 @@ def schain(request):
     yield(ch)
 
     print("Exiting")    
-    ch.stop()
+    ch.stop(force=True)
 
 def eth_available(eth):
         try:
