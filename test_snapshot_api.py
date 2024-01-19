@@ -244,7 +244,7 @@ def test_main(schain):
     n1.eth.debugInterfaceCall("SkaleHost trace break create_block")
     assert type( n1.eth.getSnapshotSignature(0) ) is dict    # ok
     assert type( n1.eth.getSnapshotSignature(1) ) is str    # error because 1 is never snapshotted
-    assert type( n1.eth.getSnapshotSignature(2) ) is dict   # ok
+    assert type( n1.eth.getSnapshotSignature(2) ) is str   # error
     assert type( n1.eth.getSnapshotSignature(3) ) is str    # error
 
     #wait_block(n1.eth, 4)
@@ -261,7 +261,7 @@ def test_main(schain):
     n1.eth.debugInterfaceCall("SkaleHost trace break create_block")
     assert type( n1.eth.getSnapshotSignature(1) ) is str    # 1 is not snapshotted
     assert type( n1.eth.getSnapshotSignature(2) ) is dict   # ok
-    assert type( n1.eth.getSnapshotSignature(3) ) is dict   # ok
+    assert type( n1.eth.getSnapshotSignature(3) ) is str    # error
     assert type( n1.eth.getSnapshotSignature(4) ) is str    # error
     time.sleep(3.0)			# allow snapshot hash to start being computed
     n1.eth.debugInterfaceCall("Client trace continue computeSnapshotHash_start")
@@ -269,7 +269,7 @@ def test_main(schain):
     assert_b_s(n1.eth, 4, 3)    # still not exposed
     assert type( n1.eth.getSnapshotSignature(4) ) is str    # error
     assert type( n1.eth.getSnapshotSignature(2) ) is dict   # ok
-    assert type( n1.eth.getSnapshotSignature(3) ) is dict   # ok
+    assert type( n1.eth.getSnapshotSignature(3) ) is str    # error
 
     time.sleep(5)           # this is waiting for tracepoint
     n1.eth.debugInterfaceCall("SkaleHost trace continue create_block")
@@ -280,7 +280,7 @@ def test_main(schain):
     n1.eth.debugInterfaceCall("SkaleHost trace break create_block")
     assert type( n1.eth.getSnapshotSignature(2) ) is str    # rotated
     assert type( n1.eth.getSnapshotSignature(3) ) is dict   # ok
-    assert type( n1.eth.getSnapshotSignature(4) ) is dict   # ok
+    assert type( n1.eth.getSnapshotSignature(4) ) is str    # error
     assert type( n1.eth.getSnapshotSignature(5) ) is str    # error
 
     time.sleep(5)           # this is waiting for tracepoint
