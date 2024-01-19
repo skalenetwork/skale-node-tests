@@ -23,6 +23,8 @@ def schain(request):
     num_nodes = 4
     shared_space_path = ''
     chain_id = None
+    sync = False
+    historic = False
 
     marker = request.node.get_closest_marker("snapshotIntervalSec")
     if marker is not None:
@@ -52,19 +54,31 @@ def schain(request):
     if marker is not None:
         chain_id = marker.args[0]
 
+    marker = request.node.get_closest_marker("sync") 
+    if marker is not None:
+        sync = True
+
+    marker = request.node.get_closest_marker("historic") 
+    if marker is not None:
+        historic = True
+
     run_container = os.getenv('RUN_CONTAINER')
-    
+
     nodes = [Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
               snapshotInterval=snapshotIntervalSec)
              for i in range(num_nodes-1)]
     nodes.append( Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
               snapshotInterval=snapshotIntervalSec,
               snapshottedStartSeconds=snapshottedStartSeconds) )
-    nodes.append( Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
+
+    if sync:
+        nodes.append( Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
               snapshotInterval=snapshotIntervalSec,
               sync=True,
               snapshottedStartSeconds=20) )
-    nodes.append( Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
+
+    if historic:
+        nodes.append( Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
               snapshotInterval=snapshotIntervalSec,
               historic=True,
               snapshottedStartSeconds=25) )
@@ -82,7 +96,8 @@ def schain(request):
         dbStorageLimit = 10000000,
         chainID = chain_id,
         schainName = "rhythmic-tegmen",
-        bls = True
+        bls = True,
+        mtm = True
     )
     ch.start(start_timeout=5, shared_space_path=shared_space_path)
 
@@ -216,7 +231,7 @@ def test_corner_cases(schain):
 def test_main(schain):
     ch = schain
     n1 = ch.nodes[0]
-    
+
     wait_answer(n1.eth)
     wait_block(n1.eth, 1)               # HACK needed for 0 snapshot
 
@@ -244,7 +259,7 @@ def test_main(schain):
     assert_b_s(n1.eth, 4, 3)
     # disallow it to switch to next block
     n1.eth.debugInterfaceCall("SkaleHost trace break create_block")
-    assert type( n1.eth.getSnapshotSignature(1) ) is str    # 1 is not snapshotted    
+    assert type( n1.eth.getSnapshotSignature(1) ) is str    # 1 is not snapshotted
     assert type( n1.eth.getSnapshotSignature(2) ) is dict   # ok
     assert type( n1.eth.getSnapshotSignature(3) ) is dict   # ok
     assert type( n1.eth.getSnapshotSignature(4) ) is str    # error
@@ -252,7 +267,7 @@ def test_main(schain):
     n1.eth.debugInterfaceCall("Client trace continue computeSnapshotHash_start")
     time.sleep(0.5)
     assert_b_s(n1.eth, 4, 3)    # still not exposed
-    assert type( n1.eth.getSnapshotSignature(4) ) is str    # error        
+    assert type( n1.eth.getSnapshotSignature(4) ) is str    # error
     assert type( n1.eth.getSnapshotSignature(2) ) is dict   # ok
     assert type( n1.eth.getSnapshotSignature(3) ) is dict   # ok
 
@@ -355,6 +370,8 @@ def test_stateRoot_conflict(schain):
 
 @pytest.mark.num_nodes(4)
 @pytest.mark.snapshotIntervalSec(60)
+@pytest.mark.sync
+@pytest.mark.historic
 #@pytest.mark.chain_id("0xd2ba743e9fef4")
 #@pytest.mark.chain_id("0x2")
 def test_wait(schain):
@@ -362,20 +379,20 @@ def test_wait(schain):
     n1 = ch.nodes[0]
     #for _ in range(50):
     while True:
-        #try:
-        #    bn1 = n1.eth.blockNumber
-        #    s1 = n1.eth.getLatestSnapshotBlockNumber()
-        #    if bn1 % 10 == 0:
-        #      print(f"block/snapshot: {bn1} {s1}")
-
-        #except Exception as e:
-        #    print(str(e))
-
         try:
-            tx = ch.transaction_obj()
-            ch.nodes[1].eth.sendRawTransaction(tx)
-        except:
-            pass    # already exists
+            bn1 = n1.eth.blockNumber
+            s1 = n1.eth.getLatestSnapshotBlockNumber()
+            if bn1 % 10 == 0:
+              print(f"block/snapshot: {bn1} {s1}")
+
+        except Exception as e:
+            print(str(e))
+
+#        try:
+#            tx = ch.transaction_obj()
+#            ch.nodes[1].eth.sendRawTransaction(tx)
+#        except:
+#            pass    # already exists
 
         time.sleep(1)
 
