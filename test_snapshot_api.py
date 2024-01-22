@@ -244,7 +244,7 @@ def test_main(schain):
     n1.eth.debugInterfaceCall("SkaleHost trace break create_block")
     assert type( n1.eth.getSnapshotSignature(0) ) is dict    # ok
     assert type( n1.eth.getSnapshotSignature(1) ) is str    # error because 1 is never snapshotted
-    assert type( n1.eth.getSnapshotSignature(2) ) is str   # error
+    assert type( n1.eth.getSnapshotSignature(2) ) is dict   # ok
     assert type( n1.eth.getSnapshotSignature(3) ) is str    # error
 
     #wait_block(n1.eth, 4)
@@ -260,16 +260,16 @@ def test_main(schain):
     # disallow it to switch to next block
     n1.eth.debugInterfaceCall("SkaleHost trace break create_block")
     assert type( n1.eth.getSnapshotSignature(1) ) is str    # 1 is not snapshotted
-    assert type( n1.eth.getSnapshotSignature(2) ) is dict   # ok
-    assert type( n1.eth.getSnapshotSignature(3) ) is str    # error
+    assert type( n1.eth.getSnapshotSignature(2) ) is str    # error
+    assert type( n1.eth.getSnapshotSignature(3) ) is dict   # ok
     assert type( n1.eth.getSnapshotSignature(4) ) is str    # error
     time.sleep(3.0)			# allow snapshot hash to start being computed
     n1.eth.debugInterfaceCall("Client trace continue computeSnapshotHash_start")
     time.sleep(0.5)
     assert_b_s(n1.eth, 4, 3)    # still not exposed
     assert type( n1.eth.getSnapshotSignature(4) ) is str    # error
-    assert type( n1.eth.getSnapshotSignature(2) ) is dict   # ok
-    assert type( n1.eth.getSnapshotSignature(3) ) is str    # error
+    assert type( n1.eth.getSnapshotSignature(2) ) is str    # error
+    assert type( n1.eth.getSnapshotSignature(3) ) is dict   # ok
 
     time.sleep(5)           # this is waiting for tracepoint
     n1.eth.debugInterfaceCall("SkaleHost trace continue create_block")
@@ -279,12 +279,9 @@ def test_main(schain):
     # disallow it to switch to next block
     n1.eth.debugInterfaceCall("SkaleHost trace break create_block")
     assert type( n1.eth.getSnapshotSignature(2) ) is str    # rotated
-    assert type( n1.eth.getSnapshotSignature(3) ) is dict   # ok
-    assert type( n1.eth.getSnapshotSignature(4) ) is str    # error
+    assert type( n1.eth.getSnapshotSignature(3) ) is str    # error
+    assert type( n1.eth.getSnapshotSignature(4) ) is dict   # ok
     assert type( n1.eth.getSnapshotSignature(5) ) is str    # error
-
-    time.sleep(5)           # this is waiting for tracepoint
-    n1.eth.debugInterfaceCall("SkaleHost trace continue create_block")
 
     snap = n1.eth.getSnapshot(4)
     assert type(snap) is dict         # no error
@@ -345,7 +342,7 @@ def test_stateRoot_conflict(schain):
 
         # delay hash computation on 2 nodes
         print("pausing hash")
-        while n1.eth.getLatestSnapshotBlockNumber()  != block-1 or n2.eth.getLatestSnapshotBlockNumber() != block-1:
+        while n1.eth.getLatestSnapshotBlockNumber() != block-1 or n2.eth.getLatestSnapshotBlockNumber() != block-1:
             time.sleep(0.1)
 
         n1.eth.debugInterfaceCall("Client trace break computeSnapshotHash_start")
