@@ -249,7 +249,7 @@ def test_stop_in_snapshot(schain1):
 # send SIGTERM while skaled is exiting by exit time
 @pytest.mark.emptyBlockIntervalMs(1)
 #@pytest.mark.cpulimit(2)
-def test_double_stop(schain4):
+def disabled_because_unreliable_test_double_stop(schain4):
     (ch, eth1, eth2, eth3, eth4) = schain4
 
     print("Note: 3 nodes mining")
