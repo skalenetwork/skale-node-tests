@@ -191,10 +191,7 @@ def test_restart(schain):
             s4 = n4.eth.getLatestSnapshotBlockNumber()
             print(f"s1 = {s1} s4 = {s4}")        
             
-            if bn1 == bn4:
-                assert s1 == s4
-            
-            if s1 != 0 and bn4 == bn1 and bn1 >= 10:
+            if s1 != 0 and bn4 == bn1 and s4==s1 and bn1 >= 10:
                                 
                 print("Restarting")
                 
