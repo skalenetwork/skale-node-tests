@@ -349,8 +349,8 @@ def test_late_join(schain):
     else:
         assert False
 
-@pytest.mark.snapshotIntervalSec(10)
-@pytest.mark.snapshottedStartSeconds(60)
+@pytest.mark.snapshotIntervalSec(60)
+@pytest.mark.snapshottedStartSeconds(130)
 @pytest.mark.requireSnapshotMajority(False)
 def test_download_without_majority(schain):
     ch = schain
