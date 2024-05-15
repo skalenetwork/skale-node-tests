@@ -319,6 +319,8 @@ class Node:
         self.requireSnapshotMajority = kwargs.get('requireSnapshotMajority', True)
         self.downloadGenesisState = kwargs.get('downloadGenesisState', True)
         self.historic = kwargs.get('historic', False)
+        if self.historic:
+            self.snapshottedStartSeconds = 20
         self.sync = kwargs.get('sync', False)
 
 class SChain:
@@ -347,6 +349,7 @@ class SChain:
             "params": {"chainID": self.chainID},
             "accounts": {},
             "skaleConfig": {
+                "nodeInfo": { "testSignatures": self.bls },
                 "sChain": {
                     "emptyBlockIntervalMs": self.emptyBlockIntervalMs,
                     "snapshotIntervalSec": self.snapshotIntervalSec,
@@ -448,11 +451,17 @@ class SChain:
             "to": to_addr,
             "value": value,
             "gas": gas,
-            "gasPrice": 1000000,
             "nonce": nonce,
             "data": data,
             "chainId": chainId
         }
+        if kwargs.get("type", 0) > 0:
+            transaction["type"] = kwargs["type"]
+        if kwargs.get("type", 0) < 2:
+            transaction["gasPrice"] = 1000000
+        else:
+            transaction["maxFeePerGas"] = 1000000
+            transaction["maxPriorityFeePerGas"] = 0
         if "code" in kwargs:
             transaction["code"] = kwargs["code"]
 
@@ -573,7 +582,7 @@ class LocalStarter:
 
         cfg = copy.deepcopy(self.config)
         config_merge(cfg, self.chain.config_addons)
-            
+
         with open(os.path.join(self.dir.name, "config0.json"), "w") as f:
             json.dump(cfg, f, indent = 1)
             
