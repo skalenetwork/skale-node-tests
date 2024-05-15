@@ -349,7 +349,7 @@ class SChain:
             "params": {"chainID": self.chainID},
             "accounts": {},
             "skaleConfig": {
-                "nodeInfo": { "testSignatures": self.bls },
+                "nodeInfo": { "testSignatures": not self.bls },
                 "sChain": {
                     "emptyBlockIntervalMs": self.emptyBlockIntervalMs,
                     "snapshotIntervalSec": self.snapshotIntervalSec,
