@@ -700,7 +700,7 @@ class LocalStarter:
 
             if not n.requireSnapshotMajority:
                 popen_args.append('--no-snapshot-majority')
-                popen_args.append(self.chain.nodes[0].bindIP)
+                popen_args.append("http://" + self.chain.nodes[0].bindIP + ":" + str(n1.basePort + 3))
 
             if not n.downloadGenesisState:
                 popen_args.append('--download-genesis-state')
