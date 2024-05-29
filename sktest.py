@@ -319,6 +319,7 @@ class Node:
         self.requireSnapshotMajority = kwargs.get('requireSnapshotMajority', True)
         self.downloadGenesisState = kwargs.get('downloadGenesisState', True)
         self.historic = kwargs.get('historic', False)
+        self.downloadSnapshotFromHistoric = kwargs.get('downloadSnapshotFromHistoric', False)
         if self.historic:
             self.snapshottedStartSeconds = 20
         self.sync = kwargs.get('sync', False)
@@ -613,123 +614,129 @@ class LocalStarter:
             os.rename("config-historic.json", f"config{simple_nodes_count+have_sync+have_historic}.json");
 
         # TODO Handle exceptions!
-        idx = 0
-        for n in self.chain.nodes:
-            assert not n.running
-            idx+=1
+        for t in range( max( [ n.snapshottedStartSeconds for n in self.chain.nodes] ) + 1 ):
+            for idx, n in enumerate( self.chain.nodes ):
+                # assert not n.running
+                if n.running or t < n.snapshottedStartSeconds:
+                    continue
+                idx += 1
 
-            node_dir = os.path.join(os.getenv('DATA_DIR', self.dir.name), str(idx))
-            ipc_dir = node_dir
-            try:
-                os.makedirs(node_dir)
-            except:
-                pass
-            cfg_file = node_dir + "/config.json"
+                node_dir = os.path.join(os.getenv('DATA_DIR', self.dir.name), str(idx))
+                ipc_dir = node_dir
+                try:
+                    os.makedirs(node_dir)
+                except:
+                    pass
+                cfg_file = node_dir + "/config.json"
 
-            # comment out temporary
-            # # add address field to nodeGroups section in config if bls is enabled
-            # if self.chain.bls:
-            #     config_json = None
-            #     with open("./config"+str(idx)+".json") as f:
-            #         config_json = json.load(f)
-            #     new_config = config_json
-            #     for _, node_info in config_json['skaleConfig']['sChain']['nodeGroups']['0']['nodes'].items():
-            #         pk_str = node_info[2][2:]
-            #         address = web3.Web3.keccak(hexstr=pk_str).hex()
-            #         address = "0x" + address[26:]
-            #         node_info.append( address )
-            #     #write updated config on disk
-            #     json_dump = json.dumps(new_config, indent=4)
-            #     with open("./config"+str(idx)+".json", "w+") as outfile:
-            #         outfile.write(json_dump)
+                # comment out temporary
+                # # add address field to nodeGroups section in config if bls is enabled
+                # if self.chain.bls:
+                #     config_json = None
+                #     with open("./config"+str(idx)+".json") as f:
+                #         config_json = json.load(f)
+                #     new_config = config_json
+                #     for _, node_info in config_json['skaleConfig']['sChain']['nodeGroups']['0']['nodes'].items():
+                #         pk_str = node_info[2][2:]
+                #         address = web3.Web3.keccak(hexstr=pk_str).hex()
+                #         address = "0x" + address[26:]
+                #         node_info.append( address )
+                #     #write updated config on disk
+                #     json_dump = json.dumps(new_config, indent=4)
+                #     with open("./config"+str(idx)+".json", "w+") as outfile:
+                #         outfile.write(json_dump)
 
-            ##!n.config = cfg
-            shutil.move("./config"+str(idx)+".json", cfg_file)
+                ##!n.config = cfg
+                shutil.move("./config"+str(idx)+".json", cfg_file)
 
-            # TODO Close all of it?
-            aleth_out = io.open(node_dir + "/" + "aleth.out", "w")
-            aleth_err = io.open(node_dir + "/" + "aleth.err", "w")
+                # TODO Close all of it?
+                aleth_out = io.open(node_dir + "/" + "aleth.out", "w")
+                aleth_err = io.open(node_dir + "/" + "aleth.err", "w")
 
-            env = os.environ.copy()
-            env['DATA_DIR'] = node_dir
-            env["NO_ULIMIT_CHECK"] = "1"
+                env = os.environ.copy()
+                env['DATA_DIR'] = node_dir
+                env["NO_ULIMIT_CHECK"] = "1"
 
-            popen_args = [
-                # "/usr/bin/strace", '-o'+node_dir+'/aleth.trace',
-                #"stdbuf", "-oL",
-                # "heaptrack",
-                # "valgrind", "--tool=callgrind", #"--separate-threads=yes",
-                self.exe,
-                "--http-port", str(n.basePort + 3),
-#                "--ws-port", str(n.wsPort),
-                "--aa", "always",
-                "--config", cfg_file,
-                "-d", node_dir,
-                # "--ipcpath", ipc_dir,		# ACHTUNG!!! 107 characters max!!
-                "-v", "4",
-                "--web3-trace",
-                "--acceptors", "1",
-                "--main-net-url", "http://127.0.0.1:1111"
-            ]
+                popen_args = [
+                    # "/usr/bin/strace", '-o'+node_dir+'/aleth.trace',
+                    #"stdbuf", "-oL",
+                    # "heaptrack",
+                    # "valgrind", "--tool=callgrind", #"--separate-threads=yes",
+                    self.exe,
+                    "--http-port", str(n.basePort + 3),
+                    #"--ws-port", str(n.wsPort),
+                    "--aa", "always",
+                    "--config", cfg_file,
+                    "-d", node_dir,
+                    # "--ipcpath", ipc_dir,		# ACHTUNG!!! 107 characters max!!
+                    "-v", "4",
+                    "--web3-trace",
+                    "--acceptors", "1",
+                    "--main-net-url", "http://127.0.0.1:1111"
+                ]
 
-            try:
-              if os.environ["SGX_URL"] and not n.sync and not n.historic:
-                  popen_args.append("--sgx-url")
-                  popen_args.append(os.environ["SGX_URL"])
-            except:
-              pass
+                try:
+                    if os.environ["SGX_URL"] and not n.sync and not n.historic:
+                        popen_args.append("--sgx-url")
+                        popen_args.append(os.environ["SGX_URL"])
+                except:
+                    pass
 
-            if n.snapshottedStartSeconds > -1:
-                popen_args.append("--download-snapshot")
-                popen_args.append("http://" + self.chain.nodes[0].bindIP + ":" + str(self.chain.nodes[0].basePort + 3))  # noqa
-                # HACK send transactions to have different snapshot hashes!
-                n1 = self.chain.nodes[0]
-                provider = web3.Web3.HTTPProvider(
-                "http://" + n1.bindIP + ":" + str(n1.basePort + 3),
-                request_kwargs = {'timeout': 20})
-                chain.eth = web3.Web3(provider).eth
-                for i in range(n.snapshottedStartSeconds):
-                    try:
-                        print("transaction")
-                        chain.transaction_async()
-                        print("ok")
-                    except Exception as ex:
-                        print(str(ex))
-                        pass    # already exists
-                    time.sleep(1)
+                if n.snapshottedStartSeconds > -1:
+                    popen_args.append("--download-snapshot")
+                    popen_args.append("http://" + self.chain.nodes[0].bindIP + ":" + str(self.chain.nodes[0].basePort + 3))  # noqa
+                    # HACK send transactions to have different snapshot hashes!
+                    n1 = self.chain.nodes[0]
+                    provider = web3.Web3.HTTPProvider(
+                    "http://" + n1.bindIP + ":" + str(n1.basePort + 3),
+                    request_kwargs = {'timeout': 20})
+                    chain.eth = web3.Web3(provider).eth
+                    for i in range(n.snapshottedStartSeconds):
+                        try:
+                            print("transaction")
+                            chain.transaction_async()
+                            print("ok")
+                        except Exception as ex:
+                            print(str(ex))
+                            pass    # already exists
+                        time.sleep(1)
 
-            if not n.requireSnapshotMajority:
-                popen_args.append('--no-snapshot-majority')
-                popen_args.append("http://" + self.chain.nodes[0].bindIP + ":" + str(n1.basePort + 3))
+                if not n.requireSnapshotMajority:
+                    popen_args.append('--no-snapshot-majority')
+                    if not n.downloadSnapshotFromHistoric:
+                        popen_args.append("http://" + self.chain.nodes[0].bindIP + ":" + str(n1.basePort + 3))
+                    else:
+                        popen_args.append("http://" + self.chain.nodes[-1].bindIP + ":" + str(self.chain.nodes[-1].basePort + 3))
 
-            if not n.downloadGenesisState:
-                popen_args.append('--download-genesis-state')
+                if not n.downloadGenesisState:
+                    popen_args.append('--download-genesis-state')
 
-            if shared_space_path != "":
-                popen_args.append('--shared-space-path')
-                popen_args.append(shared_space_path)
+                if shared_space_path != "":
+                    popen_args.append('--shared-space-path')
+                    popen_args.append(shared_space_path)
 
-            popen = Popen(
-                popen_args,
-                stdout=aleth_out,
-                stderr=aleth_err,
-                env=env,
-                preexec_fn=os.setsid
-            )
+                popen = Popen(
+                    popen_args,
+                    stdout=aleth_out,
+                    stderr=aleth_err,
+                    env=env,
+                    preexec_fn=os.setsid
+                )
 
-            n.pid = popen.pid
-            n.args = popen_args
-            n.stdout = aleth_out
-            n.stderr = aleth_err
-            n.env = env
-            n.data_dir = node_dir
+                n.pid = popen.pid
+                n.args = popen_args
+                n.stdout = aleth_out
+                n.stderr = aleth_err
+                n.env = env
+                n.data_dir = node_dir
 
-            self.exe_popens.append(popen)
-            # HACK +0 +1 +2 are used by consensus
-            # url = f"http://{n.bindIP}:{n.basePort + 3}"
+                self.exe_popens.append(popen)
+                # HACK +0 +1 +2 are used by consensus
+                # url = f"http://{n.bindIP}:{n.basePort + 3}"
 
-            # n.ipcPath = ipc_dir + "/geth.ipc"
-            n.running = True
+                # n.ipcPath = ipc_dir + "/geth.ipc"
+                n.running = True
+            time.sleep(1)
 
         safe_input_with_timeout('Press enter when nodes start', start_timeout)
 

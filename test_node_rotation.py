@@ -18,6 +18,8 @@ def schain(request):
     snapshotIntervalSec = 1
     snapshottedStartSeconds = -1
     requireSnapshotMajority = True
+    historic = False
+    downloadSnapshotFromHistoric = False
     
     marker = request.node.get_closest_marker("snapshotIntervalSec") 
     if marker is not None:
@@ -31,6 +33,14 @@ def schain(request):
     if marker is not None:
         requireSnapshotMajority = marker.args[0]
 
+    marker = request.node.get_closest_marker("historic")
+    if marker is not None:
+        historic = True
+    
+    marker = request.node.get_closest_marker("downloadSnapshotFromHistoric")
+    if marker is not None:
+        downloadSnapshotFromHistoric = True
+
     run_container = os.getenv('RUN_CONTAINER')
     
     n1 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
@@ -42,17 +52,24 @@ def schain(request):
     n4 = Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
               snapshotInterval=snapshotIntervalSec,
               snapshottedStartSeconds=snapshottedStartSeconds,
-              requireSnapshotMajority=requireSnapshotMajority)
+              requireSnapshotMajority=requireSnapshotMajority,
+              downloadSnapshotFromHistoric=downloadSnapshotFromHistoric)
+    nodes = [ n1, n2, n3, n4 ]
+    if historic:
+        nodes.append( Node(emptyBlockIntervalMs=emptyBlockIntervalMs,
+              snapshotInterval=snapshotIntervalSec,
+              historic=True,
+              snapshottedStartSeconds=25) )
+
     starter = LocalStarter(sktest_exe)
     
-    
     ch = SChain(
-        [n1, n2, n3, n4],
+        nodes,
         starter,
         prefill=[1000000000000000000, 2000000000000000000],
         emptyBlockIntervalMs=emptyBlockIntervalMs,
         snapshotIntervalSec=snapshotIntervalSec,
-	bls = True
+	    bls = True
     )
     ch.start(start_timeout=0)
 
@@ -413,6 +430,53 @@ def test_download_with_majority(schain):
         print(f"{bn1} {bn2} {bn3} {bn4}")
 
         if bn1==bn2 and bn2==bn3 and bn3==bn4:
+            break
+
+        time.sleep(1)
+    else:
+        assert False
+
+@pytest.mark.snapshotIntervalSec(40)
+@pytest.mark.snapshottedStartSeconds(100)
+@pytest.mark.requireSnapshotMajority(False)
+@pytest.mark.downloadSnapshotFromHistoric
+@pytest.mark.historic
+def test_download_from_archive_to_core(schain):
+    ch = schain
+    n1 = ch.nodes[0]
+    n2 = ch.nodes[1]
+    n3 = ch.nodes[2]
+    n4 = ch.nodes[3]
+    n5 = ch.nodes[4]
+
+    time.sleep(40)
+
+    avail = wait_answer(n3.eth)
+    print(f"n1's block number = {n1.eth.blockNumber}")
+    assert avail
+    print(f"n3's block number = {n3.eth.blockNumber}")
+
+    avail = wait_answer(n5.eth)
+    print(f"n1's block number = {n1.eth.blockNumber}")
+    assert avail
+    print(f"n5's block number = {n5.eth.blockNumber}")
+
+    time.sleep(60)
+    avail = wait_answer(n4.eth)
+    print(f"n1's block number = {n1.eth.blockNumber}")
+    assert avail
+    print(f"n4's block number = {n4.eth.blockNumber}")
+
+    for _ in range(50):
+        bn1 = n1.eth.blockNumber
+        bn2 = n2.eth.blockNumber
+        bn3 = n3.eth.blockNumber
+        bn4 = n4.eth.blockNumber
+        bn5 = n5.eth.blockNumber
+
+        print(f"{bn1} {bn2} {bn3} {bn4} {bn5}")
+
+        if bn1==bn2 and bn2==bn3 and bn3==bn4 and bn4 == bn5:
             break
 
         time.sleep(1)
