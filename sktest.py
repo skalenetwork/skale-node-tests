@@ -658,7 +658,7 @@ class LocalStarter:
                 env["NO_ULIMIT_CHECK"] = "1"
 
                 popen_args = []
-                if len( env.get( "HISTORIC_SKTEST_EXE", "" ) ):
+                if len( env.get( "HISTORIC_SKTEST_EXE", "" ) ) and n.historic:
                     popen_args.append( env["HISTORIC_SKTEST_EXE"] )
                 else:
                     popen_args.append( self.exe )
