@@ -477,6 +477,8 @@ def test_download_from_archive_to_core(schain):
         print(f"{bn1} {bn2} {bn3} {bn4} {bn5}")
 
         if bn1==bn2 and bn2==bn3 and bn3==bn4 and bn4 == bn5:
+            block_hashes = [ n.eth.getBlock( bn1 )["hash"] for n in ch.nodes]
+            assert min(block_hashes) == max(block_hashes)
             break
 
         time.sleep(1)

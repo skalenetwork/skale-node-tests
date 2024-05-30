@@ -657,12 +657,18 @@ class LocalStarter:
                 env['DATA_DIR'] = node_dir
                 env["NO_ULIMIT_CHECK"] = "1"
 
-                popen_args = [
+                popen_args = []
+                if len( env.get( "HISTORIC_SKTEST_EXE", "" ) ):
+                    popen_args.append( env["HISTORIC_SKTEST_EXE"] )
+                else:
+                    popen_args.append( self.exe )
+
+                popen_args.extend( [
                     # "/usr/bin/strace", '-o'+node_dir+'/aleth.trace',
                     #"stdbuf", "-oL",
                     # "heaptrack",
                     # "valgrind", "--tool=callgrind", #"--separate-threads=yes",
-                    self.exe,
+                    # self.exe,
                     "--http-port", str(n.basePort + 3),
                     #"--ws-port", str(n.wsPort),
                     "--aa", "always",
@@ -673,7 +679,7 @@ class LocalStarter:
                     "--web3-trace",
                     "--acceptors", "1",
                     "--main-net-url", "http://127.0.0.1:1111"
-                ]
+                ] )
 
                 try:
                     if os.environ["SGX_URL"] and not n.sync and not n.historic:
