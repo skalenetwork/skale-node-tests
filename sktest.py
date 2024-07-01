@@ -895,7 +895,6 @@ class LocalStarter:
 
     # TODO race conditions?
     def wait_node_stop(self, pos):
-        print(pos, len( self.exe_popens ))
         p = self.exe_popens[pos]
         if p and p.poll() is None:
             p.wait()
