@@ -614,7 +614,7 @@ class LocalStarter:
             os.rename("config-historic.json", f"config{simple_nodes_count+have_sync+have_historic}.json");
 
         # TODO Handle exceptions!
-        for t in range( max( [ n.snapshottedStartSeconds for n in self.chain.nodes] ) + 1 ):
+        for t in range( max( max( [ n.snapshottedStartSeconds for n in self.chain.nodes] ), 0 ) + 1 ):
             for idx, n in enumerate( self.chain.nodes ):
                 # assert not n.running
                 if n.running or t < n.snapshottedStartSeconds:
@@ -895,6 +895,7 @@ class LocalStarter:
 
     # TODO race conditions?
     def wait_node_stop(self, pos):
+        print(pos, len( self.exe_popens ))
         p = self.exe_popens[pos]
         if p and p.poll() is None:
             p.wait()
