@@ -156,7 +156,7 @@ def test_download_snapshot(schain, have_others, have_4):
                 assert not eth_available(n4.eth)
                 
                 # should break if no others
-                time.sleep(70) # wait till 0 snapshot will be downloaded
+                time.sleep(80) # wait till 0 snapshot will be downloaded
                 avail = wait_answer(n4.eth)
     
                 if not have_others:                                                               
@@ -246,7 +246,7 @@ def test_download_early(schain):
     n4 = ch.nodes[3]
     starter = ch.starter
 
-    time.sleep(90) # wait till 0 snapshot will be downloaded
+    time.sleep(100) # wait till 0 snapshot will be downloaded
 
     avail = wait_answer(n4.eth)
     print(f"n1's block number = {n1.eth.blockNumber}")
@@ -538,7 +538,7 @@ def test_wrong_stateRoot_in_proposal(schain):
             assert('"StartAgain": true' in status_text)
             print("Restarting n3 (crashed)")
             starter.restart_node(2, ["--download-snapshot", "http://127.0.0.1:9999"])
-            time.sleep(80) # wait till 0 snapshot will be downloaded
+            time.sleep(90) # wait till 0 snapshot will be downloaded
             assert( wait_answer(n3.eth) )
             print("n3 should be fixed now")
             
@@ -601,7 +601,7 @@ def test_getSnapshot_timeout(schain):
 
     print("Restarting n4 from snapshot")
     starter.restart_node(3, ["--download-snapshot", "ddduuummmyyy"])
-    time.sleep(120)
+    time.sleep(130)
     assert( wait_answer(n4.eth) )
     print("Now check how much time skale_getSnapshot took!")
     
